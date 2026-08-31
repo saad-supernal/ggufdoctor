@@ -61,13 +61,13 @@ class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
                     self.send_header("Content-Type", "application/octet-stream")
                     self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
-                    self.wfile.write(data)
-                    # Log this request
+                    # Log this request before writing (describes what server decided to send)
                     self.request_log.append({
                         "range_header": range_header,
                         "bytes_written": len(data),
                         "status": 206,
                     })
+                    self.wfile.write(data)
                     return
             except (ValueError, IndexError):
                 pass
@@ -77,13 +77,13 @@ class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", str(len(file_data)))
         self.end_headers()
-        self.wfile.write(file_data)
-        # Log this request
+        # Log this request before writing (describes what server decided to send)
         self.request_log.append({
             "range_header": range_header,
             "bytes_written": len(file_data),
             "status": 200,
         })
+        self.wfile.write(file_data)
 
     def log_message(self, format, *args):
         # Suppress logging noise
