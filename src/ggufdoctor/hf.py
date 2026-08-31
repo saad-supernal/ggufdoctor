@@ -31,8 +31,14 @@ class HfClient:
         return json.loads(self._open(url))
 
     def gguf_chat_template(self, repo_id: str) -> str | None:
-        gg = (self.model_info(repo_id) or {}).get("gguf") or {}
-        return gg.get("chat_template")
+        try:
+            info = self.model_info(repo_id)
+            if not isinstance(info, dict):
+                return None
+            gg = info.get("gguf") or {}
+            return gg.get("chat_template")
+        except Exception:
+            return None
 
     def base_model_of(self, info: dict[str, Any]) -> str | None:
         bm = (info.get("cardData") or {}).get("base_model")
@@ -52,6 +58,21 @@ class HfClient:
         for fn in ("tokenizer_config.json", "chat_template.json"):
             try:
                 data = json.loads(self._open(RESOLVE.format(repo=repo_id, fn=fn)))
+                if not isinstance(data, dict):
+                    reasons.append("fetch_error")
+                    continue
+                ct = data.get("chat_template")
+                if isinstance(ct, list):
+                    pick = None
+                    for entry in ct:
+                        if isinstance(entry, dict) and entry.get("name") == "default":
+                            pick = entry.get("template")
+                    if pick is None and ct and isinstance(ct[0], dict):
+                        pick = ct[0].get("template")
+                    ct = pick
+                if isinstance(ct, str) and ct.strip():
+                    return ct, "ok"
+                reasons.append("genuinely_absent")
             except urllib.error.HTTPError as e:
                 reasons.append("gated" if e.code in (401, 403)
                                else "not_found" if e.code == 404
@@ -60,18 +81,6 @@ class HfClient:
             except Exception:
                 reasons.append("fetch_error")
                 continue
-            ct = data.get("chat_template")
-            if isinstance(ct, list):
-                pick = None
-                for entry in ct:
-                    if isinstance(entry, dict) and entry.get("name") == "default":
-                        pick = entry.get("template")
-                if pick is None and ct and isinstance(ct[0], dict):
-                    pick = ct[0].get("template")
-                ct = pick
-            if isinstance(ct, str) and ct.strip():
-                return ct, "ok"
-            reasons.append("genuinely_absent")
         for preferred in ("gated", "genuinely_absent", "fetch_error", "not_found"):
             if preferred in reasons:
                 return None, preferred

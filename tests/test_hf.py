@@ -70,3 +70,35 @@ def test_multi_template_list_picks_default():
         {"name": "default", "template": "D"}]})
     c = HfClient(opener=fake_opener({"tokenizer_config.json": body}))
     assert c.upstream_template("org/m")[0] == "D"
+
+
+def test_upstream_json_array_is_fetch_error():
+    # Valid JSON but not a dict: [1, 2, 3]
+    c = HfClient(opener=fake_opener({"tokenizer_config.json": "[1,2,3]",
+                                     "chat_template.json": 404}))
+    tpl, why = c.upstream_template("broken/model")
+    assert tpl is None
+    assert why == "fetch_error"
+
+
+def test_upstream_json_bare_string_is_fetch_error():
+    # Valid JSON but not a dict: bare string
+    c = HfClient(opener=fake_opener({"tokenizer_config.json": '"just a string"',
+                                     "chat_template.json": 404}))
+    tpl, why = c.upstream_template("broken/model")
+    assert tpl is None
+    assert why == "fetch_error"
+
+
+def test_gguf_chat_template_handles_non_dict_model_info():
+    # model_info returns a JSON array instead of dict
+    c = HfClient(opener=fake_opener({"models": "[1,2,3]"}))
+    result = c.gguf_chat_template("bad/repo")
+    assert result is None
+
+
+def test_gguf_chat_template_handles_bare_string_model_info():
+    # model_info returns a JSON string instead of dict
+    c = HfClient(opener=fake_opener({"models": '"just a string"'}))
+    result = c.gguf_chat_template("bad/repo")
+    assert result is None
