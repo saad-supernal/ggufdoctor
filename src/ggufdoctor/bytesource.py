@@ -81,6 +81,9 @@ class HttpRangeByteSource:
         self.url = url
         self.headers = dict(headers or {})
         self.headers.setdefault("User-Agent", "ggufdoctor/0.1")
+        # bytes_fetched: client-side metric counting bytes the client consumed via read().
+        # Does not reflect server-side efficiency (e.g., a full-body download abandoned early
+        # would report the same count as a successful range request).
         self.bytes_fetched = 0
 
     def read(self, offset: int, length: int) -> bytes:

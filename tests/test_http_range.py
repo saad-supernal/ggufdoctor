@@ -19,7 +19,13 @@ GGUF_BLOB = build_gguf({
 
 
 class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
-    """HTTP handler that properly implements byte-range serving (206)."""
+    """HTTP handler that properly implements byte-range serving (206).
+
+    Instruments each request with Range header and bytes written for testing.
+    """
+
+    # Class attribute to store request records: list of dicts with 'range_header' and 'bytes_written'
+    request_log = []
 
     def do_GET(self):
         # Get the filesystem path
@@ -36,9 +42,11 @@ class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
             return
 
+        # Record the Range header (or None)
+        range_header = self.headers.get("Range")
+
         # Check for Range header
-        range_header = self.headers.get("Range", "")
-        if range_header.startswith("bytes="):
+        if range_header and range_header.startswith("bytes="):
             try:
                 range_spec = range_header[6:]
                 start_str, end_str = range_spec.split("-")
@@ -54,6 +62,12 @@ class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
                     self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
                     self.wfile.write(data)
+                    # Log this request
+                    self.request_log.append({
+                        "range_header": range_header,
+                        "bytes_written": len(data),
+                        "status": 206,
+                    })
                     return
             except (ValueError, IndexError):
                 pass
@@ -64,6 +78,12 @@ class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(file_data)))
         self.end_headers()
         self.wfile.write(file_data)
+        # Log this request
+        self.request_log.append({
+            "range_header": range_header,
+            "bytes_written": len(file_data),
+            "status": 200,
+        })
 
     def log_message(self, format, *args):
         # Suppress logging noise
@@ -75,6 +95,8 @@ def served(tmp_path):
     """HTTP server with proper byte-range support."""
     blob = GGUF_BLOB + b"\x00" * 5_000_000
     (tmp_path / "m.gguf").write_bytes(blob)
+    # Reset request log for this fixture
+    RangeAwareHTTPRequestHandler.request_log = []
     handler = partial(RangeAwareHTTPRequestHandler, directory=str(tmp_path))
     srv = HTTPServer(("127.0.0.1", 0), handler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
@@ -114,13 +136,28 @@ def test_nonzero_offset_returns_correct_bytes(served):
 
 
 def test_parses_remote_header_without_full_download(served):
-    """Test that parsing remote header uses byte ranges and fetches minimal bytes."""
+    """Test that parsing remote header uses byte ranges and fetches minimal bytes.
+
+    Verifies server-side metrics to ensure the client actually sent Range headers
+    and the server sent partial content (206), not full file (200).
+    """
     src = HttpRangeByteSource(served)
     m = read_gguf(src, "remote")
     assert m.architecture == "llama"
     assert m.chat_template == "{{ 'x' }}"
-    # With range support, bytes_fetched should be small (just metadata + one chunk)
-    assert src.bytes_fetched < 2_000_000, f"bytes_fetched={src.bytes_fetched} should be small with ranges"
+
+    # Verify server-side: all requests had Range headers
+    assert len(RangeAwareHTTPRequestHandler.request_log) > 0, "server should have received requests"
+    for req in RangeAwareHTTPRequestHandler.request_log:
+        assert req["range_header"] is not None, "all requests must include Range header"
+        assert req["status"] == 206, "all responses must be 206 Partial Content"
+
+    # Verify server sent much less than the full file (~5.2 MB)
+    total_bytes_sent = sum(req["bytes_written"] for req in RangeAwareHTTPRequestHandler.request_log)
+    assert total_bytes_sent < 2_000_000, (
+        f"server sent {total_bytes_sent} bytes (should be << 5.2MB), "
+        f"not using ranges properly"
+    )
 
 
 def test_nonzero_offset_against_non_range_server_raises_error(served_no_range):
