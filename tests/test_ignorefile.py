@@ -45,3 +45,42 @@ def test_apply_splits_kept_and_suppressed():
 
 def test_missing_file_yields_no_rules():
     assert load_ignores("/nonexistent/path") == []
+
+
+def test_collapsed_finding_single_fixture_matches_scoped_rule():
+    """Collapsed finding with single fixture is suppressed by fixture-scoped rule"""
+    findings = [Finding("S003", Severity.ERROR, "m", fixture=None,
+                        evidence={"fixtures": ["with_tools"]})]
+    rules = [IgnoreRule("S003", "with_tools", "reason")]
+    kept, suppressed = apply_ignores(findings, rules)
+    assert len(kept) == 0
+    assert len(suppressed) == 1
+
+
+def test_collapsed_finding_multiple_fixtures_not_matched_by_scoped_rule():
+    """Collapsed finding spanning multiple fixtures is not suppressed by scoped rule"""
+    findings = [Finding("S003", Severity.ERROR, "m", fixture=None,
+                        evidence={"fixtures": ["with_tools", "user_only"]})]
+    rules = [IgnoreRule("S003", "with_tools", "reason")]
+    kept, suppressed = apply_ignores(findings, rules)
+    assert len(kept) == 1
+    assert len(suppressed) == 0
+
+
+def test_collapsed_finding_multiple_fixtures_matched_by_unscoped_rule():
+    """Collapsed finding spanning multiple fixtures IS suppressed by un-scoped rule"""
+    findings = [Finding("S003", Severity.ERROR, "m", fixture=None,
+                        evidence={"fixtures": ["with_tools", "user_only"]})]
+    rules = [IgnoreRule("S003", None, "reason")]
+    kept, suppressed = apply_ignores(findings, rules)
+    assert len(kept) == 0
+    assert len(suppressed) == 1
+
+
+def test_rule_without_reason_error_includes_line_text(tmp_path):
+    """Error message for missing reason includes the actual line"""
+    p = tmp_path / "i"
+    p.write_text("S005\n")
+    with pytest.raises(ValueError) as exc_info:
+        load_ignores(str(p))
+    assert "S005" in str(exc_info.value)
