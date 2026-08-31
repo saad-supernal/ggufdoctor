@@ -163,7 +163,7 @@ def s005_eos_mismatch(ctx: CheckContext) -> list[Finding]:
         # ran. Record that as a coverage gap rather than staying silent.
         ctx.checks_not_evaluated.append("S005")
         return []
-    if m.eos_token_id >= len(m.tokens):
+    if not (0 <= m.eos_token_id < len(m.tokens)):
         # The id itself is bad metadata, worth flagging on its own -- but
         # it also means the deeper "does the template emit EOS" comparison
         # below has no real token to look for, so it didn't evaluate either.

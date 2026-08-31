@@ -1,7 +1,7 @@
 from ggufdoctor.checks.sanity import run_sanity_checks
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.fixtures import load_fixtures
-from ggufdoctor.models import CheckContext, GgufModel
+from ggufdoctor.models import CheckContext, GgufModel, Severity
 
 
 def ctx(**kw):
@@ -209,6 +209,22 @@ def test_s005_records_not_evaluated_when_eos_id_out_of_range():
     # The out-of-range id is still worth flagging on its own...
     assert "S005" in ids(findings)
     # ...but the deeper "does the template emit EOS" comparison never ran.
+    assert c.checks_not_evaluated == ["S005"]
+
+
+def test_s005_negative_eos_id_takes_the_out_of_range_warn_path():
+    # Fix round 2: a negative eos_token_id used to slip past the
+    # `eos_token_id >= len(tokens)` guard, land on `_real_token`'s
+    # `0 <= id < len` bound instead, and bail out with no finding at all --
+    # the check stayed "safe" only by accident. It must now hit the same
+    # out-of-range WARN path a too-large id does.
+    c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"],
+            eos_token_id=-1)
+    findings = run_sanity_checks(c)
+    s005 = [f for f in findings if f.id == "S005"]
+    assert len(s005) == 1
+    assert s005[0].severity == Severity.WARN
+    assert s005[0].message == "eos_token_id is out of range for this file's vocab"
     assert c.checks_not_evaluated == ["S005"]
 
 
