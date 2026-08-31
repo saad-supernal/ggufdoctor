@@ -57,3 +57,62 @@ def test_r004_flags_upstream_modified_after_publication():
         "upstream_modified": "2026-06-01T00:00:00Z",
         "gguf_modified": "2026-01-01T00:00:00Z"})))
     assert "R004" in f
+
+
+def test_r002_requires_word_boundary_on_fix_keywords():
+    # "prefix" contains "fix" but is not the keyword; should not downgrade
+    not_annotated = "{# minor prefix cleanup #}" + B
+    f = by_id(run_reference_checks(ctx(not_annotated, A)))
+    assert "R001" in f
+    assert f["R001"].severity == Severity.WARN
+    assert "R002" not in f
+
+
+def test_r002_requires_word_boundary_unmodified_contains_modified():
+    # "unmodified" contains "modified" but is not the keyword; should not downgrade
+    not_annotated = "{# unmodified copy from base #}" + B
+    f = by_id(run_reference_checks(ctx(not_annotated, A)))
+    assert "R001" in f
+    assert f["R001"].severity == Severity.WARN
+    assert "R002" not in f
+
+
+def test_r002_real_fixes_keyword_still_downgrades():
+    # Real fix keyword should still downgrade
+    annotated = "{# fixes the tool-call role #}" + B
+    f = by_id(run_reference_checks(ctx(annotated, A)))
+    assert "R001" in f
+    assert "R002" in f
+    assert f["R001"].severity == Severity.INFO
+
+
+def test_r004_silent_on_unparseable_upstream_timestamp():
+    # not-a-date in upstream timestamp produces no R004
+    f = by_id(run_reference_checks(ctx(A, A, {
+        "upstream_modified": "not-a-date",
+        "gguf_modified": "2026-01-01T00:00:00Z"})))
+    assert "R004" not in f
+
+
+def test_r004_silent_on_unparseable_gguf_timestamp():
+    # not-a-date in gguf timestamp produces no R004
+    f = by_id(run_reference_checks(ctx(A, A, {
+        "upstream_modified": "2026-06-01T00:00:00Z",
+        "gguf_modified": "not-a-date"})))
+    assert "R004" not in f
+
+
+def test_r004_silent_when_upstream_earlier_with_different_offset():
+    # upstream +09:00 at 15:00 UTC on Jan 1 is earlier than GGUF Z at 20:00 UTC on Jan 1
+    f = by_id(run_reference_checks(ctx(A, A, {
+        "upstream_modified": "2026-01-01T15:00:00+09:00",
+        "gguf_modified": "2026-01-01T20:00:00Z"})))
+    assert "R004" not in f
+
+
+def test_r004_flags_genuinely_newer_with_different_offsets():
+    # upstream +09:00 at 20:00 UTC on Jan 2 is genuinely newer
+    f = by_id(run_reference_checks(ctx(A, A, {
+        "upstream_modified": "2026-01-02T20:00:00+09:00",
+        "gguf_modified": "2026-01-01T20:00:00Z"})))
+    assert "R004" in f

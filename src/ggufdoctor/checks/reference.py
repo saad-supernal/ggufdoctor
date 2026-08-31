@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import difflib
 import re
+from datetime import datetime
 
 from ggufdoctor.models import CheckContext, Finding, Severity
 
 INTENT_COMMENT_RE = re.compile(
-    r"\{#.{0,400}?(fix|fixes|patch|patched|modified|corrected).{0,400}?#\}",
+    r"\{#.{0,400}?\b(fix|fixes|patch|patched|modified|corrected)\b.{0,400}?#\}",
     re.I | re.S)
 
 
@@ -24,11 +25,10 @@ def r002_annotated_patch(ctx: CheckContext) -> list[Finding]:
                     "divergence is annotated by the publisher as a deliberate fix")]
 
 
-def r001_output_differs(ctx: CheckContext) -> list[Finding]:
+def r001_output_differs(ctx: CheckContext, annotated: bool) -> list[Finding]:
     gguf_tpl, up_tpl = ctx.model.chat_template, ctx.upstream_template
     if not gguf_tpl or not up_tpl:
         return []
-    annotated = bool(r002_annotated_patch(ctx))
     severity = Severity.INFO if annotated else Severity.WARN
     engine = ctx.engines[0]
     out: list[Finding] = []
@@ -58,21 +58,33 @@ def r003_upstream_missing(ctx: CheckContext) -> list[Finding]:
 def r004_upstream_newer(ctx: CheckContext) -> list[Finding]:
     up = ctx.upstream_meta.get("upstream_modified")
     mine = ctx.upstream_meta.get("gguf_modified")
-    if not up or not mine or up <= mine:
+    if not up or not mine:
         return []
+
+    # Normalize and parse ISO 8601 timestamps
+    try:
+        up_dt = datetime.fromisoformat(up.replace("Z", "+00:00"))
+        mine_dt = datetime.fromisoformat(mine.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        # Unparseable or invalid timestamps: report nothing
+        return []
+
+    if up_dt <= mine_dt:
+        return []
+
     return [Finding("R004", Severity.INFO,
                     "upstream template changed after this file was published",
                     evidence={"upstream_modified": up, "gguf_modified": mine})]
 
 
-REFERENCE_CHECKS = [r001_output_differs, r002_annotated_patch,
-                    r003_upstream_missing, r004_upstream_newer]
-
-
 def run_reference_checks(ctx: CheckContext) -> list[Finding]:
     findings: list[Finding] = []
-    for check in REFERENCE_CHECKS:
-        findings.extend(check(ctx))
+    # Call r002 once and reuse the result
+    annotated = bool(r002_annotated_patch(ctx))
+    findings.extend(r001_output_differs(ctx, annotated))
+    findings.extend(r002_annotated_patch(ctx))
+    findings.extend(r003_upstream_missing(ctx))
+    findings.extend(r004_upstream_newer(ctx))
     if not any(f.id == "R001" for f in findings):
         findings = [f for f in findings if f.id != "R002"]
     return findings
