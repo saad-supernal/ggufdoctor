@@ -85,3 +85,8 @@ class HfClient:
             if preferred in reasons:
                 return None, preferred
         return None, "not_found"
+
+    def list_gguf_models(self, skip: int, limit: int = 100) -> list[dict[str, Any]]:
+        url = (f"{API}?filter=gguf&sort=downloads&direction=-1"
+               f"&limit={limit}&skip={skip}")
+        return json.loads(self._open(url))

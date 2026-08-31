@@ -35,6 +35,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "survey":
+        return _survey_main(argv[1:])
+    return _lint_main(argv)
+
+
+def _lint_main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     if args.require_upstream and not args.compare_upstream:
@@ -94,3 +101,33 @@ def main(argv: list[str] | None = None) -> int:
     if args.require_upstream and coverage.upstream != "ok":
         return 1
     return exit_code(findings, args.fail_on)
+
+
+def _survey_main(argv: list[str]) -> int:
+    import json as _json
+
+    from ggufdoctor.hf import HfClient
+    from ggufdoctor.survey import survey, to_markdown
+
+    p = argparse.ArgumentParser(prog="ggufdoctor survey")
+    p.add_argument("--top", type=int, default=200)
+    p.add_argument("--per-org", type=int, default=2)
+    p.add_argument("--out", metavar="PATH")
+    p.add_argument("--markdown", metavar="PATH")
+    args = p.parse_args(argv)
+
+    try:
+        result = survey(HfClient(), top=args.top, per_org=args.per_org)
+    except Exception as e:
+        print(f"ggufdoctor survey: {e}", file=sys.stderr)
+        return 2
+
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as f:
+            _json.dump(result, f, indent=1)
+    md = to_markdown(result)
+    if args.markdown:
+        with open(args.markdown, "w", encoding="utf-8") as f:
+            f.write(md)
+    print(md)
+    return 0
