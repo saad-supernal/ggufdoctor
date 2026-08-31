@@ -89,9 +89,17 @@ class HttpRangeByteSource:
         req = urllib.request.Request(self.url, headers=h)
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
-                if resp.status not in (200, 206):
+                if resp.status == 206:
+                    # Range request was honored, partial content
+                    data = resp.read(length)
+                elif resp.status == 200:
+                    # Range request was not honored, got full file
+                    if offset != 0:
+                        raise HttpSourceError(f"{self.url}: server does not support byte ranges")
+                    # At offset 0, full file response is acceptable; cap to requested length
+                    data = resp.read(length)
+                else:
                     raise HttpSourceError(f"{self.url}: HTTP {resp.status}")
-                data = resp.read(length)
         except urllib.error.HTTPError as e:
             raise HttpSourceError(f"{self.url}: HTTP {e.code}") from e
         except urllib.error.URLError as e:
