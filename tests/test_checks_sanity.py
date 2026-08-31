@@ -189,3 +189,44 @@ def test_s004_and_s006_skipped_when_template_does_not_compile():
     assert "S002" in ids(f)
     assert "S004" not in ids(f)
     assert "S006" not in ids(f)
+
+
+# --- Fix round 1: coverage gaps for S005/S006 when token metadata is
+# missing or out of range, so Task 10 can report "not evaluated" instead
+# of silently letting these look like clean passes. ---
+
+def test_s005_records_not_evaluated_when_eos_id_missing():
+    c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"])
+    findings = run_sanity_checks(c)
+    assert "S005" not in ids(findings)
+    assert c.checks_not_evaluated == ["S005"]
+
+
+def test_s005_records_not_evaluated_when_eos_id_out_of_range():
+    c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"],
+            eos_token_id=99)
+    findings = run_sanity_checks(c)
+    # The out-of-range id is still worth flagging on its own...
+    assert "S005" in ids(findings)
+    # ...but the deeper "does the template emit EOS" comparison never ran.
+    assert c.checks_not_evaluated == ["S005"]
+
+
+def test_s006_records_not_evaluated_when_bos_id_missing():
+    # tokens/eos_token_id are supplied purely to keep S005 from also
+    # bailing here, so this test isolates the S006 behaviour.
+    c = ctx(chat_template=CHAT_TPL, add_bos_token=True,
+            tokens=["<|im_start|>", "<|im_end|>"], eos_token_id=1)
+    findings = run_sanity_checks(c)
+    assert "S006" not in ids(findings)
+    assert c.checks_not_evaluated == ["S006"]
+
+
+def test_s006_not_recorded_when_add_bos_token_is_false():
+    # add_bos_token=False (the default) means the check correctly doesn't
+    # apply -- that's a no-op, not a coverage gap, so S006 specifically
+    # should not be recorded (S005 still bails on its own missing eos id,
+    # which is exercised separately above).
+    c = ctx(chat_template=CHAT_TPL)
+    run_sanity_checks(c)
+    assert "S006" not in c.checks_not_evaluated

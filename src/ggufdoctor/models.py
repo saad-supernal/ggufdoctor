@@ -49,6 +49,7 @@ class RenderResult:
 class Coverage:
     upstream: str
     families_run: list[str] = field(default_factory=list)
+    checks_not_evaluated: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -64,3 +65,8 @@ class CheckContext:
     fixtures: list[Fixture]
     upstream_template: str | None = None
     upstream_meta: dict[str, Any] = field(default_factory=dict)
+    # Populated by individual checks (see checks/sanity.py S005/S006) when
+    # they cannot evaluate at all due to missing or out-of-range token
+    # metadata. Distinct from "found nothing wrong": this says the check
+    # never got to look. Feeds Coverage.checks_not_evaluated downstream.
+    checks_not_evaluated: list[str] = field(default_factory=list)

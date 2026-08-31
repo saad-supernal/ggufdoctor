@@ -155,9 +155,19 @@ def s004_unknown_special_token(ctx: CheckContext) -> list[Finding]:
 
 def s005_eos_mismatch(ctx: CheckContext) -> list[Finding]:
     m = ctx.model
-    if not m.chat_template or m.eos_token_id is None or not m.tokens:
+    if not m.chat_template:
+        return []
+    if m.eos_token_id is None or not m.tokens:
+        # No declared eos id, or no vocab to resolve it against: the
+        # emits-declared-EOS comparison has nothing to compare, so it never
+        # ran. Record that as a coverage gap rather than staying silent.
+        ctx.checks_not_evaluated.append("S005")
         return []
     if m.eos_token_id >= len(m.tokens):
+        # The id itself is bad metadata, worth flagging on its own -- but
+        # it also means the deeper "does the template emit EOS" comparison
+        # below has no real token to look for, so it didn't evaluate either.
+        ctx.checks_not_evaluated.append("S005")
         return [Finding("S005", Severity.WARN,
                         "eos_token_id is out of range for this file's vocab",
                         evidence={"eos_token_id": m.eos_token_id,
@@ -183,6 +193,10 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
         return []
     bos = _real_token(m, m.bos_token_id)
     if bos is None:
+        # add_bos_token asked for this check to matter, but there is no
+        # real bos string to look for (missing or out-of-range id, or no
+        # vocab) -- the check never got to evaluate anything.
+        ctx.checks_not_evaluated.append("S006")
         return []
     fx = next((f for f in ctx.fixtures if f.name == "user_only"), None)
     if fx is None:
