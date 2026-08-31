@@ -1,0 +1,4306 @@
+[
+ {
+  "id": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+  "downloads": 12760676,
+  "org": "unsloth",
+  "status": "output_differs",
+  "arch": "qwen3moe",
+  "base_model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n\n",
+    "upstream_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 2
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n\n",
+    "upstream_tail": "_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 2
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n\n",
+    "upstream_tail": "<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 2
+   }
+  ]
+ },
+ {
+  "id": "unsloth/Qwen3.8-27B-GGUF",
+  "downloads": 8839153,
+  "org": "unsloth",
+  "status": "cosmetic_only",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ornith-ai/Ornith-1.0-9B-GGUF",
+  "downloads": 4402172,
+  "org": "ornith-ai",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "ornith-ai/Ornith-1.0-35B-GGUF",
+  "downloads": 3180759,
+  "org": "ornith-ai",
+  "status": "no_base_model",
+  "arch": "qwen35moe",
+  "base_model": null
+ },
+ {
+  "id": "mixedbread-ai/mxbai-embed-large-v1",
+  "downloads": 3128936,
+  "org": "mixedbread-ai",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+  "downloads": 2689609,
+  "org": "HauhauCS",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-e4b-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+  "downloads": 2320909,
+  "org": "DavidAU",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-MTP",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "lmstudio-community/Qwen3.8-27B-GGUF",
+  "downloads": 2275982,
+  "org": "lmstudio-community",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+  "downloads": 2144244,
+  "org": "HauhauCS",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "antirez/deepseek-v4-gguf",
+  "downloads": 2085027,
+  "org": "antirez",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+  "downloads": 1991437,
+  "org": "JonathanColetti",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf",
+  "downloads": 1907415,
+  "org": "handy-computer",
+  "status": "non_chat_arch",
+  "arch": "parakeet",
+  "base_model": "nvidia/nemotron-3.5-asr-streaming-0.6b"
+ },
+ {
+  "id": "mudler/Laguna-XS-2.1-APEX-GGUF",
+  "downloads": 1729597,
+  "org": "mudler",
+  "status": "identical",
+  "arch": "laguna",
+  "base_model": "poolside/Laguna-XS-2.1",
+  "identical_source": true,
+  "render_errors": [
+   {
+    "fixture": "user_only",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "system_user",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "with_tools",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_unset",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_true",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_false",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   }
+  ],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "nvidia/parakeet-ctc-1.1b",
+  "downloads": 1661306,
+  "org": "nvidia",
+  "status": "non_chat_arch",
+  "arch": "asr",
+  "base_model": null
+ },
+ {
+  "id": "handy-computer/parakeet-unified-en-0.6b-gguf",
+  "downloads": 1659653,
+  "org": "handy-computer",
+  "status": "non_chat_arch",
+  "arch": "parakeet",
+  "base_model": "nvidia/parakeet-unified-en-0.6b"
+ },
+ {
+  "id": "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF",
+  "downloads": 1622056,
+  "org": "huihui-ai",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "audio-cpp/audio.cpp-gguf",
+  "downloads": 1418943,
+  "org": "audio-cpp",
+  "status": "non_chat_arch",
+  "arch": "audiocpp",
+  "base_model": "MiniMaxAI/MiniMax-H3"
+ },
+ {
+  "id": "mudler/ced-gguf",
+  "downloads": 1370269,
+  "org": "mudler",
+  "status": "non_chat_arch",
+  "arch": "ced",
+  "base_model": "mispeech/ced-tiny"
+ },
+ {
+  "id": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+  "downloads": 1100488,
+  "org": "0bserverx",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Abiray/MiniMax-H3-GGUF",
+  "downloads": 1049826,
+  "org": "Abiray",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen3vl",
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Genesis-Hermes-V11-GGUF",
+  "downloads": 1005078,
+  "org": "LuffyTheFox",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35moe",
+  "base_model": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+  "why": "not_found"
+ },
+ {
+  "id": "rippertnt/HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF",
+  "downloads": 932139,
+  "org": "rippertnt",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B",
+  "why": "gated"
+ },
+ {
+  "id": "nvidia/nemotron-3.5-asr-streaming-0.6b",
+  "downloads": 927137,
+  "org": "nvidia",
+  "status": "non_chat_arch",
+  "arch": "asr",
+  "base_model": null
+ },
+ {
+  "id": "Serveurperso/Qwen3-TTS-GGUF",
+  "downloads": 900524,
+  "org": "Serveurperso",
+  "status": "non_chat_arch",
+  "arch": "qwen3-tts",
+  "base_model": "Qwen/Qwen3-TTS-Tokenizer-12Hz"
+ },
+ {
+  "id": "datalab-to/surya-ocr-2-gguf",
+  "downloads": 880578,
+  "org": "datalab-to",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "ggml-org/Qwen3.8-27B-GGUF",
+  "downloads": 872872,
+  "org": "ggml-org",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "LiquidAI/LFM2.5-2.6B-GGUF",
+  "downloads": 856329,
+  "org": "LiquidAI",
+  "status": "non_chat_model",
+  "arch": "lfm2",
+  "base_model": "LiquidAI/LFM2.5-2.6B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "LocalAI-io/privacy-filter-nemotron-GGUF",
+  "downloads": 825144,
+  "org": "LocalAI-io",
+  "status": "non_chat_model",
+  "arch": "openai-privacy-filter",
+  "base_model": "OpenMed/privacy-filter-nemotron",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+  "downloads": 825079,
+  "org": "DavidAU",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
+  "downloads": 775046,
+  "org": "PaddlePaddle",
+  "status": "no_base_model",
+  "arch": "paddleocr",
+  "base_model": null
+ },
+ {
+  "id": "OBLITERATUS/Qwen3.8-27B-OBLITERATED",
+  "downloads": 725757,
+  "org": "OBLITERATUS",
+  "status": "output_differs",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>",
+    "upstream_tail": "he final answer.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -227
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": " brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>",
+    "upstream_tail": "swer.\n\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -199
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "tant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>",
+    "upstream_tail": "k>\n\n</think>\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -246
+   }
+  ]
+ },
+ {
+  "id": "google/gemma-4-12B-it-qat-q4_0-gguf",
+  "downloads": 670528,
+  "org": "google",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-12B-it-qat-q4_0-unquantized",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "mradermacher/Qwen3-VL-8B-Instruct-abliterated-GGUF",
+  "downloads": 660170,
+  "org": "mradermacher",
+  "status": "upstream_gated",
+  "arch": "qwen3vl",
+  "base_model": "prithivMLmods/Qwen3-VL-8B-Instruct-abliterated-v1",
+  "why": "gated"
+ },
+ {
+  "id": "lmstudio-community/gemma-4-E4B-it-GGUF",
+  "downloads": 639148,
+  "org": "lmstudio-community",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-E4B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "ggml-org/models-moved",
+  "downloads": 626227,
+  "org": "ggml-org",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "bartowski/endless-frontier_BigBang-v1-GGUF",
+  "downloads": 620155,
+  "org": "bartowski",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "endless-frontier/BigBang-v1",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "cdiamond/Qwen3.8-27B-iMatrix-NVFP4-MTP-GGUF",
+  "downloads": 608667,
+  "org": "cdiamond",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "Qwen/Qwen3.8-27B"
+ },
+ {
+  "id": "prism-ml/Ternary-Bonsai-27B-gguf",
+  "downloads": 604753,
+  "org": "prism-ml",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.6-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "FINAL-Bench/POCKET-35B-GGUF",
+  "downloads": 601648,
+  "org": "FINAL-Bench",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "FINAL-Bench/Darwin-36B-Opus",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DeepBeepMeep/MiniMax-H3",
+  "downloads": 576013,
+  "org": "DeepBeepMeep",
+  "status": "no_base_model",
+  "arch": "qwen3vl",
+  "base_model": null
+ },
+ {
+  "id": "prism-ml/Bonsai-27B-gguf",
+  "downloads": 561415,
+  "org": "prism-ml",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.6-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+  "downloads": 549502,
+  "org": "google",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-E4B-it-qat-q4_0-unquantized",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "poolside/Laguna-S-2.1-GGUF",
+  "downloads": 548431,
+  "org": "poolside",
+  "status": "unrenderable",
+  "arch": "laguna",
+  "base_model": "poolside/Laguna-S-2.1",
+  "identical_source": false,
+  "render_errors": [
+   {
+    "fixture": "user_only",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "system_user",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "with_tools",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_unset",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_true",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_false",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   }
+  ],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "huihui-ai/Huihui-DeepSeek-V4-Flash-0731-abliterated-GGUF",
+  "downloads": 540915,
+  "org": "huihui-ai",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "realrebelai/MiniMax-H3_GGUFs",
+  "downloads": 533381,
+  "org": "realrebelai",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Comfy-Org/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "bartowski/XYZAILab_XYZ-Aquila-mini-GGUF",
+  "downloads": 531498,
+  "org": "bartowski",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "XYZAILab/XYZ-Aquila-mini",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF",
+  "downloads": 522598,
+  "org": "yuxinlu1",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-12B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "empero-ai/Qwythos-9B-v2-GGUF",
+  "downloads": 517725,
+  "org": "empero-ai",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "empero-ai/Qwythos-9B-v2",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DeepBeepMeep/Wan2.1",
+  "downloads": 491688,
+  "org": "DeepBeepMeep",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35",
+  "base_model": "Wan-AI/Wan2.1-T2V-1.3B",
+  "why": "not_found"
+ },
+ {
+  "id": "meta-models/Muse-Glimmer-30B-GGUF",
+  "downloads": 488839,
+  "org": "meta-models",
+  "status": "non_chat_model",
+  "arch": "muse-glimmer",
+  "base_model": "meta-models/Muse-Glimmer-30B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF",
+  "downloads": 478613,
+  "org": "empero-ai",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "empero-ai/Qwythos-9B-Claude-Mythos-5-1M",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF",
+  "downloads": 476740,
+  "org": "yuxinlu1",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-12B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "wikeeyang/Flux2-Klein-9B-True-V2",
+  "downloads": 476647,
+  "org": "wikeeyang",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.2-klein-9B",
+  "why": "gated"
+ },
+ {
+  "id": "AnkitAI/Parable-Qwen3-4B-Claude-Fable-5-GGUF",
+  "downloads": 466409,
+  "org": "AnkitAI",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-4B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "deepgrove/maple-preview-GGUF",
+  "downloads": 443520,
+  "org": "deepgrove",
+  "status": "no_base_model",
+  "arch": "maple",
+  "base_model": null
+ },
+ {
+  "id": "Jackrong/Qwopus3.6-35B-A3B-Coder-MTP-GGUF",
+  "downloads": 437342,
+  "org": "Jackrong",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "Jackrong/Qwopus3.6-35B-A3B-v1"
+ },
+ {
+  "id": "AnkitAI/Parable-Qwen3-8B-Claude-Fable-5-GGUF",
+  "downloads": 434010,
+  "org": "AnkitAI",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-8B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ProCreations/grug-27b-gguf",
+  "downloads": 430656,
+  "org": "ProCreations",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "ProCreations/grug-27b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+  "downloads": 429411,
+  "org": "Qwen",
+  "status": "output_differs",
+  "arch": "qwen2",
+  "base_model": "Qwen/Qwen2.5-3B-Instruct",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "with_tools"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "</tool_call><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "</tool_call><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 2
+   }
+  ]
+ },
+ {
+  "id": "Mia-AiLab/Gemmable-4-12B-MTP-GGUF",
+  "downloads": 427903,
+  "org": "Mia-AiLab",
+  "status": "no_base_model",
+  "arch": "gemma4",
+  "base_model": null
+ },
+ {
+  "id": "legraphista/glm-4-9b-chat-IMat-GGUF",
+  "downloads": 397748,
+  "org": "legraphista",
+  "status": "output_differs",
+  "arch": "chatglm",
+  "base_model": "THUDM/glm-4-9b-chat",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "ChatGLM4",
+    "upstream_tail": "[gMASK]<sop><|user|>\nHello<|assistant|>",
+    "len_delta": -31
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "ChatGLM4",
+    "upstream_tail": "[gMASK]<sop><|system|>\nBe brief.<|user|>\nHello<|assistant|>",
+    "len_delta": -51
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "ChatGLM4",
+    "upstream_tail": "[gMASK]<sop><|user|>\nHi<|assistant|>\nHey!<|user|>\nBye<|assistant|>",
+    "len_delta": -58
+   }
+  ]
+ },
+ {
+  "id": "Qwen/Qwen3-30B-A3B-GGUF",
+  "downloads": 392267,
+  "org": "Qwen",
+  "status": "cosmetic_only",
+  "arch": "qwen3moe",
+  "base_model": "Qwen/Qwen3-30B-A3B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Serveurperso/ACE-Step-1.5-GGUF",
+  "downloads": 386809,
+  "org": "Serveurperso",
+  "status": "upstream_fetch_failed",
+  "arch": "acestep-lm",
+  "base_model": "ACE-Step/Ace-Step1.5",
+  "why": "not_found"
+ },
+ {
+  "id": "Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF",
+  "downloads": 373817,
+  "org": "Jackrong",
+  "status": "output_differs",
+  "arch": "qwen35",
+  "base_model": "unsloth/Qwen3.5-9B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "with_tools",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "all><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "ANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -516
+   },
+   {
+    "fixture": "thinking_false",
+    "gguf_tail": "<|im_start|>user\n2+2?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "<|im_start|>user\n2+2?<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "len_delta": -11
+   }
+  ]
+ },
+ {
+  "id": "lmg-anon/vntl-llama3-8b-v2-gguf",
+  "downloads": 350188,
+  "org": "lmg-anon",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "rinna/llama-3-youko-8b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "michaelw9999/Qwen3.6-35B-A3B-NVFP4-MTP-GGUF",
+  "downloads": 343144,
+  "org": "michaelw9999",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ReadyArt/Melody1437-26B-A4B-v2.0-GGUF",
+  "downloads": 338132,
+  "org": "ReadyArt",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "ReadyArt/Melody1437-26B-A4B-v2.0",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "tvall43/Qwen3.6-14B-A3B-FableVibes-GGUF",
+  "downloads": 335494,
+  "org": "tvall43",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "tvall43/Qwen3.6-14B-A3B-FableVibes",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "ReadyArt/Dark-Scarlett-v0.3-26B-A4B-GGUF",
+  "downloads": 333140,
+  "org": "ReadyArt",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-26B-A4B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Jiunsong/supergemma4-26b-uncensored-gguf-v2",
+  "downloads": 332496,
+  "org": "Jiunsong",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-26B-A4B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+  "downloads": 328341,
+  "org": "LiquidAI",
+  "status": "non_chat_model",
+  "arch": "lfm2",
+  "base_model": "LiquidAI/LFM2.5-1.2B-Instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "LocalAI-io/privacy-filter-multilingual-GGUF",
+  "downloads": 327839,
+  "org": "LocalAI-io",
+  "status": "non_chat_model",
+  "arch": "openai-privacy-filter",
+  "base_model": "OpenMed/privacy-filter-multilingual",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "flywheel-ai/automotive",
+  "downloads": 322961,
+  "org": "flywheel-ai",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-GGUF",
+  "downloads": 321891,
+  "org": "GnLOLot",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "mradermacher/Q3.5-BlueStar-27B-GGUF",
+  "downloads": 320912,
+  "org": "mradermacher",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "zerofata/Q3.5-BlueStar-27B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-Thinking-GGUF",
+  "downloads": 319388,
+  "org": "GnLOLot",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-Thinking",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "MaziyarPanahi/Qwen3-4B-GGUF",
+  "downloads": 319034,
+  "org": "MaziyarPanahi",
+  "status": "cosmetic_only",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-4B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "DevQuasar/amd.Instella-MoE-16B-A3B-Think-GGUF",
+  "downloads": 310765,
+  "org": "DevQuasar",
+  "status": "identical",
+  "arch": "instella-moe",
+  "base_model": "amd/Instella-MoE-16B-A3B-Think",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "AngelSlim/Hy3-GGUF",
+  "downloads": 309682,
+  "org": "AngelSlim",
+  "status": "non_chat_model",
+  "arch": "hy_v3",
+  "base_model": "tencent/Hy3",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "culturerevolt/gemma-4-12b-heretic-abliterated-GGUF",
+  "downloads": 303588,
+  "org": "culturerevolt",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "culturerevolt/gemma-4-12b-heretic-abliterated",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "michaelw9999/Qwopus3.6-27B-v2-MTP-NVFP4-GGUF",
+  "downloads": 295634,
+  "org": "michaelw9999",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35",
+  "base_model": "Jackrong/Qwopus3.6-27B-v2-MTP-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "joeygambino/MiniMax-H3-encoder-GGUF",
+  "downloads": 293390,
+  "org": "joeygambino",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen3vl",
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "bytkim/Qwen3.6-27B-MTP-pi-tune-GGUF",
+  "downloads": 283856,
+  "org": "bytkim",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.6-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "MaziyarPanahi/Qwen3-0.6B-GGUF",
+  "downloads": 282972,
+  "org": "MaziyarPanahi",
+  "status": "cosmetic_only",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-0.6B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF",
+  "downloads": 280260,
+  "org": "Blackfrost-AI",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-BF16",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "hesamation/Qwen3.6-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled-GGUF",
+  "downloads": 279804,
+  "org": "hesamation",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "hesamation/Qwen3.6-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "AtomicChat/Qwen3.8-27B-GGUF",
+  "downloads": 279195,
+  "org": "AtomicChat",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "QuantStack/Wan2.2-T2V-A14B-GGUF",
+  "downloads": 278672,
+  "org": "QuantStack",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Wan-AI/Wan2.2-T2V-A14B",
+  "why": "not_found"
+ },
+ {
+  "id": "kai-os/Carnice-V2-27b-GGUF",
+  "downloads": 275278,
+  "org": "kai-os",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "kai-os/carnice-v2-27b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "KyleHessling1/Qwopus-GLM-18B-Merged-GGUF",
+  "downloads": 273949,
+  "org": "KyleHessling1",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Jackrong/Qwopus3.5-9B-v3.5",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "janhq/Jan-v3.5-4B-gguf",
+  "downloads": 265707,
+  "org": "janhq",
+  "status": "non_chat_model",
+  "arch": "qwen3",
+  "base_model": "janhq/Jan-v3-4B-base-instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "SexGod1979/PinkCherry_NSFW_LTX23",
+  "downloads": 263766,
+  "org": "SexGod1979",
+  "status": "no_base_model",
+  "arch": "ltxv",
+  "base_model": null
+ },
+ {
+  "id": "NorwAI/NorwAI-Magistral-24B-reasoning",
+  "downloads": 262402,
+  "org": "NorwAI",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "FINAL-Bench/POCKET-26B-GGUF",
+  "downloads": 252155,
+  "org": "FINAL-Bench",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-26B-A4B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "orcarouter/Qwen3.8-27B-Uncensored-GGUF",
+  "downloads": 238397,
+  "org": "orcarouter",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+  "downloads": 237296,
+  "org": "QuantStack",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Wan-AI/Wan2.2-I2V-A14B",
+  "why": "not_found"
+ },
+ {
+  "id": "Agnuxo/CAJAL-4B",
+  "downloads": 233966,
+  "org": "Agnuxo",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "Abiray/MiniMax-H3-Pruned-GGUF",
+  "downloads": 233573,
+  "org": "Abiray",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "AtomicChat/Ling-3.0-flash-GGUF",
+  "downloads": 231559,
+  "org": "AtomicChat",
+  "status": "non_chat_model",
+  "arch": "bailingmoe3",
+  "base_model": "inclusionAI/Ling-3.0-flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "webAI-Official/TwIL-LM3",
+  "downloads": 228865,
+  "org": "webAI-Official",
+  "status": "non_chat_model",
+  "arch": "smollm3",
+  "base_model": "HuggingFaceTB/SmolLM3-3B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "migtissera/Tess-4-27B-GGUF",
+  "downloads": 228503,
+  "org": "migtissera",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "migtissera/Tess-4-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "molbal/MiniMax-H3-GGUF",
+  "downloads": 221651,
+  "org": "molbal",
+  "status": "upstream_fetch_failed",
+  "arch": "minimax_h3",
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "speakleash/Bielik-11B-v3.0-Instruct-awq",
+  "downloads": 215012,
+  "org": "speakleash",
+  "status": "upstream_gated",
+  "arch": null,
+  "base_model": "speakleash/Bielik-11B-v3.0-Instruct",
+  "why": "gated"
+ },
+ {
+  "id": "KyleHessling1/Qwopus3.6-27B-Fusion-GGUF",
+  "downloads": 213726,
+  "org": "KyleHessling1",
+  "status": "output_differs",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.6-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "with_tools"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "ANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "ANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -375
+   }
+  ]
+ },
+ {
+  "id": "paperscarecrow/Gemma-4-31B-it-abliterated",
+  "downloads": 213368,
+  "org": "paperscarecrow",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-31B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "z-lab/Qwen3.8-27B-DFlash2-GGUF",
+  "downloads": 212771,
+  "org": "z-lab",
+  "status": "identical",
+  "arch": "dflash",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "city96/FLUX.2-dev-gguf",
+  "downloads": 211926,
+  "org": "city96",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.2-dev",
+  "why": "gated"
+ },
+ {
+  "id": "SulphurAI/Sulphur-2-base",
+  "downloads": 211507,
+  "org": "SulphurAI",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35",
+  "base_model": "Lightricks/LTX-2.3",
+  "why": "not_found"
+ },
+ {
+  "id": "tencent/Hy-MT2-1.8B-GGUF",
+  "downloads": 204638,
+  "org": "tencent",
+  "status": "non_chat_model",
+  "arch": "hunyuan-dense",
+  "base_model": "tencent/Hy-MT2-1.8B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Ma7ee7/Qwen3.8_4B_Distilled_GGUF",
+  "downloads": 202050,
+  "org": "Ma7ee7",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "Ma7ee7/Qwen3.8_4B_Distilled",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "drbaph/Higgs-Audio-v3-Studio",
+  "downloads": 200276,
+  "org": "drbaph",
+  "status": "no_base_model",
+  "arch": "higgs_tts",
+  "base_model": null
+ },
+ {
+  "id": "Snowflake/snowflake-arctic-embed-m-v1.5",
+  "downloads": 198570,
+  "org": "Snowflake",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "poolside/Laguna-XS-2.1-GGUF",
+  "downloads": 193462,
+  "org": "poolside",
+  "status": "identical",
+  "arch": "laguna",
+  "base_model": "poolside/Laguna-XS-2.1",
+  "identical_source": true,
+  "render_errors": [
+   {
+    "fixture": "user_only",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "system_user",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "with_tools",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_unset",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_true",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   },
+   {
+    "fixture": "thinking_false",
+    "gguf_err": "compile:TemplateSyntaxError",
+    "upstream_err": "compile:TemplateSyntaxError"
+   }
+  ],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "city96/FLUX.1-dev-gguf",
+  "downloads": 193431,
+  "org": "city96",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.1-dev",
+  "why": "gated"
+ },
+ {
+  "id": "kenpath/svara-tts-v1",
+  "downloads": 191063,
+  "org": "kenpath",
+  "status": "upstream_gated",
+  "arch": null,
+  "base_model": "canopylabs/3b-hi-ft-research_release",
+  "why": "gated"
+ },
+ {
+  "id": "QuantFactory/SmolLM2-135M-GGUF",
+  "downloads": 182588,
+  "org": "QuantFactory",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "smthem/LTX-2.3-test-gguf",
+  "downloads": 180454,
+  "org": "smthem",
+  "status": "no_base_model",
+  "arch": "gemma3",
+  "base_model": null
+ },
+ {
+  "id": "Hcompany/Holo-3.1-35B-A3B-GGUF",
+  "downloads": 175210,
+  "org": "Hcompany",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "InternScience/Agents-A1-4B-Q8_0-GGUF",
+  "downloads": 174563,
+  "org": "InternScience",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "InternScience/Agents-A1-4B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "esatapedico/Qwen3.8-27B-NVFP4-MTP-GGUF",
+  "downloads": 172168,
+  "org": "esatapedico",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "unsloth/Qwen3.8-27B-NVFP4"
+ },
+ {
+  "id": "JetBrains/Mellum2-12B-A2.5B-Instruct-GGUF-Q8_0",
+  "downloads": 158850,
+  "org": "JetBrains",
+  "status": "non_chat_model",
+  "arch": "mellum",
+  "base_model": "JetBrains/Mellum2-12B-A2.5B-Instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "chimingw/Qwen3.8-27B-Uncensored-OrcaRouter-GGUF",
+  "downloads": 144654,
+  "org": "chimingw",
+  "status": "upstream_gated",
+  "arch": "qwen35",
+  "base_model": "orcarouter/Qwen3.8-27B-Uncensored-FP8",
+  "why": "gated"
+ },
+ {
+  "id": "DevQuasar/Qwen.Qwen3-VL-Embedding-2B-GGUF",
+  "downloads": 144235,
+  "org": "DevQuasar",
+  "status": "non_chat_model",
+  "arch": "qwen3vl",
+  "base_model": "Qwen/Qwen3-VL-Embedding-2B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "batiai/Qwen3.6-27B-GGUF",
+  "downloads": 144235,
+  "org": "batiai",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.6-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "VesNFF/Qwen3-VL-Embedding-8B-GGUF",
+  "downloads": 140733,
+  "org": "VesNFF",
+  "status": "non_chat_model",
+  "arch": "qwen3vl",
+  "base_model": "Qwen/Qwen3-VL-Embedding-8B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "InternScience/Agents-A1-4B-Q4_K_M-GGUF",
+  "downloads": 140719,
+  "org": "InternScience",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "InternScience/Agents-A1-4B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "owao/Nanbeige4.2-3B-GGUF",
+  "downloads": 135893,
+  "org": "owao",
+  "status": "identical",
+  "arch": "nanbeige",
+  "base_model": "Nanbeige/Nanbeige4.2-3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ProCreations/grug-27b-mtp-gguf",
+  "downloads": 130281,
+  "org": "ProCreations",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "ProCreations/grug-27b-mtp",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "HuggingFaceBio/Carbon-8B-GGUF",
+  "downloads": 129812,
+  "org": "HuggingFaceBio",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "HuggingFaceBio/Carbon-8B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "jinaai/jina-embeddings-v5-text-nano-retrieval",
+  "downloads": 129747,
+  "org": "jinaai",
+  "status": "non_chat_model",
+  "arch": "eurobert",
+  "base_model": "jinaai/jina-embeddings-v5-text-nano",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "HuggingFaceBio/Carbon-3B-GGUF",
+  "downloads": 125475,
+  "org": "HuggingFaceBio",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "HuggingFaceBio/Carbon-3B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "sugoitoolkit/Sugoi-32B-Ultra-GGUF",
+  "downloads": 123510,
+  "org": "sugoitoolkit",
+  "status": "identical",
+  "arch": "qwen2",
+  "base_model": "Qwen/Qwen2.5-32B-Instruct",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Novice25/Qwen-Image-Edit-Rapid-AIO-GGUF",
+  "downloads": 122213,
+  "org": "Novice25",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen_image",
+  "base_model": "Phr00t/Qwen-Image-Edit-Rapid-AIO",
+  "why": "not_found"
+ },
+ {
+  "id": "second-state/All-MiniLM-L6-v2-Embedding-GGUF",
+  "downloads": 114776,
+  "org": "second-state",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": "sentence-transformers/all-MiniLM-L6-v2"
+ },
+ {
+  "id": "nomic-ai/nomic-embed-text-v1.5-GGUF",
+  "downloads": 110016,
+  "org": "nomic-ai",
+  "status": "non_chat_arch",
+  "arch": "nomic-bert",
+  "base_model": "nomic-ai/nomic-embed-text-v1.5"
+ },
+ {
+  "id": "rahul7star/gemma-gguf",
+  "downloads": 106328,
+  "org": "rahul7star",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-E2B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "togatogah/jinen-v2-small.gguf",
+  "downloads": 105968,
+  "org": "togatogah",
+  "status": "no_base_model",
+  "arch": "qwen3",
+  "base_model": null
+ },
+ {
+  "id": "UmeAiRT/ComfyUI-Auto-Installer-Assets",
+  "downloads": 105035,
+  "org": "UmeAiRT",
+  "status": "no_base_model",
+  "arch": "cosmos",
+  "base_model": null
+ },
+ {
+  "id": "zenmagnets/Nemotron-3-Embed-1B-Q4_K_M-GGUF",
+  "downloads": 104202,
+  "org": "zenmagnets",
+  "status": "non_chat_model",
+  "arch": "mistral3",
+  "base_model": "nvidia/Nemotron-3-Embed-1B-BF16",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "meshllm/gemma-4-E4B-it-Q4_K_M-layers",
+  "downloads": 104080,
+  "org": "meshllm",
+  "status": "upstream_fetch_failed",
+  "arch": "gemma4",
+  "base_model": "unsloth/gemma-4-E4B-it-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "bloomer010/Ling-3.0-tiny-GGUF",
+  "downloads": 103956,
+  "org": "bloomer010",
+  "status": "non_chat_model",
+  "arch": "bailingmoe3",
+  "base_model": "inclusionAI/Ling-3.0-tiny",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "williamliao/gemma-4-26B-A4B-it-speculator.eagle3-F16-GGUF",
+  "downloads": 99399,
+  "org": "williamliao",
+  "status": "upstream_fetch_failed",
+  "arch": "eagle3",
+  "base_model": "RedHatAI/gemma-4-26B-A4B-it-speculator.eagle3",
+  "why": "not_found"
+ },
+ {
+  "id": "Arki05/Qwen3.8-27B-GGUF-shards",
+  "downloads": 99121,
+  "org": "Arki05",
+  "status": "cosmetic_only",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "kekusprod/WAI-NSFW-illustrious-SDXL-v110-GGUF",
+  "downloads": 98739,
+  "org": "kekusprod",
+  "status": "upstream_fetch_failed",
+  "arch": "sdxl",
+  "base_model": "John6666/wai-nsfw-illustrious-v110-sdxl",
+  "why": "not_found"
+ },
+ {
+  "id": "prithivMLmods/Qwen3.6-35B-A3B-MTP-GGUF",
+  "downloads": 97423,
+  "org": "prithivMLmods",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "sugoitoolkit/Sugoi-14B-Ultra-GGUF",
+  "downloads": 97116,
+  "org": "sugoitoolkit",
+  "status": "identical",
+  "arch": "qwen2",
+  "base_model": "sugoitoolkit/Sugoi-14B-Ultra-HF",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "nsparks/DeepSeek-V4-Flash-FP4-FP8-GGUF",
+  "downloads": 96773,
+  "org": "nsparks",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "ManniX-ITA/Qwen3.6-27B-A3B-Coder-MTP-GGUF",
+  "downloads": 96236,
+  "org": "ManniX-ITA",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-DS4-Headroom128",
+  "downloads": 94177,
+  "org": "apetersson",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-FP8",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "xCloudinfo/xGemable-12B-coder-v1.5-GGUF",
+  "downloads": 91173,
+  "org": "xCloudinfo",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-12B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "puwaer/DeepSeek-V4-Flash-0731-reap-150b-gguf",
+  "downloads": 89880,
+  "org": "puwaer",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "puwaer/DeepSeek-V4-Flash-0731-reap-150b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "leejet/MiniMax-H3-GGUF",
+  "downloads": 89191,
+  "org": "leejet",
+  "status": "upstream_fetch_failed",
+  "arch": null,
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "JetBrains/Mellum2-12B-A2.5B-Instruct-GGUF-Q4_K_M",
+  "downloads": 88999,
+  "org": "JetBrains",
+  "status": "non_chat_model",
+  "arch": "mellum",
+  "base_model": "JetBrains/Mellum2-12B-A2.5B-Instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "badtheorylabs/BTL-4-Compact",
+  "downloads": 88769,
+  "org": "badtheorylabs",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "badtheorylabs/BTL-4",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF",
+  "downloads": 87848,
+  "org": "peculiar-ragdoll",
+  "status": "output_differs",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "on, don't guess.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 777
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "on, don't guess.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 749
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "k>\n\n</think>\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "rt|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 796
+   }
+  ]
+ },
+ {
+  "id": "Blackfrost-AI/Muse-Glimmer-30B-Abliterated-GGUF",
+  "downloads": 87575,
+  "org": "Blackfrost-AI",
+  "status": "output_differs",
+  "arch": "muse-glimmer",
+  "base_model": "Blackfrost-Research/Muse-Glimmer-30B-Abliterated-BF16",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "d recipients: \"self\", \"user\".<|eot|><|start|>user<|message|>Hello<|eot|><|start|>assistant",
+    "upstream_tail": "d recipients: \"self\", \"user\".<|eot|><|start|>user<|message|>Hello<|eot|><|start|>assistant",
+    "len_delta": 1
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "d recipients: \"self\", \"user\".<|eot|><|start|>user<|message|>Hello<|eot|><|start|>assistant",
+    "upstream_tail": "d recipients: \"self\", \"user\".<|eot|><|start|>user<|message|>Hello<|eot|><|start|>assistant",
+    "len_delta": 1
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "ssistant to=user<|message|>Hey!<|eot|><|start|>user<|message|>Bye<|eot|><|start|>assistant",
+    "upstream_tail": "ssistant to=user<|message|>Hey!<|eot|><|start|>user<|message|>Bye<|eot|><|start|>assistant",
+    "len_delta": 1
+   }
+  ]
+ },
+ {
+  "id": "audio-cpp/MiniMax-Music3-GGUF",
+  "downloads": 86637,
+  "org": "audio-cpp",
+  "status": "non_chat_arch",
+  "arch": "audiocpp",
+  "base_model": "MiniMaxAI/MiniMax-Music3"
+ },
+ {
+  "id": "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+  "downloads": 86452,
+  "org": "TheBloke",
+  "status": "identical",
+  "arch": "llama",
+  "base_model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "pramodlohra/Qween3_4B_thinking_finetune",
+  "downloads": 83086,
+  "org": "pramodlohra",
+  "status": "no_base_model",
+  "arch": "qwen3",
+  "base_model": null
+ },
+ {
+  "id": "openthaigpt/openthaigpt1.5-7b-instruct",
+  "downloads": 82885,
+  "org": "openthaigpt",
+  "status": "no_base_model",
+  "arch": "qwen2",
+  "base_model": null
+ },
+ {
+  "id": "SC117/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-GGUF",
+  "downloads": 81955,
+  "org": "SC117",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved"
+ },
+ {
+  "id": "NovachronoAI/LFM2.5-1.2B-Nova-Function-Calling-GGUF",
+  "downloads": 81239,
+  "org": "NovachronoAI",
+  "status": "non_chat_model",
+  "arch": "lfm2",
+  "base_model": "LiquidAI/LFM2.5-1.2B-Instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Aitrepreneur/FLX",
+  "downloads": 80083,
+  "org": "Aitrepreneur",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "MonsterMMORPG/Wan_GGUF",
+  "downloads": 79814,
+  "org": "MonsterMMORPG",
+  "status": "no_base_model",
+  "arch": "flux",
+  "base_model": null
+ },
+ {
+  "id": "Mungert/UI-TARS-1.5-7B-GGUF",
+  "downloads": 79765,
+  "org": "Mungert",
+  "status": "no_base_model",
+  "arch": "qwen2vl",
+  "base_model": null
+ },
+ {
+  "id": "zerodigest/Qwen3.8-27B-Uncensored-YMQ-MTP-GGUF",
+  "downloads": 79214,
+  "org": "zerodigest",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "JonathanColetti/Qwen3.8-27B-Uncensored",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Aero-Ex/Trellis2-GGUF",
+  "downloads": 77613,
+  "org": "Aero-Ex",
+  "status": "no_base_model",
+  "arch": "flux",
+  "base_model": null
+ },
+ {
+  "id": "pnnbao-ump/VieNeu-TTS-v2",
+  "downloads": 75622,
+  "org": "pnnbao-ump",
+  "status": "no_base_model",
+  "arch": "qwen3",
+  "base_model": null
+ },
+ {
+  "id": "NaomiBTW/rwkv7-g1c-13.3b-gguf",
+  "downloads": 74285,
+  "org": "NaomiBTW",
+  "status": "upstream_fetch_failed",
+  "arch": "rwkv7",
+  "base_model": "BlinkDL/rwkv7-g1",
+  "why": "not_found"
+ },
+ {
+  "id": "togatogah/jinen-v1-small.gguf",
+  "downloads": 74063,
+  "org": "togatogah",
+  "status": "no_base_model",
+  "arch": "gpt2",
+  "base_model": null
+ },
+ {
+  "id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF-MTP",
+  "downloads": 73569,
+  "org": "peculiar-ragdoll",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B"
+ },
+ {
+  "id": "AInVFX/SeedVR2_comfyUI",
+  "downloads": 72520,
+  "org": "AInVFX",
+  "status": "upstream_fetch_failed",
+  "arch": "seedvr",
+  "base_model": "ByteDance-Seed/SeedVR2-7B",
+  "why": "not_found"
+ },
+ {
+  "id": "jinaai/jina-embeddings-v5-text-small-retrieval",
+  "downloads": 69662,
+  "org": "jinaai",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "jinaai/jina-embeddings-v5-text-small",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "pnnbao-ump/VieNeu-TTS-0.3B-q4-gguf",
+  "downloads": 69366,
+  "org": "pnnbao-ump",
+  "status": "non_chat_model",
+  "arch": "qwen3",
+  "base_model": "pnnbao-ump/VieNeu-TTS-0.3B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "incoai/Qwen3.8-27B-DFlash2-GGUF",
+  "downloads": 69257,
+  "org": "incoai",
+  "status": "identical",
+  "arch": "dflash",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Mungert/Hunyuan-MT-7B-GGUF",
+  "downloads": 68756,
+  "org": "Mungert",
+  "status": "no_base_model",
+  "arch": "hunyuan-dense",
+  "base_model": null
+ },
+ {
+  "id": "Alittlehammmer/Qwen3.6-27B-DFlash-GGUF-llama.cpp",
+  "downloads": 67414,
+  "org": "Alittlehammmer",
+  "status": "upstream_fetch_failed",
+  "arch": "dflash",
+  "base_model": "z-lab/Qwen3.6-27B-DFlash",
+  "why": "not_found"
+ },
+ {
+  "id": "tobil/qmd-query-expansion-1.7B-gguf",
+  "downloads": 66852,
+  "org": "tobil",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-1.7B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Isi99999/Wan2.2BasedModels",
+  "downloads": 66028,
+  "org": "Isi99999",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "Alittlehammmer/Qwen3.6-35B-A3B-DFlash-GGUF-llama.cpp",
+  "downloads": 65910,
+  "org": "Alittlehammmer",
+  "status": "upstream_fetch_failed",
+  "arch": "dflash",
+  "base_model": "z-lab/Qwen3.6-35B-A3B-DFlash",
+  "why": "not_found"
+ },
+ {
+  "id": "manuelgutierrez/WhiteRabbitNeo-33B-v1.5-GGUF",
+  "downloads": 65617,
+  "org": "manuelgutierrez",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+  "downloads": 64866,
+  "org": "mistralai",
+  "status": "non_chat_model",
+  "arch": "mistral3",
+  "base_model": "mistralai/Ministral-3-8B-Instruct-2512",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "BigDannyPt/Wan-2.2-Remix-GGUF",
+  "downloads": 64848,
+  "org": "BigDannyPt",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "Granddyser/flux-klein-9b-Biglove-Collection",
+  "downloads": 64350,
+  "org": "Granddyser",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.2-klein-base-9B",
+  "why": "gated"
+ },
+ {
+  "id": "jukofyork/creative-writing-control-vectors-v3.0",
+  "downloads": 64062,
+  "org": "jukofyork",
+  "status": "no_base_model",
+  "arch": "controlvector",
+  "base_model": null
+ },
+ {
+  "id": "KBlueLeaf/TIPO-500M-ft",
+  "downloads": 63731,
+  "org": "KBlueLeaf",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "elizaos/eliza-1",
+  "downloads": 63669,
+  "org": "elizaos",
+  "status": "no_base_model",
+  "arch": "qwen3vl",
+  "base_model": null
+ },
+ {
+  "id": "vantagewithai/MiniMax-H3-comfyUI-GGUF",
+  "downloads": 62862,
+  "org": "vantagewithai",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "SakuraLLM/Sakura-GalTransl-7B-v3.7",
+  "downloads": 61957,
+  "org": "SakuraLLM",
+  "status": "no_base_model",
+  "arch": "qwen2",
+  "base_model": null
+ },
+ {
+  "id": "ibm-granite/granite-4.2-30b-GGUF",
+  "downloads": 61019,
+  "org": "ibm-granite",
+  "status": "non_chat_model",
+  "arch": "granite",
+  "base_model": "ibm-granite/granite-4.2-30b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "ibm-granite/granite-4.2-3b-GGUF",
+  "downloads": 58867,
+  "org": "ibm-granite",
+  "status": "non_chat_model",
+  "arch": "granite",
+  "base_model": "ibm-granite/granite-4.2-3b",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "windowsxp811203/Qwen3.8-Flash-Next-Abliterated-GGUF",
+  "downloads": 58839,
+  "org": "windowsxp811203",
+  "status": "identical",
+  "arch": "qwen4exp",
+  "base_model": "windowsxp811203/Qwen3.8-Flash-Next-Abliterated",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "outsourc-e/Qwen3.8-27B-Unleashed-GGUF",
+  "downloads": 58666,
+  "org": "outsourc-e",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "JonathanColetti/Qwen3.8-27B-Uncensored",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "hugging-quants/Llama-3.2-1B-Instruct-Q4_K_M-GGUF",
+  "downloads": 58580,
+  "org": "hugging-quants",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Llama-3.2-1B-Instruct",
+  "why": "gated"
+ },
+ {
+  "id": "Ttimofeyka/MistralRP-Noromaid-NSFW-Mistral-7B-GGUF",
+  "downloads": 58031,
+  "org": "Ttimofeyka",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "Bucoid/Qwen3.8-27B-Uncensored-IQ4-XS-MTP-16GB-VRAM-GGUF",
+  "downloads": 57815,
+  "org": "Bucoid",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "KBlueLeaf/TIPO-500M",
+  "downloads": 57296,
+  "org": "KBlueLeaf",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "enfuse/smol-tools-4b-32k",
+  "downloads": 57016,
+  "org": "enfuse",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Jackrong/Qwen3.5-4B-Claude-4.6-Opus-Reasoning-Distilled",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ChrisColeTech/LTX-2.3-uncensored-v1.4-FP8",
+  "downloads": 56786,
+  "org": "ChrisColeTech",
+  "status": "upstream_fetch_failed",
+  "arch": "ltxv",
+  "base_model": "TenStrip/LTX2.3-10Eros",
+  "why": "not_found"
+ },
+ {
+  "id": "Edge-Quant/Nanbeige4.1-3B-Q8_0-GGUF",
+  "downloads": 56712,
+  "org": "Edge-Quant",
+  "status": "identical",
+  "arch": "llama",
+  "base_model": "Nanbeige/Nanbeige4.1-3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Edge-Quant/Nanbeige4.1-3B-Q4_K_M-GGUF",
+  "downloads": 56711,
+  "org": "Edge-Quant",
+  "status": "identical",
+  "arch": "llama",
+  "base_model": "Nanbeige/Nanbeige4.1-3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "0xKitkat/Qwen3.8-27B-Uncensored-Aggressive",
+  "downloads": 56320,
+  "org": "0xKitkat",
+  "status": "output_differs",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "\u670d\u52a1\u8303\u56f4.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "upstream_tail": "he final answer.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 202
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "rief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "upstream_tail": "swer.\n\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": -198
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": ">\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+    "upstream_tail": "k>\n\n</think>\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 202
+   }
+  ]
+ },
+ {
+  "id": "quimmedes/Qwen3.8-27B-XYZ",
+  "downloads": 55724,
+  "org": "quimmedes",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "neuphonic/neutts-air-q8-gguf",
+  "downloads": 55631,
+  "org": "neuphonic",
+  "status": "upstream_gated",
+  "arch": "qwen2",
+  "base_model": "neuphonic/neutts-air",
+  "why": "gated"
+ },
+ {
+  "id": "shafire/Zero-Gemma4-E4B-OpenZero-GGUF",
+  "downloads": 55170,
+  "org": "shafire",
+  "status": "identical",
+  "arch": "gemma4",
+  "base_model": "unsloth/gemma-4-E4B-it",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "nerkyor/Qwen3.6-35B-A3B-DSV4Pro-SFT-GPT56Sol-RL-Agent-GGUF",
+  "downloads": 55111,
+  "org": "nerkyor",
+  "status": "no_base_model",
+  "arch": "qwen3next",
+  "base_model": null
+ },
+ {
+  "id": "nif0/Qwen3-VL-32B-Instruct-ultra-uncensored-heretic-H3-GGUF",
+  "downloads": 54853,
+  "org": "nif0",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen3vl",
+  "base_model": "mradermacher/Qwen3-VL-32B-Instruct-ultra-uncensored-heretic-i1-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "llmfan46/gemma-4-31B-it-uncensored-heretic-GGUF",
+  "downloads": 54679,
+  "org": "llmfan46",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "llmfan46/gemma-4-31B-it-uncensored-heretic",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "ilintar/trellis2-gguf",
+  "downloads": 54384,
+  "org": "ilintar",
+  "status": "no_base_model",
+  "arch": "birefnet-swinl",
+  "base_model": null
+ },
+ {
+  "id": "0bserverx/Muse-Glimmer-30B-Heretic-Uncensored-GGUF",
+  "downloads": 53979,
+  "org": "0bserverx",
+  "status": "non_chat_model",
+  "arch": "muse-glimmer",
+  "base_model": "meta-models/Muse-Glimmer-30B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "RavichandranJ/Dolphin3-Cyber-8B-GGUF",
+  "downloads": 53764,
+  "org": "RavichandranJ",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "huihui-ai/Dolphin3.0-Llama3.1-8B-abliterated",
+  "why": "gated"
+ },
+ {
+  "id": "SporkySporkness/FLUX.1-Canny-dev-GGUF",
+  "downloads": 53723,
+  "org": "SporkySporkness",
+  "status": "no_base_model",
+  "arch": "flux",
+  "base_model": null
+ },
+ {
+  "id": "scragnog/MiniMax-Music3-GGUF",
+  "downloads": 53606,
+  "org": "scragnog",
+  "status": "upstream_fetch_failed",
+  "arch": "mm3-cond",
+  "base_model": "MiniMaxAI/MiniMax-Music3",
+  "why": "not_found"
+ },
+ {
+  "id": "AnonimousA/Qwen3.8-Flash-Next-REAP-256-duo-GGUF",
+  "downloads": 53599,
+  "org": "AnonimousA",
+  "status": "cosmetic_only",
+  "arch": "qwen4exp",
+  "base_model": "Qwen/Qwen3.8-Flash-Next",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "joeygambino/MiniMax-H3-curve-GGUF",
+  "downloads": 53449,
+  "org": "joeygambino",
+  "status": "upstream_fetch_failed",
+  "arch": "minimax_h3",
+  "base_model": "MiniMaxAI/MiniMax-H3",
+  "why": "not_found"
+ },
+ {
+  "id": "bullerwins/Wan2.2-I2V-A14B-GGUF",
+  "downloads": 53016,
+  "org": "bullerwins",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Wan-AI/Wan2.2-I2V-A14B",
+  "why": "not_found"
+ },
+ {
+  "id": "TheBloke/Mistral-7B-Instruct-v0.2-GGUF",
+  "downloads": 52182,
+  "org": "TheBloke",
+  "status": "output_differs",
+  "arch": "llama",
+  "base_model": "mistralai/Mistral-7B-Instruct-v0.2",
+  "identical_source": false,
+  "render_errors": [
+   {
+    "fixture": "system_user",
+    "gguf_err": "render:ValueError",
+    "upstream_err": null
+   }
+  ],
+  "diff_fixtures": [
+   "user_only",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "<s>[INST] Hello [/INST]",
+    "upstream_tail": "<s> [INST] Hello [/INST]",
+    "len_delta": -1
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "<s>[INST] Hi [/INST]Hey!</s>[INST] Bye [/INST]",
+    "upstream_tail": "<s> [INST] Hi [/INST] Hey!</s> [INST] Bye [/INST]",
+    "len_delta": -3
+   },
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "<s>[INST] Weather in Paris? [/INST]",
+    "upstream_tail": "<s> [INST] Weather in Paris? [/INST]",
+    "len_delta": -1
+   }
+  ]
+ },
+ {
+  "id": "silveroxides/Chroma1-HD-GGUF",
+  "downloads": 50808,
+  "org": "silveroxides",
+  "status": "upstream_fetch_failed",
+  "arch": "flux",
+  "base_model": "lodestones/Chroma1-HD",
+  "why": "not_found"
+ },
+ {
+  "id": "ToastyPigeon/Gemma4-Test-GGUFs",
+  "downloads": 49719,
+  "org": "ToastyPigeon",
+  "status": "no_base_model",
+  "arch": "gemma4",
+  "base_model": null
+ },
+ {
+  "id": "llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-GGUF",
+  "downloads": 48552,
+  "org": "llmfan46",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "openbmb/MiniCPM5-1B-GGUF",
+  "downloads": 47549,
+  "org": "openbmb",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "gbuzhf/KAT-Coder-V2.5-Dev-MTP-GGUF",
+  "downloads": 47121,
+  "org": "gbuzhf",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Kwaipilot/KAT-Coder-V2.5-Dev",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "noctrex/Huihui-Qwen3-VL-30B-A3B-Instruct-abliterated-GGUF",
+  "downloads": 46732,
+  "org": "noctrex",
+  "status": "identical",
+  "arch": "qwen3vlmoe",
+  "base_model": "huihui-ai/Huihui-Qwen3-VL-30B-A3B-Instruct-abliterated",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "purplesmartai/pony-v7-base",
+  "downloads": 44855,
+  "org": "purplesmartai",
+  "status": "no_base_model",
+  "arch": "aura",
+  "base_model": null
+ },
+ {
+  "id": "Isotr0py/test-gguf-sample",
+  "downloads": 43579,
+  "org": "Isotr0py",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "offgrid-ai/pony-diffusion-v6-xl-GGUF",
+  "downloads": 43543,
+  "org": "offgrid-ai",
+  "status": "upstream_fetch_failed",
+  "arch": null,
+  "base_model": "LyliaEngine/Pony_Diffusion_V6_XL",
+  "why": "not_found"
+ },
+ {
+  "id": "nif0/Qwen3-VL-32B-Instruct-MiniMax-H3-GGUF",
+  "downloads": 43384,
+  "org": "nif0",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen3vl",
+  "base_model": "unsloth/Qwen3-VL-32B-Instruct-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "dphn/Dolphin3.0-Llama3.1-8B-GGUF",
+  "downloads": 43351,
+  "org": "dphn",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Llama-3.1-8B",
+  "why": "gated"
+ },
+ {
+  "id": "orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF",
+  "downloads": 42864,
+  "org": "orcarouter",
+  "status": "identical",
+  "arch": "qwen4exp",
+  "base_model": "Qwen/Qwen3.8-Flash-Next",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "KridgeDookie/Qwen3.8-27B-ABLITERATED-UNCENSORED-PHILADELPHIA-CLASS",
+  "downloads": 42675,
+  "org": "KridgeDookie",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "openbmb/MiniCPM-o-4_5-gguf",
+  "downloads": 42465,
+  "org": "openbmb",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "openbmb/MiniCPM-o-4_5",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "AgentAnon/flux-klein-9b-Biglove-Collection",
+  "downloads": 41953,
+  "org": "AgentAnon",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.2-klein-base-9B",
+  "why": "gated"
+ },
+ {
+  "id": "TheDrummer/Artemis-31B-v1-GGUF",
+  "downloads": 40942,
+  "org": "TheDrummer",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-31B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "bloomer010/Ling-3.0-flash-GGUF",
+  "downloads": 40600,
+  "org": "bloomer010",
+  "status": "non_chat_model",
+  "arch": "bailingmoe3",
+  "base_model": "inclusionAI/Ling-3.0-flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "wikeeyang/Flux2-Klein-9B-True-V3",
+  "downloads": 40314,
+  "org": "wikeeyang",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.2-klein-9B",
+  "why": "gated"
+ },
+ {
+  "id": "neuralcrew/neutrino-instruct",
+  "downloads": 40163,
+  "org": "neuralcrew",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "neuralcrew/neutrino",
+  "why": "gated"
+ },
+ {
+  "id": "vantagewithai/Krea-2-Turbo-GGUF",
+  "downloads": 39484,
+  "org": "vantagewithai",
+  "status": "upstream_gated",
+  "arch": "qwen_image",
+  "base_model": "krea/Krea-2-Turbo",
+  "why": "gated"
+ },
+ {
+  "id": "OBLITERATUS/gemma-4-E4B-it-OBLITERATED",
+  "downloads": 39468,
+  "org": "OBLITERATUS",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "google/gemma-4-E4B-it",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "mmnga/Moonlight-16B-A3B-Instruct-gguf",
+  "downloads": 39383,
+  "org": "mmnga",
+  "status": "missing_template",
+  "arch": "deepseek2",
+  "base_model": "moonshotai/Moonlight-16B-A3B-Instruct"
+ },
+ {
+  "id": "NousResearch/Hermes-2-Pro-Mistral-7B-GGUF",
+  "downloads": 39267,
+  "org": "NousResearch",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "mistralai/Mistral-7B-v0.1",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "calcuis/wan-1.3b-gguf",
+  "downloads": 39037,
+  "org": "calcuis",
+  "status": "upstream_fetch_failed",
+  "arch": "pig",
+  "base_model": "Wan-AI/Wan2.1-VACE-1.3B",
+  "why": "not_found"
+ },
+ {
+  "id": "leejet/Z-Image-Turbo-GGUF",
+  "downloads": 38501,
+  "org": "leejet",
+  "status": "upstream_fetch_failed",
+  "arch": null,
+  "base_model": "Tongyi-MAI/Z-Image-Turbo",
+  "why": "not_found"
+ },
+ {
+  "id": "gpustack/bge-m3-GGUF",
+  "downloads": 37272,
+  "org": "gpustack",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "RubixYT/Zeptonic_1.1",
+  "downloads": 37000,
+  "org": "RubixYT",
+  "status": "no_base_model",
+  "arch": null,
+  "base_model": null
+ },
+ {
+  "id": "realrebelai/KREA-2_GGUFs",
+  "downloads": 36873,
+  "org": "realrebelai",
+  "status": "upstream_gated",
+  "arch": "krea2",
+  "base_model": "krea/Krea-2-Turbo",
+  "why": "gated"
+ },
+ {
+  "id": "logic65/Qwen3.8-Whittle-MoE-27B-A17.8B-GGUF",
+  "downloads": 36837,
+  "org": "logic65",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "logic65/Qwen3.8-Whittle-MoE-27B-A17.8B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "vcruz305/Qwen3.8-27B-AEON-ULTIMATE-UNCENSORED-GGUF",
+  "downloads": 36733,
+  "org": "vcruz305",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "AEON-7/Qwen3.8-27B-AEON-ULTIMATE-UNCENSORED-BF16",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Noobito45/Qwen3.8-9B-heretic-uncensored-NVFP4-GGUF",
+  "downloads": 36629,
+  "org": "Noobito45",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "empero-ai/Qwen3.8-9B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "jayn7/Z-Image-Turbo-GGUF",
+  "downloads": 36336,
+  "org": "jayn7",
+  "status": "upstream_fetch_failed",
+  "arch": "lumina2",
+  "base_model": "Tongyi-MAI/Z-Image-Turbo",
+  "why": "not_found"
+ },
+ {
+  "id": "mayocream/RORem-mixed-GGUF",
+  "downloads": 35854,
+  "org": "mayocream",
+  "status": "upstream_fetch_failed",
+  "arch": null,
+  "base_model": "LetsThink/RORem",
+  "why": "not_found"
+ },
+ {
+  "id": "silveroxides/Chroma-GGUF",
+  "downloads": 35435,
+  "org": "silveroxides",
+  "status": "upstream_fetch_failed",
+  "arch": "flux",
+  "base_model": "lodestones/Chroma",
+  "why": "not_found"
+ },
+ {
+  "id": "ponpoke/flux2-klein-9b-uncensored-text-encoder",
+  "downloads": 35241,
+  "org": "ponpoke",
+  "status": "upstream_gated",
+  "arch": "qwen3",
+  "base_model": "black-forest-labs/FLUX.2-klein-9B",
+  "why": "gated"
+ },
+ {
+  "id": "techwithsergiu/Qwen3.5-text-2B-GGUF",
+  "downloads": 35106,
+  "org": "techwithsergiu",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "techwithsergiu/Qwen3.5-text-2B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "unslothai/Qwen3-ASR-0.6B-GGUF",
+  "downloads": 34883,
+  "org": "unslothai",
+  "status": "output_differs",
+  "arch": "qwen3vl",
+  "base_model": "Qwen/Qwen3-ASR-0.6B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\n<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": -25
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 5
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\n<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 40
+   }
+  ]
+ },
+ {
+  "id": "antirez/glm-5.2-gguf",
+  "downloads": 34652,
+  "org": "antirez",
+  "status": "no_base_model",
+  "arch": "glm-dsa",
+  "base_model": null
+ },
+ {
+  "id": "rodrigoramosrs/veriloop-coder-e1-gguf",
+  "downloads": 34589,
+  "org": "rodrigoramosrs",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "tsinghua-sigs-robot-lab/veriloop-coder-e1",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "KevinJK51/Qwen3.6-12B-IQ-Ultra-Heretic-Uncensored-Thinking-V2-Hightop-GGUF",
+  "downloads": 34504,
+  "org": "KevinJK51",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "DavidAU/Qwen3.6-12B-IQ-Ultra-Heretic-Uncensored-Thinking-V2-Hightop",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "nomic-ai/nomic-embed-text-v2-moe-GGUF",
+  "downloads": 34083,
+  "org": "nomic-ai",
+  "status": "non_chat_model",
+  "arch": "nomic-bert-moe",
+  "base_model": "nomic-ai/nomic-embed-text-v2-moe",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "thebbg/Ma7ee7-Qwen3.8_4B_Distilled-v2",
+  "downloads": 34076,
+  "org": "thebbg",
+  "status": "no_base_model",
+  "arch": "qwen3",
+  "base_model": null
+ },
+ {
+  "id": "TrevorJS/gemma-4-26B-A4B-it-uncensored-GGUF",
+  "downloads": 34007,
+  "org": "TrevorJS",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "TrevorJS/gemma-4-26B-A4B-it-uncensored",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "THE203/Wan-2.2-Remix-GGUF",
+  "downloads": 33927,
+  "org": "THE203",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "PocketAiHub/Ornith-1.5-35B-A3B-Abliterated-GGUF",
+  "downloads": 33912,
+  "org": "PocketAiHub",
+  "status": "output_differs",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "multiturn"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "k>\n\n</think>\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "rt|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 19
+   }
+  ]
+ },
+ {
+  "id": "DreamFast/gemma-3-12b-it-heretic",
+  "downloads": 33861,
+  "org": "DreamFast",
+  "status": "upstream_gated",
+  "arch": "gemma3",
+  "base_model": "google/gemma-3-12b-it",
+  "why": "gated"
+ },
+ {
+  "id": "kingjones777/Qwen3.8-Flash-Next-Uncensored-ROCmFP4-FAST-GGUF",
+  "downloads": 33031,
+  "org": "kingjones777",
+  "status": "upstream_gated",
+  "arch": "qwen4exp",
+  "base_model": "orcarouter/Qwen3.8-Flash-Next-Uncensored",
+  "why": "gated"
+ },
+ {
+  "id": "cygnal/Qwen3.8-27B-heretic-ara-Q4_K_M-MTP-GGUF",
+  "downloads": 33029,
+  "org": "cygnal",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "trohrbaugh/Qwen3.8-27B-heretic-ara",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "M4-ai/TinyMistral-248M-v2-Instruct-GGUF",
+  "downloads": 33012,
+  "org": "M4-ai",
+  "status": "non_chat_model",
+  "arch": "llama",
+  "base_model": "Locutusque/TinyMistral-248M-v2-Instruct",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "hyrelabs/Homura-30B-GGUF",
+  "downloads": 33002,
+  "org": "hyrelabs",
+  "status": "non_chat_model",
+  "arch": "muse-glimmer",
+  "base_model": "darkc0de/Muse-Glimmer-30B-heretic",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "hotdogs/Qwen3.8-27B-abliterated-MTP-GGUF",
+  "downloads": 32889,
+  "org": "hotdogs",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "hotdogs/Qwen3.8-27B-abliterated",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "hellohazime/Qwen3.8-2.4T-A95B-REAP-256GB-GGUF",
+  "downloads": 32852,
+  "org": "hellohazime",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35moe",
+  "base_model": "unsloth/Qwen3.8-2.4T-A95B-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "dealignai/Qwen3.8-27B-UNCENSORED-GGUF",
+  "downloads": 32782,
+  "org": "dealignai",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-DS4-Quality128",
+  "downloads": 32361,
+  "org": "apetersson",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-FP8",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "mlabonne/Meta-Llama-3.1-8B-Instruct-abliterated-GGUF",
+  "downloads": 32216,
+  "org": "mlabonne",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "why": "gated"
+ },
+ {
+  "id": "jica98/qwen3.5-4B-super-coder",
+  "downloads": 31916,
+  "org": "jica98",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.5-4B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "freeguyfroverrrr/Wan-2.2-Remix-GGUF",
+  "downloads": 31888,
+  "org": "freeguyfroverrrr",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "morikomorizz/Qwen3.6-35B-A3B-Uncensored-HauhauCS-MTP",
+  "downloads": 31788,
+  "org": "morikomorizz",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive"
+ },
+ {
+  "id": "nazeshinjite/DeepSeek-V4-Flash-0731-ds4-GGUF",
+  "downloads": 31773,
+  "org": "nazeshinjite",
+  "status": "non_chat_model",
+  "arch": "deepseek4-dspark",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "smthem/SenseNova-U1-8B-MoT-Merger-gguf",
+  "downloads": 31726,
+  "org": "smthem",
+  "status": "no_base_model",
+  "arch": "qwen",
+  "base_model": null
+ },
+ {
+  "id": "allura-quants/Qwen3.8-27B-Dominatrix-GGUF",
+  "downloads": 31049,
+  "org": "allura-quants",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "allura-org/Qwen3.8-27B-Dominatrix",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "mirek190/audio.cpp",
+  "downloads": 30565,
+  "org": "mirek190",
+  "status": "non_chat_arch",
+  "arch": "audiocpp",
+  "base_model": null
+ },
+ {
+  "id": "Bucoid/Qwen3.8-27B-Heretic-Ara-16GB-VRAM-IQ4-XS-MTP-GGUF",
+  "downloads": 30438,
+  "org": "Bucoid",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Lord-H4D3ZS/Qwen3.8-Distill-35B-A3B-Coder-Abliterated",
+  "downloads": 30031,
+  "org": "Lord-H4D3ZS",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "soyaakinohara/qwen3.8-27b-abliterated-3.69bpw-12GB-MTP.gguf",
+  "downloads": 30030,
+  "org": "soyaakinohara",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "AEON-7/Qwen3.8-27B-AEON-ULTIMATE-UNCENSORED-BF16",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Ralriki/multilingual-e5-large-instruct-GGUF",
+  "downloads": 30000,
+  "org": "Ralriki",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "hugging-quants/Llama-3.2-3B-Instruct-Q4_K_M-GGUF",
+  "downloads": 29865,
+  "org": "hugging-quants",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Llama-3.2-3B-Instruct",
+  "why": "gated"
+ },
+ {
+  "id": "tencent/Hy-MT2-7B-GGUF",
+  "downloads": 29776,
+  "org": "tencent",
+  "status": "non_chat_model",
+  "arch": "hunyuan-dense",
+  "base_model": "tencent/Hy-MT2-7B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "vcruz305/Ornith-1.0-35B-AEON-Ultimate-Uncensored-GGUF",
+  "downloads": 29617,
+  "org": "vcruz305",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "AEON-7/Ornith-1.0-35B-AEON-Ultimate-Uncensored-BF16",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "fiojanea/Esan_testi",
+  "downloads": 29581,
+  "org": "fiojanea",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "befox/WAN2.2-14B-Rapid-AllInOne-GGUF",
+  "downloads": 29240,
+  "org": "befox",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Phr00t/WAN2.2-14B-Rapid-AllInOne",
+  "why": "not_found"
+ },
+ {
+  "id": "macadeliccc/dolphin-2.9.3-mistral-7B-32K-GGUF",
+  "downloads": 29238,
+  "org": "macadeliccc",
+  "status": "identical",
+  "arch": "llama",
+  "base_model": "cognitivecomputations/dolphin-2.9.3-mistral-7B-32K",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Phil2Sat/Qwen-Image-Edit-Rapid-AIO-GGUF",
+  "downloads": 29108,
+  "org": "Phil2Sat",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen2vl",
+  "base_model": "Phr00t/Qwen-Image-Edit-Rapid-AIO",
+  "why": "not_found"
+ },
+ {
+  "id": "FreedomAISVR/Qwen-Image-Edit-Rapid-AIO-NSFW-v23-NVFP4-GGUF",
+  "downloads": 29067,
+  "org": "FreedomAISVR",
+  "status": "no_base_model",
+  "arch": "qwen_image",
+  "base_model": null
+ },
+ {
+  "id": "julianmb/Qwen-3.8-27B-ROCmFP4-FAST-GGUF",
+  "downloads": 28779,
+  "org": "julianmb",
+  "status": "cosmetic_only",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "NousResearch/Hermes-3-Llama-3.1-8B-GGUF",
+  "downloads": 28693,
+  "org": "NousResearch",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Meta-Llama-3.1-8B",
+  "why": "gated"
+ },
+ {
+  "id": "TizzyT566/Ornith-1.5-35B-A3B-NVFP4-GGUF",
+  "downloads": 28647,
+  "org": "TizzyT566",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B-NVFP4",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Kutches/Anim4",
+  "downloads": 28079,
+  "org": "Kutches",
+  "status": "no_base_model",
+  "arch": "cosmos",
+  "base_model": null
+ },
+ {
+  "id": "LocalAI-Community/piper-voices-GGUF",
+  "downloads": 27921,
+  "org": "LocalAI-Community",
+  "status": "no_base_model",
+  "arch": "piper",
+  "base_model": null
+ },
+ {
+  "id": "Arki05/Grok-1-GGUF",
+  "downloads": 27535,
+  "org": "Arki05",
+  "status": "no_base_model",
+  "arch": "grok",
+  "base_model": null
+ },
+ {
+  "id": "Undi95/Xwin-MLewd-13B-V0.2-GGUF",
+  "downloads": 27282,
+  "org": "Undi95",
+  "status": "no_base_model",
+  "arch": "llama",
+  "base_model": null
+ },
+ {
+  "id": "raulvidis/Ling-3.0-flash-ROCmFP4-STRIX-MTP-GGUF",
+  "downloads": 26943,
+  "org": "raulvidis",
+  "status": "non_chat_model",
+  "arch": "bailingmoe3",
+  "base_model": "inclusionAI/Ling-3.0-flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "second-state/stable-diffusion-v1-5-GGUF",
+  "downloads": 26631,
+  "org": "second-state",
+  "status": "upstream_fetch_failed",
+  "arch": null,
+  "base_model": "runwayml/stable-diffusion-v1-5",
+  "why": "not_found"
+ },
+ {
+  "id": "KBLab/sentence-bert-swedish-cased",
+  "downloads": 26611,
+  "org": "KBLab",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "zaakirio/gemma-4-12b-it-uncensored-GGUF",
+  "downloads": 26435,
+  "org": "zaakirio",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "zaakirio/gemma-4-12b-it-uncensored",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "tooltd/Qwen3.8-27B-IQ4-XS-16GB-VRAM-GGUF",
+  "downloads": 26240,
+  "org": "tooltd",
+  "status": "cosmetic_only",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "AngelSlim/Hy4-preview-GGUF",
+  "downloads": 26215,
+  "org": "AngelSlim",
+  "status": "no_base_model",
+  "arch": "hyv4",
+  "base_model": null
+ },
+ {
+  "id": "BennyDaBall/Qwen3-4b-Z-Image-Turbo-AbliteratedV1",
+  "downloads": 25619,
+  "org": "BennyDaBall",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen3",
+  "base_model": "Tongyi-MAI/Z-Image-Turbo",
+  "why": "not_found"
+ },
+ {
+  "id": "cmeka/SeedVR2-GGUF",
+  "downloads": 25603,
+  "org": "cmeka",
+  "status": "upstream_fetch_failed",
+  "arch": "seedvr",
+  "base_model": "numz/SeedVR2_comfyUI",
+  "why": "not_found"
+ },
+ {
+  "id": "microsoft/Phi-3-mini-4k-instruct-gguf",
+  "downloads": 25561,
+  "org": "microsoft",
+  "status": "no_base_model",
+  "arch": "phi3",
+  "base_model": null
+ },
+ {
+  "id": "gbuzhf/Ornith-1.5-35B-A3B-Abliterated-MTP-UD-APEX-GGUF",
+  "downloads": 25325,
+  "org": "gbuzhf",
+  "status": "output_differs",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "multiturn"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "k>\n\n</think>\n\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "rt|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 19
+   }
+  ]
+ },
+ {
+  "id": "neuphonic/neutts-air-q4-gguf",
+  "downloads": 25198,
+  "org": "neuphonic",
+  "status": "upstream_gated",
+  "arch": "qwen2",
+  "base_model": "neuphonic/neutts-air",
+  "why": "gated"
+ },
+ {
+  "id": "jayn7/WAN2.2-I2V_A14B-DISTILL-LIGHTX2V-4STEP-GGUF",
+  "downloads": 24766,
+  "org": "jayn7",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "lightx2v/Wan2.2-Distill-Models",
+  "why": "not_found"
+ },
+ {
+  "id": "lemuralabs/Llama-3.2-3B-Uncensored-GGUF",
+  "downloads": 24739,
+  "org": "lemuralabs",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Llama-3.2-3B",
+  "why": "gated"
+ },
+ {
+  "id": "jrell/Qwen3.8-27B-i1-IQ4_XS-GGUF-Smaller",
+  "downloads": 24575,
+  "org": "jrell",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35",
+  "base_model": "unsloth/Qwen3.8-27B-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "calcuis/ltxv-gguf",
+  "downloads": 24572,
+  "org": "calcuis",
+  "status": "upstream_fetch_failed",
+  "arch": "ltxv",
+  "base_model": "Lightricks/LTX-Video",
+  "why": "not_found"
+ },
+ {
+  "id": "logic65/Qwen3.8-Whittle-MoE-27B-A17.8B",
+  "downloads": 24538,
+  "org": "logic65",
+  "status": "missing_template",
+  "arch": null,
+  "base_model": "Qwen/Qwen3.8-27B"
+ },
+ {
+  "id": "6block/Qwen3-32B-GGUF",
+  "downloads": 24396,
+  "org": "6block",
+  "status": "identical",
+  "arch": "qwen3",
+  "base_model": "Qwen/Qwen3-32B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "lemuralabs/Qwen3.6-27B-V2-abliterated-uncensored-8-bit-GGUF",
+  "downloads": 24102,
+  "org": "lemuralabs",
+  "status": "output_differs",
+  "arch": "qwen35",
+  "base_model": "Jackrong/Qwopus3.6-27B-v2",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "with_tools"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "ANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "upstream_tail": "ANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+    "len_delta": 375
+   }
+  ]
+ },
+ {
+  "id": "trklou/audio.cpp",
+  "downloads": 24088,
+  "org": "trklou",
+  "status": "non_chat_arch",
+  "arch": "audiocpp",
+  "base_model": null
+ },
+ {
+  "id": "GestaltLabs/Ornstein-Hermes-3.6-27B-GGUF",
+  "downloads": 23760,
+  "org": "GestaltLabs",
+  "status": "upstream_gated",
+  "arch": "qwen35",
+  "base_model": "GestaltLabs/Ornstein-hermes-3.6-27b",
+  "why": "gated"
+ },
+ {
+  "id": "cartesia/azzurra-voice",
+  "downloads": 23707,
+  "org": "cartesia",
+  "status": "upstream_gated",
+  "arch": "csm",
+  "base_model": "sesame/csm-1b",
+  "why": "gated"
+ },
+ {
+  "id": "ATH-MaaS/Marco-DeepResearch-8B-i1-GGUF",
+  "downloads": 23602,
+  "org": "ATH-MaaS",
+  "status": "non_chat_model",
+  "arch": "qwen3",
+  "base_model": "AIDC-AI/Marco-DeepResearch-8B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Kutches/minmax",
+  "downloads": 23601,
+  "org": "Kutches",
+  "status": "no_base_model",
+  "arch": "minimax_h3",
+  "base_model": null
+ },
+ {
+  "id": "kyutai/moshiko-candle-q8",
+  "downloads": 23438,
+  "org": "kyutai",
+  "status": "no_base_model",
+  "arch": null,
+  "base_model": null
+ },
+ {
+  "id": "mlasli/Qwen3.8-27B-Heretic-Uncensored-Q5_K_M-GGUF",
+  "downloads": 23436,
+  "org": "mlasli",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
+  "downloads": 23306,
+  "org": "bottlecapai",
+  "status": "upstream_gated",
+  "arch": "qwen35",
+  "base_model": "bottlecapai/ThinkingCap-Qwen3.6-27B",
+  "why": "gated"
+ },
+ {
+  "id": "kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF",
+  "downloads": 23122,
+  "org": "kingjones777",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.8-27B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "otheru/DeepSeek-V4-Flash-Strix-Halo-GGUF",
+  "downloads": 22815,
+  "org": "otheru",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "lmstudio-ai/gemma-2b-it-GGUF",
+  "downloads": 22736,
+  "org": "lmstudio-ai",
+  "status": "no_base_model",
+  "arch": "gemma",
+  "base_model": null
+ },
+ {
+  "id": "froggeric/Qwen3.6-27B-MTP-GGUF",
+  "downloads": 22697,
+  "org": "froggeric",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "Qwen/Qwen3.6-27B"
+ },
+ {
+  "id": "mistralai/Ministral-3-14B-Reasoning-2512-GGUF",
+  "downloads": 22677,
+  "org": "mistralai",
+  "status": "non_chat_model",
+  "arch": "mistral3",
+  "base_model": "mistralai/Ministral-3-14B-Reasoning-2512",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "sahilchachra/Unlimited-OCR-GGUF",
+  "downloads": 22560,
+  "org": "sahilchachra",
+  "status": "non_chat_model",
+  "arch": "deepseek2-ocr",
+  "base_model": "baidu/Unlimited-OCR",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Lewdiculous/L3-8B-Stheno-v3.2-GGUF-IQ-Imatrix",
+  "downloads": 22489,
+  "org": "Lewdiculous",
+  "status": "identical",
+  "arch": "llama",
+  "base_model": "Sao10K/L3-8B-Stheno-v3.2",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "bleysg/DeepSeek-V4-Flash-DSpark-drafter-GGUF",
+  "downloads": 22430,
+  "org": "bleysg",
+  "status": "non_chat_model",
+  "arch": "deepseek4-dspark",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "LuffyTheFox/Qwen3.6-27B-Uncensored-Genesis-MTP-GGUF",
+  "downloads": 22342,
+  "org": "LuffyTheFox",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35",
+  "base_model": "HauhauCS/Qwen3.6-27B-Uncensored-HauhauCS-Aggressive",
+  "why": "not_found"
+ },
+ {
+  "id": "Smoffyy/Qwen3.5-9B-Instruct-Pure-GGUF",
+  "downloads": 21798,
+  "org": "Smoffyy",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.5-9B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Ma7ee7/Qwen3.8_1.2B_LFM_Distillation_GGUF",
+  "downloads": 21781,
+  "org": "Ma7ee7",
+  "status": "no_base_model",
+  "arch": "lfm2",
+  "base_model": null
+ },
+ {
+  "id": "knifeayumu/LLM_Collection",
+  "downloads": 21649,
+  "org": "knifeayumu",
+  "status": "no_base_model",
+  "arch": "command-r",
+  "base_model": null
+ },
+ {
+  "id": "joyfox/JoyFox-Qwen3.6-35B-A3B-RP-Aggressive",
+  "downloads": 21541,
+  "org": "joyfox",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.6-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "gpustack/bge-reranker-v2-m3-GGUF",
+  "downloads": 21494,
+  "org": "gpustack",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": null
+ },
+ {
+  "id": "YarvixPA/FLUX.1-Fill-dev-GGUF",
+  "downloads": 21319,
+  "org": "YarvixPA",
+  "status": "upstream_gated",
+  "arch": "flux",
+  "base_model": "black-forest-labs/FLUX.1-Fill-dev",
+  "why": "gated"
+ },
+ {
+  "id": "philbert440/Qwen3.8-27B-Uncensored-Cyber-GGUF",
+  "downloads": 21297,
+  "org": "philbert440",
+  "status": "non_chat_model",
+  "arch": "qwen35",
+  "base_model": "philbert440/Qwen3.8-27B-Uncensored-Cyber",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "TheDrummer/Cydonia-24B-v4.3-GGUF",
+  "downloads": 21020,
+  "org": "TheDrummer",
+  "status": "upstream_fetch_failed",
+  "arch": "llama",
+  "base_model": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+  "why": "not_found"
+ },
+ {
+  "id": "FunAudioLLM/Fun-ASR-Nano-2512-GGUF",
+  "downloads": 20997,
+  "org": "FunAudioLLM",
+  "status": "non_chat_model",
+  "arch": null,
+  "base_model": "FunAudioLLM/Fun-ASR-Nano-2512-hf",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "puwaer/Qwen3-Next-80B-A3B-Thinking-GRPO-Uncensored-gguf",
+  "downloads": 20857,
+  "org": "puwaer",
+  "status": "upstream_gated",
+  "arch": "qwen3next",
+  "base_model": "puwaer/Qwen3-Next-80B-A3B-Thinking-GRPO-Uncensored",
+  "why": "gated"
+ },
+ {
+  "id": "DreamFast/gemma-3-12b-it-heretic-v2",
+  "downloads": 20677,
+  "org": "DreamFast",
+  "status": "upstream_gated",
+  "arch": "gemma3",
+  "base_model": "google/gemma-3-12b-it",
+  "why": "gated"
+ },
+ {
+  "id": "gaston-parravicini/LFM2.5-8B-A1B-Uncensored-Gaston-GGUF",
+  "downloads": 20537,
+  "org": "gaston-parravicini",
+  "status": "non_chat_model",
+  "arch": "lfm2moe",
+  "base_model": "LiquidAI/LFM2.5-8B-A1B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Andycurrent/Gemma-3-1B-it-GLM-4.7-Flash-Heretic-Uncensored-Thinking_GGUF",
+  "downloads": 20507,
+  "org": "Andycurrent",
+  "status": "upstream_gated",
+  "arch": "gemma3",
+  "base_model": "google/gemma-3-1b-it",
+  "why": "gated"
+ },
+ {
+  "id": "mixedbread-ai/mxbai-embed-xsmall-v1",
+  "downloads": 20492,
+  "org": "mixedbread-ai",
+  "status": "non_chat_arch",
+  "arch": "bert",
+  "base_model": "mixedbread-ai/mxbai-embed-mini-v1"
+ },
+ {
+  "id": "CMSManhattan/JiRackUltra_14b",
+  "downloads": 20455,
+  "org": "CMSManhattan",
+  "status": "no_base_model",
+  "arch": "qwen2",
+  "base_model": null
+ },
+ {
+  "id": "unslothai/Qwen3-ASR-1.7B-GGUF",
+  "downloads": 20370,
+  "org": "unslothai",
+  "status": "output_differs",
+  "arch": "qwen3vl",
+  "base_model": "Qwen/Qwen3-ASR-1.7B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\n<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": -25
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 5
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<|im_start|>system\n<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": 40
+   }
+  ]
+ },
+ {
+  "id": "FireRedTeam/FireRed-Image-Edit-1.1-ComfyUI",
+  "downloads": 20244,
+  "org": "FireRedTeam",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen_image",
+  "base_model": "FireRedTeam/FireRed-Image-Edit-1.1",
+  "why": "not_found"
+ },
+ {
+  "id": "weareapexcreators/Qwen3.5-0.8B-LocalAI",
+  "downloads": 20222,
+  "org": "weareapexcreators",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "ClankLabs/Wrench-35B-A3B-Q4_K_M-GGUF",
+  "downloads": 20207,
+  "org": "ClankLabs",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "Qwen/Qwen3.5-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ThomasBaruzier/Meta-Llama-3.1-405B-Instruct-GGUF",
+  "downloads": 20202,
+  "org": "ThomasBaruzier",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Meta-Llama-3.1-405B",
+  "why": "gated"
+ },
+ {
+  "id": "lm-kit/qwen-3-14b-instruct-gguf",
+  "downloads": 20057,
+  "org": "lm-kit",
+  "status": "no_base_model",
+  "arch": "qwen3",
+  "base_model": null
+ },
+ {
+  "id": "el4/GRM-3.2-Sky-ONYX-GGUF",
+  "downloads": 19757,
+  "org": "el4",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "OrionLLM/GRM-3.2-Sky",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DevQuasar-10/google.gemma-3-27b-pt-GGUF",
+  "downloads": 19618,
+  "org": "DevQuasar-10",
+  "status": "upstream_gated",
+  "arch": "gemma3",
+  "base_model": "google/gemma-3-27b-pt",
+  "why": "gated"
+ },
+ {
+  "id": "TeichAI/Qwen3.8-27B-Fable-Distill-GGUF",
+  "downloads": 19461,
+  "org": "TeichAI",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "TeichAI/Qwen3.8-27B-Fable-Distill",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "EmanuelOverride/gemma-4-26B-A4B-it-heretic-APEX-GGUF",
+  "downloads": 19310,
+  "org": "EmanuelOverride",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "coder3101/gemma-4-26B-A4B-it-heretic",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "janhq/Jan-v2-VL-high-gguf",
+  "downloads": 19293,
+  "org": "janhq",
+  "status": "non_chat_model",
+  "arch": "qwen3vl",
+  "base_model": "Menlo/Jan-v2-VL-high",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "qtum/DeepSeek-V4-Flash-0731-GGUF",
+  "downloads": 19271,
+  "org": "qtum",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "teamblobfish/DeepSeek-V4-Pro-GGUF",
+  "downloads": 19176,
+  "org": "teamblobfish",
+  "status": "non_chat_model",
+  "arch": "deepseek4",
+  "base_model": "deepseek-ai/DeepSeek-V4-Pro",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "DevQuasar-9/prithivMLmods.Viper-Coder-HybridMini-v1.3-GGUF",
+  "downloads": 19108,
+  "org": "DevQuasar-9",
+  "status": "identical",
+  "arch": "qwen2",
+  "base_model": "prithivMLmods/Viper-Coder-HybridMini-v1.3",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "ChrisColeTech/qwen-image-edit-uncensored-GGUF",
+  "downloads": 19107,
+  "org": "ChrisColeTech",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen_image",
+  "base_model": "Qwen/Qwen-Image-Edit-2511",
+  "why": "not_found"
+ },
+ {
+  "id": "SC117/Ornith-1.5-35B-A3B-Heretic-MTP-APEX-GGUF",
+  "downloads": 19078,
+  "org": "SC117",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B"
+ },
+ {
+  "id": "nerkyor/Qwen3.6-27B-Uncensored-Heretic-DSV4Pro-GLM52-SFT-GPT55-RL-Coding-VL-MTP-GGUF",
+  "downloads": 19067,
+  "org": "nerkyor",
+  "status": "upstream_gated",
+  "arch": "qwen35",
+  "base_model": "Merkyor/Qwen3.6-27B-DSV4Pro-Thinking-Distill",
+  "why": "gated"
+ },
+ {
+  "id": "ente-ai/embeddinggemma-300m-gguf",
+  "downloads": 19055,
+  "org": "ente-ai",
+  "status": "upstream_gated",
+  "arch": "gemma-embedding",
+  "base_model": "google/embeddinggemma-300m",
+  "why": "gated"
+ },
+ {
+  "id": "vmlinux/Muse-Glimmer-30B-ROCmFPX-GGUF",
+  "downloads": 19039,
+  "org": "vmlinux",
+  "status": "non_chat_model",
+  "arch": "muse-glimmer",
+  "base_model": "meta-models/Muse-Glimmer-30B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Isi99999/LTX-Video",
+  "downloads": 19008,
+  "org": "Isi99999",
+  "status": "no_base_model",
+  "arch": "ltxv",
+  "base_model": null
+ },
+ {
+  "id": "mitkox/antares-1b-Q8_0-GGUF",
+  "downloads": 18861,
+  "org": "mitkox",
+  "status": "upstream_gated",
+  "arch": "granite",
+  "base_model": "fdtn-ai/antares-1b",
+  "why": "gated"
+ },
+ {
+  "id": "protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+  "downloads": 18825,
+  "org": "protoLabsAI",
+  "status": "non_chat_arch",
+  "arch": "clip",
+  "base_model": "ornith-ai/Ornith-1.5-9B"
+ },
+ {
+  "id": "0xKitkat/Ornith-1.5-35B-A3B-Uncensored-GGUF",
+  "downloads": 18609,
+  "org": "0xKitkat",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "XeyonAI/MN-Helcyon-Saturn-RP-12b-v1.0-GGUF",
+  "downloads": 18547,
+  "org": "XeyonAI",
+  "status": "output_differs",
+  "arch": "llama",
+  "base_model": "mistralai/Mistral-Nemo-Instruct-2407",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Hello[/INST]",
+    "len_delta": 34
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Be brief.\n\nHello[/INST]",
+    "len_delta": 62
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Hi[/INST]Hey!</s>[INST]Bye[/INST]",
+    "len_delta": 78
+   }
+  ]
+ },
+ {
+  "id": "desirel/WAN2.2-14B-Rapid-AllInOne-GGUF-NSFW-v10",
+  "downloads": 18433,
+  "org": "desirel",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "Phr00t/WAN2.2-14B-Rapid-AllInOne",
+  "why": "not_found"
+ },
+ {
+  "id": "gkraker04/Nanbeige4.2-3B-GGUF",
+  "downloads": 18425,
+  "org": "gkraker04",
+  "status": "cosmetic_only",
+  "arch": "nanbeige",
+  "base_model": "Nanbeige/Nanbeige4.2-3B",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "XeyonAI/MN-Helcyon-Claude-Opus-12b-v1.0-GGUF",
+  "downloads": 18419,
+  "org": "XeyonAI",
+  "status": "output_differs",
+  "arch": "llama",
+  "base_model": "mistralai/Mistral-Nemo-Instruct-2407",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "user_only",
+   "system_user",
+   "multiturn",
+   "with_tools",
+   "thinking_unset",
+   "thinking_true",
+   "thinking_false"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "user_only",
+    "gguf_tail": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Hello[/INST]",
+    "len_delta": 34
+   },
+   {
+    "fixture": "system_user",
+    "gguf_tail": "_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Be brief.\n\nHello[/INST]",
+    "len_delta": 62
+   },
+   {
+    "fixture": "multiturn",
+    "gguf_tail": "<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "<s>[INST]Hi[/INST]Hey!</s>[INST]Bye[/INST]",
+    "len_delta": 78
+   }
+  ]
+ },
+ {
+  "id": "deadbydawn101/RavenX-CyberAgent-Qwen3.6-35B-A3B-Opus-4.7-OpenMythos-Pentester-BugHunter-RATH-GGUF",
+  "downloads": 18255,
+  "org": "deadbydawn101",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "huihui-ai/Huihui-Qwen3.6-35B-A3B-Claude-4.7-Opus-abliterated",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "dealignai/Ornith-1.5-35B-A3B-UNCENSORED-GGUF",
+  "downloads": 18235,
+  "org": "dealignai",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "NullpoLab/AnimeGen-I2V-GGUF",
+  "downloads": 18222,
+  "org": "NullpoLab",
+  "status": "upstream_fetch_failed",
+  "arch": "wan",
+  "base_model": "aidealab/AnimeGen-I2V",
+  "why": "not_found"
+ },
+ {
+  "id": "dphn/dolphin-2.9.4-llama3.1-8b-gguf",
+  "downloads": 18164,
+  "org": "dphn",
+  "status": "upstream_gated",
+  "arch": "llama",
+  "base_model": "meta-llama/Meta-Llama-3.1-8B",
+  "why": "gated"
+ },
+ {
+  "id": "rtila-corporation/rtila-assistant-lite-1.5",
+  "downloads": 18065,
+  "org": "rtila-corporation",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "ahmedandaloes/CyberStrike-OffSec-35B-GGUF",
+  "downloads": 18047,
+  "org": "ahmedandaloes",
+  "status": "non_chat_model",
+  "arch": "qwen35moe",
+  "base_model": "oyildirim/CyberStrike-OffSec-35B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "microsoft/bitnet-b1.58-2B-4T-gguf",
+  "downloads": 17897,
+  "org": "microsoft",
+  "status": "no_base_model",
+  "arch": "bitnet-b1.58",
+  "base_model": null
+ },
+ {
+  "id": "KridgeDookie/KAT-Coder-V2.5-Dev-35B-A3B-ABLITERATED-UNCENSORED-PHILADELPHIA-CLASS",
+  "downloads": 17870,
+  "org": "KridgeDookie",
+  "status": "cosmetic_only",
+  "arch": "qwen35moe",
+  "base_model": "Kwaipilot/KAT-Coder-V2.5-Dev",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "DevQuasar-10/google.gemma-3-12b-pt-GGUF",
+  "downloads": 17672,
+  "org": "DevQuasar-10",
+  "status": "upstream_gated",
+  "arch": "gemma3",
+  "base_model": "google/gemma-3-12b-pt",
+  "why": "gated"
+ },
+ {
+  "id": "Chun121/Qwen3-4B-RPG-Roleplay-V2",
+  "downloads": 17627,
+  "org": "Chun121",
+  "status": "non_chat_model",
+  "arch": "qwen3",
+  "base_model": "unsloth/Qwen3-4B-Base",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "EryriLabs/Ornith-1.5-35B-A3B-BigBang-MTP-GGUF",
+  "downloads": 17606,
+  "org": "EryriLabs",
+  "status": "identical",
+  "arch": "qwen35moe",
+  "base_model": "EryriLabs/Ornith-1.5-35B-A3B-BigBang-MTP",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "Bedovyy/smoothMixWan22-I2V-GGUF",
+  "downloads": 17577,
+  "org": "Bedovyy",
+  "status": "no_base_model",
+  "arch": "wan",
+  "base_model": null
+ },
+ {
+  "id": "lukey03/Qwen3.5-9B-abliterated-GGUF",
+  "downloads": 17558,
+  "org": "lukey03",
+  "status": "identical",
+  "arch": "qwen35",
+  "base_model": "Qwen/Qwen3.5-9B",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "groxaxo/Huihui-gemma-4-26B-A4B-it-abliterated-GGUF",
+  "downloads": 17533,
+  "org": "groxaxo",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "huihui-ai/Huihui-gemma-4-26B-A4B-it-abliterated",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "zerofata/G4-MeroMero-v2-31B-GGUF",
+  "downloads": 17404,
+  "org": "zerofata",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "zerofata/G4-MeroMero-v2-31B",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "Dampfinchen/google-gemma-3-12b-it-qat-q4_0-gguf-small-fix",
+  "downloads": 17392,
+  "org": "Dampfinchen",
+  "status": "no_base_model",
+  "arch": "gemma3",
+  "base_model": null
+ },
+ {
+  "id": "julianmb/Ornith-1.5-35B-A3B-ROCmFP4-GGUF",
+  "downloads": 17120,
+  "org": "julianmb",
+  "status": "upstream_fetch_failed",
+  "arch": "qwen35moe",
+  "base_model": "ornith-ai/Ornith-1.5-35B-A3B-GGUF",
+  "why": "not_found"
+ },
+ {
+  "id": "DevQuasar-9/huihui-ai.QwQ-32B-abliterated-GGUF",
+  "downloads": 17040,
+  "org": "DevQuasar-9",
+  "status": "identical",
+  "arch": "qwen2",
+  "base_model": "huihui-ai/QwQ-32B-abliterated",
+  "identical_source": true,
+  "render_errors": [],
+  "diff_fixtures": [],
+  "diff_detail": []
+ },
+ {
+  "id": "JackFRost0703/R3GE_Quen2.5_7B",
+  "downloads": 16791,
+  "org": "JackFRost0703",
+  "status": "no_base_model",
+  "arch": "qwen2",
+  "base_model": null
+ },
+ {
+  "id": "weareapexcreators/Qwen3.5-2B-MTP-LocalAI",
+  "downloads": 16742,
+  "org": "weareapexcreators",
+  "status": "no_base_model",
+  "arch": "qwen35",
+  "base_model": null
+ },
+ {
+  "id": "ErenAta00/MorpheusHigh-LLM-14B-Virtual-Reality-Model",
+  "downloads": 16640,
+  "org": "ErenAta00",
+  "status": "no_base_model",
+  "arch": "qwen2",
+  "base_model": null
+ },
+ {
+  "id": "lthn/lemer",
+  "downloads": 16625,
+  "org": "lthn",
+  "status": "non_chat_model",
+  "arch": "gemma4",
+  "base_model": "LetheanNetwork/lemer",
+  "why": "genuinely_absent"
+ },
+ {
+  "id": "molbal/Minimax-Music3-GGUF",
+  "downloads": 16600,
+  "org": "molbal",
+  "status": "no_base_model",
+  "arch": "minimax_music3",
+  "base_model": null
+ },
+ {
+  "id": "n00b001/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M-GGUF",
+  "downloads": 16314,
+  "org": "n00b001",
+  "status": "output_differs",
+  "arch": "qwen3moe",
+  "base_model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+  "identical_source": false,
+  "render_errors": [],
+  "diff_fixtures": [
+   "with_tools"
+  ],
+  "diff_detail": [
+   {
+    "fixture": "with_tools",
+    "gguf_tail": "</IMPORTANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n",
+    "upstream_tail": "</IMPORTANT><|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n",
+    "len_delta": -18
+   }
+  ]
+ },
+ {
+  "id": "RunDiffusion/Juggernaut-Z-Image",
+  "downloads": 16301,
+  "org": "RunDiffusion",
+  "status": "upstream_fetch_failed",
+  "arch": "lumina2",
+  "base_model": "Tongyi-MAI/Z-Image",
+  "why": "not_found"
+ }
+]
