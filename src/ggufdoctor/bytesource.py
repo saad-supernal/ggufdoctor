@@ -67,3 +67,34 @@ class Cursor:
     def string(self) -> str:
         n = self.u64()
         return self.take(n).decode("utf-8", "replace")
+
+import urllib.error
+import urllib.request
+
+
+class HttpSourceError(Exception):
+    """Remote source could not be range-read."""
+
+
+class HttpRangeByteSource:
+    def __init__(self, url: str, headers: dict[str, str] | None = None) -> None:
+        self.url = url
+        self.headers = dict(headers or {})
+        self.headers.setdefault("User-Agent", "ggufdoctor/0.1")
+        self.bytes_fetched = 0
+
+    def read(self, offset: int, length: int) -> bytes:
+        h = dict(self.headers)
+        h["Range"] = f"bytes={offset}-{offset + length - 1}"
+        req = urllib.request.Request(self.url, headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                if resp.status not in (200, 206):
+                    raise HttpSourceError(f"{self.url}: HTTP {resp.status}")
+                data = resp.read(length)
+        except urllib.error.HTTPError as e:
+            raise HttpSourceError(f"{self.url}: HTTP {e.code}") from e
+        except urllib.error.URLError as e:
+            raise HttpSourceError(f"{self.url}: {e.reason}") from e
+        self.bytes_fetched += len(data)
+        return data
