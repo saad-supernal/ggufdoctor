@@ -68,3 +68,56 @@ def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
 
     data = json.loads(out_path.read_text())
     assert data["coverage"]["checks_not_evaluated"] == ["S005"]
+
+
+# --- Fix round 1 ---
+
+def test_unwritable_json_path_exits_two_without_traceback(tmp_path, capsys):
+    readonly_dir = tmp_path / "readonly"
+    readonly_dir.mkdir()
+    readonly_dir.chmod(0o500)  # read + execute, no write
+    target = str(readonly_dir / "r.json")
+    try:
+        exit_status = main([_model(tmp_path), "--json", target])
+    finally:
+        readonly_dir.chmod(0o700)  # let tmp_path cleanup remove it afterwards
+
+    assert exit_status == 2
+    err = capsys.readouterr().err
+    assert err.startswith("ggufdoctor: ")
+    # A one-line message, not a multi-line traceback.
+    assert err.count("\n") == 1
+
+
+def test_default_local_run_headline_is_not_alarming(tmp_path, capsys):
+    # A valid eos_token_id (index 1 -> "<|im_end|>", which the template does
+    # emit) lets S005 fully evaluate, so the only thing "missing" from this
+    # run is the upstream comparison the user never asked for. That must
+    # read as complete-for-what-was-asked, not as a coverage warning.
+    path = _model(tmp_path, **{"tokenizer.ggml.eos_token_id": ("u32", 1)})
+    assert main([path]) == 0
+    human = capsys.readouterr().out
+    assert "no findings — local checks only" in human
+    assert "--compare-upstream" in human
+    assert "partial" not in human
+
+
+def test_gated_upstream_produces_a_partial_headline(tmp_path, monkeypatch, capsys):
+    class FakeClient:
+        def __init__(self, *a, **k):
+            pass
+
+        def upstream_template(self, repo):
+            return None, "gated"
+
+    monkeypatch.setattr("ggufdoctor.sources.HfClient", FakeClient)
+    path = _model(tmp_path, **{"tokenizer.ggml.eos_token_id": ("u32", 1)})
+    assert main([path, "--compare-upstream", "some/repo"]) == 0
+    human = capsys.readouterr().out
+    assert "no findings (partial: upstream gated" in human
+    assert "local checks only" not in human
+
+
+def test_require_upstream_without_compare_upstream_is_a_usage_error(tmp_path):
+    path = _model(tmp_path)
+    assert main([path, "--require-upstream"]) == 2

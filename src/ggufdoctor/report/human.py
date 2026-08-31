@@ -30,19 +30,45 @@ def _visible(text: str | None) -> str | None:
     return _CONTROL_RE.sub(lambda m: f"\\x{ord(m.group()):02x}", text)
 
 
-def _coverage_caveats(coverage: Coverage, skipped_families: list[str]) -> list[str]:
+# Prose for the upstream reasons that mean "the comparison was requested and
+# the tool could not deliver it" -- as opposed to "not_requested" (the user
+# simply didn't ask) or "ok" (it succeeded). Falls back to a generic
+# "upstream {reason}" for any value not listed here.
+_UPSTREAM_GAP_TEXT = {
+    "gated": "upstream gated — cannot compare without access",
+    "not_found": "upstream not found — base model no longer exists",
+    "fetch_error": "upstream fetch failed — could not reach the source model",
+    "genuinely_absent": "upstream has no chat template to compare against",
+    "no_base_model": "no upstream base model declared",
+}
+
+
+def _upstream_gap(upstream: str) -> str | None:
+    """Headline/tail text for a genuine coverage gap on the upstream side.
+
+    None for "ok" (nothing to say) and, deliberately, for "not_requested"
+    too: declining a comparison the user never asked for is not a gap, and
+    must never be phrased like one. Everything else means a comparison was
+    attempted and failed -- exactly the case a reader must not be able to
+    mistake for "clean" by skimming past a warning that fires on every run.
+    """
+    if upstream in ("ok", "not_requested"):
+        return None
+    return _UPSTREAM_GAP_TEXT.get(upstream, f"upstream {upstream}")
+
+
+def _coverage_caveats(coverage: Coverage) -> list[str]:
     """Short phrases describing why a clean result might not mean clean.
 
-    Feeds the qualified "no findings (partial: ...)" headline -- each part
-    matches the wording used in the coverage detail lines it summarises, so
-    skimming the headline and skimming the tail line agree with each other.
+    Feeds the qualified "no findings (partial: ...)" headline. Only ever
+    lists genuine gaps: a declined upstream comparison never appears here
+    (see _upstream_gap), but an unevaluated check always does -- that's a
+    coverage hole regardless of what the user asked for.
     """
     parts: list[str] = []
-    if skipped_families:
-        label = "family" if len(skipped_families) == 1 else "families"
-        parts.append(f"{', '.join(skipped_families)} {label} skipped")
-    if coverage.upstream != "ok":
-        parts.append(f"upstream {coverage.upstream}")
+    gap = _upstream_gap(coverage.upstream)
+    if gap:
+        parts.append(gap)
     if coverage.checks_not_evaluated:
         parts.append(f"{', '.join(coverage.checks_not_evaluated)} not evaluated")
     return parts
@@ -59,13 +85,19 @@ def render_human(model: GgufModel, findings: list[Finding],
     lines.append("")
 
     skipped = [fam for fam in ALL_FAMILIES if fam not in coverage.families_run]
+    upstream_gap = _upstream_gap(coverage.upstream)
 
     if not findings:
-        caveats = _coverage_caveats(coverage, skipped)
-        if caveats:
-            lines.append(f"  no findings (partial: {', '.join(caveats)})")
+        if upstream_gap is None and not coverage.checks_not_evaluated:
+            if coverage.upstream == "not_requested":
+                lines.append(
+                    "  no findings — local checks only (add --compare-upstream "
+                    "<repo> to also check against the source template)")
+            else:
+                lines.append("  no findings")
         else:
-            lines.append("  no findings")
+            caveats = _coverage_caveats(coverage)
+            lines.append(f"  no findings (partial: {', '.join(caveats)})")
     for f in findings:
         head = f"  {f.id}  {f.severity.value.upper():<5} {_visible(f.message)}"
         fixtures_evidence = f.evidence.get("fixtures")
@@ -92,8 +124,15 @@ def render_human(model: GgufModel, findings: list[Finding],
     lines.append(tail)
     lines.append(f"families run: {', '.join(coverage.families_run) or 'none'}"
                  f"   upstream: {coverage.upstream}")
-    for fam in skipped:
-        lines.append(f"  note: {fam} family skipped")
+    # A family is only ever skipped here because the upstream comparison
+    # didn't happen (family R, always -- family S never skips in this
+    # architecture), so this note would fire on every default run if it
+    # weren't gated the same way the headline is: silent when the user
+    # simply didn't ask (upstream_gap is None for "not_requested"/"ok"),
+    # voiced when the tool tried and failed.
+    if upstream_gap is not None:
+        for fam in skipped:
+            lines.append(f"  note: {fam} family skipped")
     for check_id in coverage.checks_not_evaluated:
         lines.append(f"  note: {check_id} not evaluated")
     return "\n".join(lines)

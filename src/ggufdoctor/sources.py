@@ -13,13 +13,28 @@ def is_repo_id(target: str) -> bool:
     Anything that already exists on disk is a local path, full stop -- that
     check comes first specifically so a real file or directory is never
     mistaken for a repo id no matter what its name looks like. Otherwise a
-    repo id has the "namespace/name" shape and doesn't look like a filesystem
-    reference (no leading '.', '/', or '~', and no '.gguf' suffix).
+    repo id has the "namespace/name" shape: no leading '.', '/', or '~', no
+    '.gguf' suffix, and *exactly* two '/'-separated segments -- a nested
+    relative path like "does/not/exist" or "org/sub/repo" has more than
+    that and is never mistaken for one.
+
+    Two segments alone isn't enough, though: a mistyped local path such as
+    "models/foo" has exactly that shape too, and treating it as a repo id
+    would send a typo to the network instead of reporting a clear local
+    file-not-found. So when the first segment exists on disk as its own
+    entry (a real "models" directory sitting right there), that's a local
+    reference whose second component just doesn't exist yet -- never a
+    namespace on the Hub -- and resolving it locally (letting the caller's
+    file open fail with its own clear error) is the safer default.
     """
     if os.path.exists(target):
         return False
-    return ("/" in target and not target.startswith((".", "/", "~"))
-            and not target.endswith(".gguf"))
+    if target.startswith((".", "/", "~")) or target.endswith(".gguf"):
+        return False
+    segments = target.split("/")
+    if len(segments) != 2 or not all(segments):
+        return False
+    return not os.path.exists(segments[0])
 
 
 def resolve(target: str, compare_upstream: str | None = None,
