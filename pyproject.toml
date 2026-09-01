@@ -8,9 +8,8 @@ version = "0.1.0"
 description = "Lint chat templates embedded in GGUF files"
 readme = "README.md"
 requires-python = ">=3.11"
-# No `license` field yet: the license for this project has not been chosen.
-# Do not infer one (e.g. from classifiers or from this being open source on
-# a host) -- add `license = "..."` here explicitly once that choice is made.
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "Saad", email = "saadfarooq404@yahoo.com"},
 ]
