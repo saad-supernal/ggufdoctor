@@ -143,58 +143,78 @@ def _severities(findings):
     return {(f.id, f.severity) for f in findings}
 
 
-def test_mistral_v02_full_suite_is_clean_apart_from_documented_declines():
-    # Fix round 3 (final whole-branch review): the fixtures already
-    # contained the evidence for S003/S007 -- the old test only asserted
-    # "S005 not in ids(f)" and sailed straight past both. This asserts the
-    # full finding set instead. add_bos_token=False reflects a correctly
-    # converted GGUF (the template's own `{{ bos_token }}` is the only BOS
-    # source), isolating this run to what the real template *itself*
-    # produces rather than also re-litigating S006 (see S006's own tests).
+def test_mistral_v02_full_suite_matches_documented_real_world_footguns():
+    # Fix round 4 (coordinator ruling on final-fix-a): the previous version
+    # of this test used add_bos_token=False to keep the assertion tidy --
+    # but the real mistralai/Mistral-7B-Instruct-v0.2 tokenizer_config.json
+    # sets add_bos_token: true (confirmed against the live file), and the
+    # template also emits `{{ bos_token }}` itself. Faking the metadata to
+    # dodge that combination is exactly the move that let the S003 bug ship
+    # in the first place: a test that narrows what it looks at will keep
+    # missing whatever it wasn't looking for. So this carries the genuine
+    # published metadata and asserts the complete finding set, not a
+    # filtered subset.
     #
-    # What's left after that isolation is NOT a false positive:
-    #   - S003 INFO: the real template's OWN alternation guard (identical to
-    #     transformers) rejects the "system_user" fixture -- this is the
-    #     template author's deliberate, documented behaviour, now correctly
-    #     reported at INFO with the author's own message quoted, not ERROR.
-    #   - S007 INFO: add_generation_prompt is genuinely a no-op in this
-    #     template (it's never referenced at all) -- true and unavoidable
-    #     for this exact upstream template text -- but the rendered output
-    #     already ends in "[/INST]", which plainly opens the assistant turn
-    #     some other way, so it's INFO, not WARN.
-    # A template this widely deployed cannot be forced to report empty
-    # without either lying about what it does or suppressing a true
-    # observation -- so this is not weakened to assert `== []`.
+    # Every finding here is a true positive, independently documented:
+    #   - S003 INFO: the template's OWN alternation guard (identical to
+    #     transformers) rejects the "system_user" fixture -- the author's
+    #     deliberate, documented behaviour, quoted verbatim, not an error.
+    #   - S006 WARN: add_bos_token=true (real) + the template's own
+    #     `{{ bos_token }}` (real) is the documented llama.cpp "double BOS"
+    #     footgun for Mistral GGUF conversions -- S006 exists precisely to
+    #     catch this combination, and it does.
+    #   - S007 INFO: add_generation_prompt is genuinely never referenced in
+    #     this template -- true and unavoidable for this exact upstream
+    #     text -- but the rendered output already ends in "[/INST]", which
+    #     plainly opens the assistant turn some other way, so INFO not WARN.
+    # A future change to any of Mistral's real template/metadata that
+    # altered this set should break this test loudly -- that's the point.
     f = run_sanity_checks(ctx(chat_template=MISTRAL_V02_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
                               bos_token_id=1, eos_token_id=2,
-                              add_bos_token=False))
-    assert _severities(f) == {("S003", Severity.INFO), ("S007", Severity.INFO)}
+                              add_bos_token=True))
+    assert _severities(f) == {
+        ("S003", Severity.INFO),
+        ("S006", Severity.WARN),
+        ("S007", Severity.INFO),
+    }
 
 
-def test_llama2_chat_full_suite_is_clean_apart_from_documented_noop():
-    # Same fix as above, applied to Llama-2-chat. Its template special-cases
-    # a leading system role (folding it into the first user turn) rather
-    # than rejecting it, so system_user never raises -- S003 is silent here.
-    # add_generation_prompt is still never referenced, so S007 still fires;
-    # the rendered output still ends in "[/INST]", so it's still INFO.
+def test_llama2_chat_full_suite_matches_documented_real_world_footguns():
+    # Same fix as above, applied to Llama-2-chat: the real
+    # meta-llama/Llama-2-7b-chat-hf tokenizer_config.json also sets
+    # add_bos_token: true (confirmed against the live file), and its
+    # template prepends `{{ bos_token }}` to every user turn, including the
+    # first -- the same real double-BOS footgun, independently documented
+    # for Llama-2 GGUF conversions. Its template special-cases a leading
+    # system role (folding it into the first user turn) rather than
+    # rejecting it outright, so system_user never raises and there is no
+    # S003 here. add_generation_prompt is still never referenced, so S007
+    # still fires; the rendered output still ends in "[/INST]", so INFO.
     f = run_sanity_checks(ctx(chat_template=LLAMA2_CHAT_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
                               bos_token_id=1, eos_token_id=2,
-                              add_bos_token=False))
-    assert _severities(f) == {("S007", Severity.INFO)}
+                              add_bos_token=True))
+    assert _severities(f) == {
+        ("S006", Severity.WARN),
+        ("S007", Severity.INFO),
+    }
 
 
 def test_gemma2_full_suite_matches_documented_real_world_quirks():
-    # Real Gemma-2 tokenizer_config.json values (fetched from the public
-    # unsloth/gemma-2-9b-it mirror): add_bos_token is True, and the model's
-    # own vocab holds a separate "<eos>" special token distinct from the
-    # "<end_of_turn>" the chat template actually emits at every turn
-    # boundary. Both S005 and S006 below are well-documented real-world
-    # Gemma-2 GGUF conversion issues (generation_config.json for Gemma-2
-    # instruct models has historically had to list *two* eos token ids for
-    # exactly this reason, and "double BOS" was an open llama.cpp issue for
-    # Gemma conversions) -- not artifacts of this tool's fix.
+    # Real Gemma-2 tokenizer_config.json / generation_config.json / config
+    # values (fetched from the public unsloth/gemma-2-9b-it mirror, cross-
+    # checked against three separate files): add_bos_token is true,
+    # bos_token_id=2 and eos_token_id=1 are the model's genuine published
+    # ids (not renumbered for convenience -- pad=0, eos=1, bos=2 is
+    # Gemma-2's real special-token layout), and the model's own vocab holds
+    # a separate "<eos>" special token distinct from the "<end_of_turn>"
+    # the chat template actually emits at every turn boundary. Both S005
+    # and S006 below are well-documented real-world Gemma-2 GGUF conversion
+    # issues (generation_config.json for Gemma-2 instruct models has
+    # historically had to list *two* eos token ids for exactly this reason,
+    # and "double BOS" was an open llama.cpp issue for Gemma conversions)
+    # -- not artifacts of this tool's fix.
     f = run_sanity_checks(ctx(chat_template=GEMMA2_TPL,
                               tokens=["<pad>", "<eos>", "<bos>",
                                       "<start_of_turn>", "<end_of_turn>"],
@@ -208,19 +228,36 @@ def test_gemma2_full_suite_matches_documented_real_world_quirks():
 
 
 def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
-    # Real Llama-3.3 tokenizer_config.json values (fetched from the public
-    # unsloth/Llama-3.3-70B-Instruct mirror of Meta's own file):
-    # add_bos_token is True, and the template also emits `{{ bos_token }}`
-    # at the very top -- the same real double-BOS pattern as Gemma-2 above,
-    # independently documented for Llama-3.x GGUF conversions. Everything
-    # else about this template -- including the "with_tools" fixture's real
+    # Real Llama-3.3 metadata (fetched from the public
+    # unsloth/Llama-3.3-70B-Instruct mirror of Meta's own files):
+    # add_bos_token is true, bos_token_id=128000 and eos_token_id=128009
+    # are the model's genuine published ids (config.json/generation_config
+    # .json), at the same positions Meta's own tokenizer assigns them --
+    # not renumbered down to small convenience indices. The vocab below is
+    # a real, sparse *prefix-and-suffix* of the actual 128256-entry
+    # tokenizer: every slot that matters to these checks holds its real
+    # token at its real id; the filler positions are never looked up by any
+    # check (S004 only tests set membership of literal `<|...|>` strings
+    # found in the template source; S005/S006 only ever index the two
+    # tokens named above) so a placeholder there doesn't affect coverage.
+    #
+    # add_bos_token=true + the template's own `{{- bos_token }}` at the top
+    # is the same real double-BOS pattern as Gemma-2 above, independently
+    # documented for Llama-3.x GGUF conversions. Everything else about this
+    # template -- including the "with_tools" fixture's real
     # `| tojson(indent=4)` tool-schema rendering -- is clean.
+    tokens = ["<unk>"] * 128011
+    tokens[128000] = "<|begin_of_text|>"
+    tokens[128001] = "<|end_of_text|>"
+    tokens[128006] = "<|start_header_id|>"
+    tokens[128007] = "<|end_header_id|>"
+    tokens[128008] = "<|eom_id|>"
+    tokens[128009] = "<|eot_id|>"
+    tokens[128010] = "<|python_tag|>"
     f = run_sanity_checks(ctx(
         chat_template=LLAMA3_TOOLS_TPL,
-        tokens=["<|begin_of_text|>", "<|end_of_text|>", "<|eot_id|>",
-                "<|eom_id|>", "<|python_tag|>", "<|start_header_id|>",
-                "<|end_header_id|>"],
-        bos_token_id=0, eos_token_id=2, add_bos_token=True))
+        tokens=tokens,
+        bos_token_id=128000, eos_token_id=128009, add_bos_token=True))
     assert _severities(f) == {("S006", Severity.WARN)}
 
 
