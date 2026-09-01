@@ -110,7 +110,12 @@ def test_out_of_range_eos_token_id_records_s005_as_not_evaluated():
 
     model = GgufModel(source_id="m.gguf", architecture="llama",
                       chat_template="{% for m in messages %}{{ m['content'] }}{% endfor %}",
-                      tokens=["<unk>", "<s>", "</s>"], eos_token_id=99)
+                      tokens=["<unk>", "<s>", "</s>"], eos_token_id=99,
+                      # Isolates this test to S005's own coverage gap --
+                      # add_bos_token=False keeps S006 from also recording
+                      # itself as not-evaluated (it correctly no-ops instead,
+                      # since metadata confidently says no BOS is added).
+                      add_bos_token=False)
     ctx = CheckContext(model=model, engines=[Engine()], fixtures=load_fixtures())
     run_sanity_checks(ctx)
     assert "S005" in ctx.checks_not_evaluated

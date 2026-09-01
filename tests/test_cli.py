@@ -50,24 +50,26 @@ def test_unreadable_file_exits_two(tmp_path):
 
 
 def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
-    # _model() never sets tokenizer.ggml.eos_token_id, so S005 records
-    # itself on ctx.checks_not_evaluated (no eos id to compare against) and
-    # returns no finding -- a "clean" run that is not actually a clean bill
-    # of health. resolve() builds `coverage` before any check has run, so
-    # this only reaches the reports if main() copies ctx.checks_not_evaluated
-    # onto coverage afterwards. Without that merge this test fails: the human
+    # _model() never sets tokenizer.ggml.eos_token_id or
+    # tokenizer.ggml.add_bos_token, so both S005 (no eos id to compare
+    # against) and S006 (no way to know whether the tokenizer itself adds a
+    # BOS) record themselves on ctx.checks_not_evaluated and return no
+    # finding -- a "clean" run that is not actually a clean bill of health.
+    # resolve() builds `coverage` before any check has run, so this only
+    # reaches the reports if main() copies ctx.checks_not_evaluated onto
+    # coverage afterwards. Without that merge this test fails: the human
     # report says a bare "no findings" and the JSON's checks_not_evaluated
-    # stays empty, silently hiding that S005 never ran.
+    # stays empty, silently hiding that neither check ever ran.
     out_path = tmp_path / "r.json"
     exit_status = main([_model(tmp_path), "--json", str(out_path)])
     assert exit_status == 0
 
     human = capsys.readouterr().out
-    assert "S005 not evaluated" in human
+    assert "S005, S006 not evaluated" in human
     assert "no findings (partial:" in human
 
     data = json.loads(out_path.read_text())
-    assert data["coverage"]["checks_not_evaluated"] == ["S005"]
+    assert data["coverage"]["checks_not_evaluated"] == ["S005", "S006"]
 
 
 # --- Fix round 1 ---
@@ -91,10 +93,13 @@ def test_unwritable_json_path_exits_two_without_traceback(tmp_path, capsys):
 
 def test_default_local_run_headline_is_not_alarming(tmp_path, capsys):
     # A valid eos_token_id (index 1 -> "<|im_end|>", which the template does
-    # emit) lets S005 fully evaluate, so the only thing "missing" from this
-    # run is the upstream comparison the user never asked for. That must
-    # read as complete-for-what-was-asked, not as a coverage warning.
-    path = _model(tmp_path, **{"tokenizer.ggml.eos_token_id": ("u32", 1)})
+    # emit) lets S005 fully evaluate, and an explicit add_bos_token=False
+    # lets S006 resolve too (metadata confidently says no BOS is added, so
+    # there's nothing to check). The only thing "missing" from this run is
+    # then the upstream comparison the user never asked for. That must read
+    # as complete-for-what-was-asked, not as a coverage warning.
+    path = _model(tmp_path, **{"tokenizer.ggml.eos_token_id": ("u32", 1),
+                               "tokenizer.ggml.add_bos_token": ("bool", False)})
     assert main([path]) == 0
     human = capsys.readouterr().out
     assert "no findings — local checks only" in human

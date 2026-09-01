@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import Any
 
 from ggufdoctor.models import CheckContext, Finding, Fixture, GgufModel, Severity
@@ -63,7 +64,7 @@ def _render_fixture(ctx: CheckContext, fixture: Fixture):
 def _collapse_by_signature(
     check_id: str,
     severity: Severity,
-    message: str,
+    message: str | Callable[[dict[str, Any]], str],
     results: list[tuple[str, Any, dict[str, Any]]],
 ) -> list[Finding]:
     """Fold one-finding-per-fixture into one-finding-per-distinct-failure.
@@ -74,6 +75,11 @@ def _collapse_by_signature(
     fixture in evidence["fixtures"]; fixtures failing for different reasons
     stay as separate findings. Order follows first occurrence, which follows
     corpus order, so results are deterministic.
+
+    `message` may be a plain string, or a callable that receives the group's
+    evidence (including the just-added "fixtures" key) and returns the
+    message -- used when the wording needs to quote something from that
+    particular group's evidence (see S003's author-declined case).
     """
     order: list[Any] = []
     fixtures_by_sig: dict[Any, list[str]] = {}
@@ -88,7 +94,8 @@ def _collapse_by_signature(
     for sig in order:
         evidence = dict(evidence_by_sig[sig])
         evidence["fixtures"] = fixtures_by_sig[sig]
-        out.append(Finding(check_id, severity, message, evidence=evidence))
+        msg = message(evidence) if callable(message) else message
+        out.append(Finding(check_id, severity, msg, evidence=evidence))
     return out
 
 
@@ -117,21 +124,46 @@ def s003_render_error(ctx: CheckContext) -> list[Finding]:
     tpl = ctx.model.chat_template
     if not tpl:
         return []
-    results = []
+    failures: list[tuple[str, Any, dict[str, Any]]] = []
+    declines: list[tuple[str, Any, dict[str, Any]]] = []
     for fx in ctx.fixtures:
         r = _render_fixture(ctx, fx)
-        if r.error and r.error.startswith("render:"):
-            results.append((fx.name, r.error, {"error": r.error}))
-    return _collapse_by_signature(
+        if not r.error:
+            continue
+        if r.error.startswith("render:"):
+            failures.append((fx.name, r.error, {"error": r.error}))
+        elif r.error.startswith("raise:"):
+            # The template itself called raise_exception(...) -- this is the
+            # author deliberately declining this conversation shape (e.g.
+            # Mistral/Llama-2 rejecting a system role), not an engine
+            # failure. See jinja2_engine.AuthorDeclinedRender.
+            author_message = r.error[len("raise:"):]
+            declines.append((fx.name, r.error, {"error": r.error,
+                                                 "author_message": author_message}))
+    findings = _collapse_by_signature(
         "S003", Severity.ERROR,
         "template raises while rendering a standard conversation",
-        results,
+        failures,
     )
+    findings.extend(_collapse_by_signature(
+        "S003", Severity.INFO,
+        lambda evidence: (
+            "template author deliberately declines this conversation shape "
+            f"(raise_exception: {evidence['author_message']!r})"
+        ),
+        declines,
+    ))
+    return findings
 
 
 def s004_unknown_special_token(ctx: CheckContext) -> list[Finding]:
     tpl = ctx.model.chat_template
-    if not tpl or not ctx.model.tokens:
+    if not tpl:
+        return []
+    if not ctx.model.tokens:
+        # No vocab to check emitted special tokens against at all -- this
+        # check never got to run, which is a coverage gap, not a clean pass.
+        ctx.checks_not_evaluated.append("S004")
         return []
     vocab = set(ctx.model.tokens)
     candidates = {t for t in SPECIAL_TOKEN_RE.findall(tpl) if t not in vocab}
@@ -175,6 +207,9 @@ def s005_eos_mismatch(ctx: CheckContext) -> list[Finding]:
     eos = m.tokens[m.eos_token_id]
     fx = next((f for f in ctx.fixtures if f.name == "multiturn"), None)
     if fx is None:
+        # A custom --fixtures corpus that doesn't include "multiturn" gives
+        # this check nothing to render, so it never evaluated.
+        ctx.checks_not_evaluated.append("S005")
         return []
     r = _render_fixture(ctx, fx)
     if not r.ok:
@@ -189,7 +224,20 @@ def s005_eos_mismatch(ctx: CheckContext) -> list[Finding]:
 
 def s006_double_bos(ctx: CheckContext) -> list[Finding]:
     m = ctx.model
-    if not m.chat_template or not m.add_bos_token:
+    if not m.chat_template:
+        return []
+    if m.add_bos_token is None:
+        # We don't know whether the tokenizer itself adds a BOS on top of
+        # whatever the template renders -- add_bos_token is genuinely
+        # missing from this file's metadata (e.g. a remote org/repo target
+        # with no vocab at all), so the check cannot even tell whether it
+        # applies. That's a coverage gap, not a clean pass.
+        ctx.checks_not_evaluated.append("S006")
+        return []
+    if not m.add_bos_token:
+        # Metadata confidently says the tokenizer does not add its own BOS,
+        # so there is no double-BOS risk regardless of the template -- a
+        # genuine no-op, not a coverage gap.
         return []
     bos = _real_token(m, m.bos_token_id)
     if bos is None:
@@ -200,6 +248,9 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
         return []
     fx = next((f for f in ctx.fixtures if f.name == "user_only"), None)
     if fx is None:
+        # A custom --fixtures corpus that doesn't include "user_only" gives
+        # this check nothing to render, so it never evaluated.
+        ctx.checks_not_evaluated.append("S006")
         return []
     r = _render_fixture(ctx, fx)
     if not r.ok:
@@ -212,19 +263,47 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
                     evidence={"add_bos_token": True})]
 
 
+# Common idioms by which a template hands off to the assistant through some
+# mechanism other than add_generation_prompt (a role header, a closing tag
+# that conventionally ends the user/instruction turn, ...). Used only to
+# pick S007's severity: a best-effort heuristic over known template
+# families, not a guarantee that every such template is fine.
+_ASSISTANT_OPEN_MARKERS = (
+    "[/INST]",
+    "<|im_start|>assistant",
+    "<|assistant|>",
+    "<start_of_turn>model",
+    "<|start_header_id|>assistant<|end_header_id|>",
+    "ASSISTANT:",
+    "### Response:",
+)
+
+
+def _opens_assistant_turn(text: str) -> bool:
+    tail = (text or "").rstrip()
+    return any(tail.endswith(marker) for marker in _ASSISTANT_OPEN_MARKERS)
+
+
 def s007_generation_prompt_noop(ctx: CheckContext) -> list[Finding]:
     tpl = ctx.model.chat_template
     if not tpl:
         return []
     fx = next((f for f in ctx.fixtures if f.name == "user_only"), None)
     if fx is None:
+        # A custom --fixtures corpus that doesn't include "user_only" gives
+        # this check nothing to render, so it never evaluated.
+        ctx.checks_not_evaluated.append("S007")
         return []
     on = _primary(ctx).render(tpl, _with_real_tokens(ctx, {**fx.context, "add_generation_prompt": True}))
     off = _primary(ctx).render(tpl, _with_real_tokens(ctx, {**fx.context, "add_generation_prompt": False}))
     if not (on.ok and off.ok) or on.text != off.text:
         return []
-    return [Finding("S007", Severity.WARN,
-                    "add_generation_prompt has no effect; the assistant turn is never opened",
+    # We can only observe that the flag changed nothing -- not why, and not
+    # whether the assistant turn is actually opened some other way, so the
+    # message states the observable fact alone.
+    severity = Severity.INFO if _opens_assistant_turn(on.text or "") else Severity.WARN
+    return [Finding("S007", severity,
+                    "add_generation_prompt has no effect on the rendered output",
                     fixture=fx.name)]
 
 

@@ -112,21 +112,116 @@ LLAMA2_CHAT_TPL = (
 )
 
 
-def test_s005_no_false_positive_on_mistral_template():
-    # Reviewer's disqualifying case: the real Mistral-7B-Instruct-v0.2
-    # template only ever emits EOS via `{{ eos_token }}`, never as a
-    # hardcoded literal, and demonstrably renders `</s>` correctly.
+# The real Gemma-2 chat template (google/gemma-2-9b-it tokenizer_config.json,
+# fetched verbatim from the public unsloth/gemma-2-9b-it mirror, which carries
+# the identical file). Gemma rejects a leading system role outright and, like
+# Mistral/Llama-2, only opens the assistant turn conditionally on
+# add_generation_prompt -- so unlike them, S007 does NOT fire here.
+GEMMA2_TPL = (
+    "{{ bos_token }}{% if messages[0]['role'] == 'system' %}"
+    "{{ raise_exception('System role not supported') }}{% endif %}"
+    "{% for message in messages %}"
+    "{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}"
+    "{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}"
+    "{% endif %}"
+    "{% if (message['role'] == 'assistant') %}{% set role = 'model' %}"
+    "{% else %}{% set role = message['role'] %}{% endif %}"
+    "{{ '<start_of_turn>' + role + '\n' + message['content'] | trim + '<end_of_turn>\n' }}"
+    "{% endfor %}"
+    "{% if add_generation_prompt %}{{'<start_of_turn>model\n'}}{% endif %}"
+)
+
+# The real Llama-3.1/3.3 tool-calling ("tool_use") chat template, fetched
+# verbatim from the public unsloth/Llama-3.3-70B-Instruct mirror of Meta's
+# own tokenizer_config.json (Llama 3.3 folded the separate tool_use variant
+# into its single default template). Exercises the "with_tools" fixture
+# through real `{{ ... | tojson(indent=4) }}` tool-schema rendering.
+LLAMA3_TOOLS_TPL = '{{- bos_token }}\n{%- if custom_tools is defined %}\n    {%- set tools = custom_tools %}\n{%- endif %}\n{%- if not tools_in_user_message is defined %}\n    {%- set tools_in_user_message = true %}\n{%- endif %}\n{%- if not date_string is defined %}\n    {%- set date_string = "26 Jul 2024" %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n\n{#- This block extracts the system message, so we can slot it into the right place. #}\n{%- if messages[0][\'role\'] == \'system\' %}\n    {%- set system_message = messages[0][\'content\']|trim %}\n    {%- set messages = messages[1:] %}\n{%- else %}\n    {%- set system_message = "" %}\n{%- endif %}\n\n{#- System message + builtin tools #}\n{{- "<|start_header_id|>system<|end_header_id|>\\n\\n" }}\n{%- if builtin_tools is defined or tools is not none %}\n    {{- "Environment: ipython\\n" }}\n{%- endif %}\n{%- if builtin_tools is defined %}\n    {{- "Tools: " + builtin_tools | reject(\'equalto\', \'code_interpreter\') | join(", ") + "\\n\\n"}}\n{%- endif %}\n{{- "Cutting Knowledge Date: December 2023\\n" }}\n{{- "Today Date: " + date_string + "\\n\\n" }}\n{%- if tools is not none and not tools_in_user_message %}\n    {{- "You have access to the following functions. To call a function, please respond with JSON for a function call." }}\n    {{- \'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.\' }}\n    {{- "Do not use variables.\\n\\n" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- "\\n\\n" }}\n    {%- endfor %}\n{%- endif %}\n{{- system_message }}\n{{- "<|eot_id|>" }}\n\n{#- Custom tools are passed in a user message with some extra guidance #}\n{%- if tools_in_user_message and not tools is none %}\n    {#- Extract the first user message so we can plug it in here #}\n    {%- if messages | length != 0 %}\n        {%- set first_user_message = messages[0][\'content\']|trim %}\n        {%- set messages = messages[1:] %}\n    {%- else %}\n        {{- raise_exception("Cannot put tools in the first user message when there\'s no first user message!") }}\n{%- endif %}\n    {{- \'<|start_header_id|>user<|end_header_id|>\\n\\n\' -}}\n    {{- "Given the following functions, please respond with a JSON for a function call " }}\n    {{- "with its proper arguments that best answers the given prompt.\\n\\n" }}\n    {{- \'Respond in the format {"name": function name, "parameters": dictionary of argument name and its value}.\' }}\n    {{- "Do not use variables.\\n\\n" }}\n    {%- for t in tools %}\n        {{- t | tojson(indent=4) }}\n        {{- "\\n\\n" }}\n    {%- endfor %}\n    {{- first_user_message + "<|eot_id|>"}}\n{%- endif %}\n\n{%- for message in messages %}\n    {%- if not (message.role == \'ipython\' or message.role == \'tool\' or \'tool_calls\' in message) %}\n        {{- \'<|start_header_id|>\' + message[\'role\'] + \'<|end_header_id|>\\n\\n\'+ message[\'content\'] | trim + \'<|eot_id|>\' }}\n    {%- elif \'tool_calls\' in message %}\n        {%- if not message.tool_calls|length == 1 %}\n            {{- raise_exception("This model only supports single tool-calls at once!") }}\n        {%- endif %}\n        {%- set tool_call = message.tool_calls[0].function %}\n        {%- if builtin_tools is defined and tool_call.name in builtin_tools %}\n            {{- \'<|start_header_id|>assistant<|end_header_id|>\\n\\n\' -}}\n            {{- "<|python_tag|>" + tool_call.name + ".call(" }}\n            {%- for arg_name, arg_val in tool_call.arguments | items %}\n                {{- arg_name + \'="\' + arg_val + \'"\' }}\n                {%- if not loop.last %}\n                    {{- ", " }}\n                {%- endif %}\n                {%- endfor %}\n            {{- ")" }}\n        {%- else  %}\n            {{- \'<|start_header_id|>assistant<|end_header_id|>\\n\\n\' -}}\n            {{- \'{"name": "\' + tool_call.name + \'", \' }}\n            {{- \'"parameters": \' }}\n            {{- tool_call.arguments | tojson }}\n            {{- "}" }}\n        {%- endif %}\n        {%- if builtin_tools is defined %}\n            {#- This means we\'re in ipython mode #}\n            {{- "<|eom_id|>" }}\n        {%- else %}\n            {{- "<|eot_id|>" }}\n        {%- endif %}\n    {%- elif message.role == "tool" or message.role == "ipython" %}\n        {{- "<|start_header_id|>ipython<|end_header_id|>\\n\\n" }}\n        {%- if message.content is mapping or message.content is iterable %}\n            {{- message.content | tojson }}\n        {%- else %}\n            {{- message.content }}\n        {%- endif %}\n        {{- "<|eot_id|>" }}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- \'<|start_header_id|>assistant<|end_header_id|>\\n\\n\' }}\n{%- endif %}\n'
+
+
+def _severities(findings):
+    return {(f.id, f.severity) for f in findings}
+
+
+def test_mistral_v02_full_suite_is_clean_apart_from_documented_declines():
+    # Fix round 3 (final whole-branch review): the fixtures already
+    # contained the evidence for S003/S007 -- the old test only asserted
+    # "S005 not in ids(f)" and sailed straight past both. This asserts the
+    # full finding set instead. add_bos_token=False reflects a correctly
+    # converted GGUF (the template's own `{{ bos_token }}` is the only BOS
+    # source), isolating this run to what the real template *itself*
+    # produces rather than also re-litigating S006 (see S006's own tests).
+    #
+    # What's left after that isolation is NOT a false positive:
+    #   - S003 INFO: the real template's OWN alternation guard (identical to
+    #     transformers) rejects the "system_user" fixture -- this is the
+    #     template author's deliberate, documented behaviour, now correctly
+    #     reported at INFO with the author's own message quoted, not ERROR.
+    #   - S007 INFO: add_generation_prompt is genuinely a no-op in this
+    #     template (it's never referenced at all) -- true and unavoidable
+    #     for this exact upstream template text -- but the rendered output
+    #     already ends in "[/INST]", which plainly opens the assistant turn
+    #     some other way, so it's INFO, not WARN.
+    # A template this widely deployed cannot be forced to report empty
+    # without either lying about what it does or suppressing a true
+    # observation -- so this is not weakened to assert `== []`.
     f = run_sanity_checks(ctx(chat_template=MISTRAL_V02_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
-                              bos_token_id=1, eos_token_id=2))
-    assert "S005" not in ids(f)
+                              bos_token_id=1, eos_token_id=2,
+                              add_bos_token=False))
+    assert _severities(f) == {("S003", Severity.INFO), ("S007", Severity.INFO)}
 
 
-def test_s005_no_false_positive_on_llama2_template():
+def test_llama2_chat_full_suite_is_clean_apart_from_documented_noop():
+    # Same fix as above, applied to Llama-2-chat. Its template special-cases
+    # a leading system role (folding it into the first user turn) rather
+    # than rejecting it, so system_user never raises -- S003 is silent here.
+    # add_generation_prompt is still never referenced, so S007 still fires;
+    # the rendered output still ends in "[/INST]", so it's still INFO.
     f = run_sanity_checks(ctx(chat_template=LLAMA2_CHAT_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
-                              bos_token_id=1, eos_token_id=2))
-    assert "S005" not in ids(f)
+                              bos_token_id=1, eos_token_id=2,
+                              add_bos_token=False))
+    assert _severities(f) == {("S007", Severity.INFO)}
+
+
+def test_gemma2_full_suite_matches_documented_real_world_quirks():
+    # Real Gemma-2 tokenizer_config.json values (fetched from the public
+    # unsloth/gemma-2-9b-it mirror): add_bos_token is True, and the model's
+    # own vocab holds a separate "<eos>" special token distinct from the
+    # "<end_of_turn>" the chat template actually emits at every turn
+    # boundary. Both S005 and S006 below are well-documented real-world
+    # Gemma-2 GGUF conversion issues (generation_config.json for Gemma-2
+    # instruct models has historically had to list *two* eos token ids for
+    # exactly this reason, and "double BOS" was an open llama.cpp issue for
+    # Gemma conversions) -- not artifacts of this tool's fix.
+    f = run_sanity_checks(ctx(chat_template=GEMMA2_TPL,
+                              tokens=["<pad>", "<eos>", "<bos>",
+                                      "<start_of_turn>", "<end_of_turn>"],
+                              bos_token_id=2, eos_token_id=1,
+                              add_bos_token=True))
+    assert _severities(f) == {
+        ("S003", Severity.INFO),   # declines a leading system role, by design
+        ("S005", Severity.WARN),   # template only ever emits <end_of_turn>, never <eos>
+        ("S006", Severity.WARN),   # add_bos_token=True + template's own {{ bos_token }}
+    }
+
+
+def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
+    # Real Llama-3.3 tokenizer_config.json values (fetched from the public
+    # unsloth/Llama-3.3-70B-Instruct mirror of Meta's own file):
+    # add_bos_token is True, and the template also emits `{{ bos_token }}`
+    # at the very top -- the same real double-BOS pattern as Gemma-2 above,
+    # independently documented for Llama-3.x GGUF conversions. Everything
+    # else about this template -- including the "with_tools" fixture's real
+    # `| tojson(indent=4)` tool-schema rendering -- is clean.
+    f = run_sanity_checks(ctx(
+        chat_template=LLAMA3_TOOLS_TPL,
+        tokens=["<|begin_of_text|>", "<|end_of_text|>", "<|eot_id|>",
+                "<|eom_id|>", "<|python_tag|>", "<|start_header_id|>",
+                "<|end_header_id|>"],
+        bos_token_id=0, eos_token_id=2, add_bos_token=True))
+    assert _severities(f) == {("S006", Severity.WARN)}
 
 
 def test_s005_flags_template_that_never_emits_eos():
@@ -196,7 +291,10 @@ def test_s004_and_s006_skipped_when_template_does_not_compile():
 # of silently letting these look like clean passes. ---
 
 def test_s005_records_not_evaluated_when_eos_id_missing():
-    c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"])
+    # add_bos_token=False isolates this from S006's own (correct) coverage
+    # gap when add_bos_token is absent -- see the S006 tests below.
+    c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"],
+            add_bos_token=False)
     findings = run_sanity_checks(c)
     assert "S005" not in ids(findings)
     assert c.checks_not_evaluated == ["S005"]
@@ -204,7 +302,7 @@ def test_s005_records_not_evaluated_when_eos_id_missing():
 
 def test_s005_records_not_evaluated_when_eos_id_out_of_range():
     c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"],
-            eos_token_id=99)
+            eos_token_id=99, add_bos_token=False)
     findings = run_sanity_checks(c)
     # The out-of-range id is still worth flagging on its own...
     assert "S005" in ids(findings)
@@ -219,7 +317,7 @@ def test_s005_negative_eos_id_takes_the_out_of_range_warn_path():
     # the check stayed "safe" only by accident. It must now hit the same
     # out-of-range WARN path a too-large id does.
     c = ctx(chat_template=CHAT_TPL, tokens=["<|im_start|>", "<|im_end|>"],
-            eos_token_id=-1)
+            eos_token_id=-1, add_bos_token=False)
     findings = run_sanity_checks(c)
     s005 = [f for f in findings if f.id == "S005"]
     assert len(s005) == 1
@@ -239,10 +337,107 @@ def test_s006_records_not_evaluated_when_bos_id_missing():
 
 
 def test_s006_not_recorded_when_add_bos_token_is_false():
-    # add_bos_token=False (the default) means the check correctly doesn't
-    # apply -- that's a no-op, not a coverage gap, so S006 specifically
+    # add_bos_token *explicitly* False means the metadata confidently says
+    # the tokenizer does not add its own BOS -- the check correctly doesn't
+    # apply, that's a no-op, not a coverage gap, so S006 specifically
     # should not be recorded (S005 still bails on its own missing eos id,
     # which is exercised separately above).
-    c = ctx(chat_template=CHAT_TPL)
+    c = ctx(chat_template=CHAT_TPL, add_bos_token=False)
     run_sanity_checks(c)
     assert "S006" not in c.checks_not_evaluated
+
+
+def test_s006_records_not_evaluated_when_add_bos_token_absent():
+    # Fix round 3 (final whole-branch review): add_bos_token *absent*
+    # (None, the GgufModel default -- e.g. a remote org/repo target with no
+    # tokenizer_config info at all) is not the same claim as an explicit
+    # False. We don't know whether the tokenizer adds its own BOS, so the
+    # check cannot even tell whether it applies -- previously this was
+    # conflated with the explicit-False case and silently treated as a
+    # clean no-op, hiding a real coverage gap.
+    c = ctx(chat_template=CHAT_TPL)
+    findings = run_sanity_checks(c)
+    assert "S006" not in ids(findings)
+    assert "S006" in c.checks_not_evaluated
+
+
+def test_s004_records_not_evaluated_when_vocab_unavailable():
+    # Fix round 3: S004 used to return [] with no trace when the file has
+    # no vocab at all (e.g. a remote org/repo target) -- indistinguishable
+    # from "checked and found nothing wrong". It must now say it never ran.
+    c = ctx(chat_template=CHAT_TPL, tokens=[])
+    findings = run_sanity_checks(c)
+    assert "S004" not in ids(findings)
+    assert "S004" in c.checks_not_evaluated
+
+
+def test_s005_records_not_evaluated_when_multiturn_fixture_missing():
+    # Fix round 3: a custom --fixtures corpus that lacks "multiturn" leaves
+    # S005 with nothing to render; that must be a recorded coverage gap,
+    # not a silent pass.
+    custom_fixtures = [f for f in load_fixtures() if f.name != "multiturn"]
+    model = GgufModel(source_id="t", architecture="llama", chat_template=CHAT_TPL,
+                      tokens=["<unk>", "<s>", "</s>", "<|im_start|>", "<|im_end|>"],
+                      eos_token_id=2, add_bos_token=False)
+    c = CheckContext(model=model, engines=[Jinja2Engine()], fixtures=custom_fixtures)
+    findings = run_sanity_checks(c)
+    assert "S005" not in ids(findings)
+    assert "S005" in c.checks_not_evaluated
+
+
+def test_s006_records_not_evaluated_when_user_only_fixture_missing():
+    custom_fixtures = [f for f in load_fixtures() if f.name != "user_only"]
+    model = GgufModel(source_id="t", architecture="llama", chat_template=CHAT_TPL,
+                      tokens=["<s>", "<|im_start|>", "<|im_end|>"],
+                      bos_token_id=0, add_bos_token=True)
+    c = CheckContext(model=model, engines=[Jinja2Engine()], fixtures=custom_fixtures)
+    findings = run_sanity_checks(c)
+    assert "S006" not in ids(findings)
+    assert "S006" in c.checks_not_evaluated
+
+
+def test_s007_records_not_evaluated_when_user_only_fixture_missing():
+    custom_fixtures = [f for f in load_fixtures() if f.name != "user_only"]
+    model = GgufModel(source_id="t", architecture="llama", chat_template=CHAT_TPL)
+    c = CheckContext(model=model, engines=[Jinja2Engine()], fixtures=custom_fixtures)
+    findings = run_sanity_checks(c)
+    assert "S007" not in ids(findings)
+    assert "S007" in c.checks_not_evaluated
+
+
+# --- Fix round 3 (final whole-branch review): S003 splits author-declined
+# renders from genuine engine failures; S007's message states only the
+# observable fact. ---
+
+def test_s003_author_decline_is_info_not_error_and_quotes_the_message():
+    f = run_sanity_checks(ctx(chat_template=(
+        "{{ raise_exception('Only user and assistant roles are supported!') }}")))
+    s003 = [x for x in f if x.id == "S003"]
+    assert len(s003) == 1
+    assert s003[0].severity == Severity.INFO
+    assert "Only user and assistant roles are supported!" in s003[0].message
+
+
+def test_s003_genuine_render_failure_stays_error():
+    # An undefined-variable access is a real engine failure, not an author
+    # decline, and must keep S003's original ERROR severity.
+    f = run_sanity_checks(ctx(chat_template="{{ messages[0]['role'].nonexistent.deeper }}"))
+    s003 = [x for x in f if x.id == "S003"]
+    assert len(s003) == 1
+    assert s003[0].severity == Severity.ERROR
+
+
+def test_s007_info_when_output_already_opens_assistant_turn():
+    # Ends in "[/INST]" -- the assistant turn is plainly opened some other
+    # way, so the no-op flag is informational, not a working problem.
+    tpl = "{% for m in messages %}[INST] {{ m['content'] }} [/INST]{% endfor %}"
+    f = run_sanity_checks(ctx(chat_template=tpl))
+    s007 = next(x for x in f if x.id == "S007")
+    assert s007.severity == Severity.INFO
+    assert s007.message == "add_generation_prompt has no effect on the rendered output"
+
+
+def test_s007_warn_when_output_does_not_open_assistant_turn():
+    f = run_sanity_checks(ctx(chat_template="{% for m in messages %}{{ m['content'] }}{% endfor %}"))
+    s007 = next(x for x in f if x.id == "S007")
+    assert s007.severity == Severity.WARN

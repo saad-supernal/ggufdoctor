@@ -22,8 +22,24 @@ BASE_CONTEXT: dict[str, Any] = {
 }
 
 
+class AuthorDeclinedRender(Exception):
+    """Raised by a template's own `{{ raise_exception(...) }}` call.
+
+    A chat template that calls `raise_exception(...)` is not broken -- it is
+    the template author deliberately telling us they reject this conversation
+    shape (Mistral/Llama-2/Gemma all do this for unsupported role sequences,
+    and transformers reproduces the same behaviour). That is categorically
+    different from a genuine engine-level failure (a compile error, an
+    undefined variable, an unknown filter, a TypeError from malformed
+    template logic), so it gets its own exception type here and its own
+    "raise:" prefix on RenderResult.error, distinct from "render:" for
+    everything else. Callers (see checks/sanity.py S003) use that prefix to
+    tell an author's deliberate decline apart from a real failure.
+    """
+
+
 def _raise_exception(msg: str) -> None:
-    raise ValueError(msg)
+    raise AuthorDeclinedRender(msg)
 
 
 def _strftime_now(fmt: str) -> str:
@@ -99,5 +115,7 @@ class Jinja2Engine:
         ctx.update(context)
         try:
             return RenderResult(tpl.render(**ctx), None)
+        except AuthorDeclinedRender as e:
+            return RenderResult(None, f"raise:{e}")
         except Exception as e:
             return RenderResult(None, f"render:{type(e).__name__}: {e}")

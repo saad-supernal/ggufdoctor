@@ -15,8 +15,23 @@ def test_compile_error_is_captured_not_raised():
     assert r.error.startswith("compile:")
 
 
+def test_author_raised_exception_is_tagged_distinctly_from_engine_failures():
+    # Fix round 3 (final whole-branch review): a template calling
+    # raise_exception(...) is the author deliberately declining a
+    # conversation shape (Mistral/Llama-2/Gemma all do this for
+    # unsupported roles), not an engine failure -- it gets its own "raise:"
+    # prefix, carrying the author's own message verbatim, so callers (see
+    # checks/sanity.py S003) can tell the two apart.
+    r = Jinja2Engine().render(
+        "{{ raise_exception('Only user and assistant roles are supported!') }}", {})
+    assert not r.ok
+    assert r.error == "raise:Only user and assistant roles are supported!"
+
+
 def test_render_error_is_captured_not_raised():
-    r = Jinja2Engine().render("{{ raise_exception('boom') }}", {})
+    # A genuine engine-level failure (here: division by zero deep in an
+    # expression) is not an author decline and keeps the "render:" prefix.
+    r = Jinja2Engine().render("{{ 1 / 0 }}", {})
     assert not r.ok
     assert r.error.startswith("render:")
 
