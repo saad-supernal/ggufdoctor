@@ -489,3 +489,36 @@ def test_s007_warn_when_output_does_not_open_assistant_turn():
     f = run_sanity_checks(ctx(chat_template="{% for m in messages %}{{ m['content'] }}{% endfor %}"))
     s007 = next(x for x in f if x.id == "S007")
     assert s007.severity == Severity.WARN
+
+
+# --- Final fix C: a template that declines every fixture must say so, not
+# read as clean. S004/S005/S006/S007 all bail on "no render succeeded" (or,
+# for S007, "the flag's on/off render failed") without recording that as a
+# coverage gap -- indistinguishable, from the finding list alone, from
+# "checked and found nothing wrong". Splitting the author's deliberate
+# raise_exception out of S003 (fix round 3) was correct, but it means a
+# template that declines everything now produces a single S003 INFO and
+# *nothing else* unless these four checks also speak up. ---
+
+# Special tokens live in the raw template text (S004 regex-scans the
+# template source, not rendered output), so they still count as candidates
+# even though raise_exception fires before any of this text could ever be
+# emitted.
+DECLINES_EVERYTHING_TPL = "{{ raise_exception('nope') }}<|im_start|><|im_end|>"
+
+
+def test_template_declining_every_fixture_is_not_reported_as_clean():
+    c = ctx(chat_template=DECLINES_EVERYTHING_TPL,
+            tokens=["<unk>", "<s>", "</s>"],
+            bos_token_id=1, eos_token_id=2, add_bos_token=True)
+    findings = run_sanity_checks(c)
+    # S003 alone has something to say -- the author's declaration that this
+    # template declines every conversation shape the corpus offers. Nothing
+    # downstream of that render ever observed any output at all.
+    assert ids(findings) == {"S003"}
+    s003 = next(f for f in findings if f.id == "S003")
+    assert s003.severity == Severity.INFO
+    # Before this fix: none of these record anything, findings == the
+    # single S003 INFO, and the report reads as a clean pass with an empty
+    # checks_not_evaluated -- the exact silence this project keeps fighting.
+    assert set(c.checks_not_evaluated) == {"S004", "S005", "S006", "S007"}

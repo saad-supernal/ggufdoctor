@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from typing import Any, Callable
 
 API = "https://huggingface.co/api/models"
 RESOLVE = "https://huggingface.co/{repo}/resolve/main/{fn}"
+
+# A modest, bounded backoff for HTTP 429 (rate limited) -- stdlib time.sleep
+# only, no retry/backoff dependency. A 429 means "the Hub is throttling us
+# right now", not "this URL is invalid or gone": the same request very
+# likely succeeds a moment later, so it deserves a few short retries before
+# survey.py's caller has to file it as a genuine examine_error. A survey run
+# that does hundreds of these calls back to back is exactly the case that
+# trips this, and filing a throttled call as a permanent failure would
+# quietly shrink the comparable sample without saying so (see final-fix-c).
+_RATE_LIMIT_RETRY_DELAYS = (0.5, 1.0, 2.0)
 
 
 def _default_opener(token: str | None) -> Callable[[str], str]:
@@ -26,10 +37,34 @@ class HfClient:
         self.token = token
         self._open = opener or _default_opener(token)
 
+    def _fetch(self, url: str) -> str:
+        """self._open(url), retrying a bounded number of times on HTTP 429.
+
+        Anything other than a 429 propagates immediately -- a 404, a 500, a
+        network error are genuine failures the caller needs to see right
+        away, not conditions worth waiting out. A URL still returning 429
+        after every retry also propagates, so a repo that is truly
+        unreachable still ends up recorded as a failure rather than retried
+        forever; it just isn't blamed for merely having been asked at a bad
+        moment.
+        """
+        last_exc: urllib.error.HTTPError | None = None
+        for delay in (0.0, *_RATE_LIMIT_RETRY_DELAYS):
+            if delay:
+                time.sleep(delay)
+            try:
+                return self._open(url)
+            except urllib.error.HTTPError as e:
+                if e.code != 429:
+                    raise
+                last_exc = e
+        assert last_exc is not None
+        raise last_exc
+
     def model_info(self, repo_id: str) -> dict[str, Any]:
         url = (f"{API}/{repo_id}?expand[]=gguf&expand[]=cardData"
                "&expand[]=tags&expand[]=pipeline_tag")
-        return json.loads(self._open(url))
+        return json.loads(self._fetch(url))
 
     def gguf_chat_template(self, repo_id: str) -> str | None:
         try:
@@ -58,7 +93,7 @@ class HfClient:
         reasons: list[str] = []
         for fn in ("tokenizer_config.json", "chat_template.json"):
             try:
-                data = json.loads(self._open(RESOLVE.format(repo=repo_id, fn=fn)))
+                data = json.loads(self._fetch(RESOLVE.format(repo=repo_id, fn=fn)))
                 if not isinstance(data, dict):
                     reasons.append("fetch_error")
                     continue
@@ -90,4 +125,4 @@ class HfClient:
     def list_gguf_models(self, skip: int, limit: int = 100) -> list[dict[str, Any]]:
         url = (f"{API}?filter=gguf&sort=downloads&direction=-1"
                f"&limit={limit}&skip={skip}")
-        return json.loads(self._open(url))
+        return json.loads(self._fetch(url))

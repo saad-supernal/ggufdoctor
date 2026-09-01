@@ -41,6 +41,18 @@ UPSTREAM_REASON_TO_GAP = {
 # rather than a guess from its architecture name.
 NON_CHAT_PIPELINE_TAGS = {"automatic-speech-recognition", "text-to-speech"}
 
+# A repo recorded as "examine_error" contributes to neither comparable nor
+# divergent -- it just vanishes from both. Below this fraction of the
+# sample, that is ordinary background noise (a genuine timeout, a malformed
+# response). Above it, the comparable/divergent percentages were measured
+# over a sample that is missing a meaningful chunk of what it was supposed
+# to cover, and Hugging Face rate-limiting the extra Hub calls a survey
+# makes is a real, observed way to get there quietly: a live --top 400 run
+# once returned 75/400 = 18.75% examine_error, entirely rate-limiting, with
+# no other symptom -- the comparable/divergent figures still came out
+# looking like ordinary numbers. See final-fix-c.
+UNRELIABLE_EXAMINE_ERROR_FRACTION = 0.05
+
 
 def _is_non_chat_pipeline(info: dict[str, Any]) -> bool:
     pipeline_tag = str(info.get("pipeline_tag") or "").lower()
@@ -132,20 +144,6 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
             # both the sample size and the (fake) agreement rate.
             rec["status"] = "no_base_model"
             return rec
-        if _is_non_chat_pipeline(_safe_model_info(client, base)):
-            # The GGUF-side check above tests the GGUF repo's own
-            # pipeline_tag/tags -- but a GGUF repo built by a quantizer
-            # (e.g. unslothai/Qwen3-ASR-*-GGUF) routinely carries neither:
-            # pipeline_tag is often None and its tags are generic
-            # ("conversational"). The ASR/TTS fact lives on the *upstream*
-            # model card (Qwen/Qwen3-ASR-0.6B publishes pipeline_tag:
-            # automatic-speech-recognition), so it has to be checked there
-            # too. Either side firing excludes the repo; this is checked
-            # before fetching the upstream template so an excluded repo
-            # costs one model_info call, not also a wasted
-            # tokenizer_config.json/chat_template.json fetch.
-            rec["status"] = "upstream_non_chat_pipeline_tag"
-            return rec
         upstream, why = client.upstream_template(base)
         if why != "ok":
             rec["status"] = UPSTREAM_REASON_TO_GAP.get(why, "upstream_fetch_error")
@@ -154,6 +152,40 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
             rec["status"] = "missing_template"
             return rec
 
+        # The GGUF-side check above tests the GGUF repo's own pipeline_tag/
+        # tags -- but a GGUF repo built by a quantizer (e.g. unslothai/
+        # Qwen3-ASR-*-GGUF) routinely carries neither: pipeline_tag is often
+        # None and its tags are generic ("conversational"). The ASR/TTS fact
+        # lives on the *upstream* model card (Qwen/Qwen3-ASR-0.6B publishes
+        # pipeline_tag: automatic-speech-recognition), so it has to be
+        # checked there too. Deliberately lazy: this is the one check in
+        # this function that costs an extra Hub call beyond what fetching
+        # and comparing the templates already needs, so it only runs once a
+        # repo has survived every other filter and is one step from being
+        # counted as comparable -- not for every repo that merely carries a
+        # base model, most of which would be excluded for some other reason
+        # (missing/gated/absent upstream, no gguf-side template) anyway. A
+        # live --top 400 run once found this check running unconditionally
+        # here roughly doubled Hub calls and tripped rate limiting badly
+        # enough to turn a fifth of the sample into examine_error -- see
+        # final-fix-c.
+        if _is_non_chat_pipeline(_safe_model_info(client, base)):
+            rec["status"] = "upstream_non_chat_pipeline_tag"
+            return rec
+
+        # This GgufModel deliberately carries no tokens/bos_token_id/
+        # eos_token_id: the survey has no per-repo vocab to fetch for either
+        # side. checks/sanity._with_real_tokens is therefore a no-op here,
+        # so both the GGUF's own template and the upstream template render
+        # against the same engine-fabricated placeholder bos_token/
+        # eos_token strings (Jinja2Engine's BASE_CONTEXT) rather than either
+        # side's real tokens. That's symmetric -- both sides get the same
+        # placeholders, so it can't manufacture a divergence between them by
+        # itself -- but it does mean the survey never exercises the
+        # real-token protection the lint path has (see sanity.py's S004/
+        # S005/S006, which gate on _real_token specifically to avoid a
+        # fabricated placeholder standing in for a real token). Fetching a
+        # vocab per repo to close that gap is out of scope for v0.1.
         model = GgufModel(source_id=repo["id"], architecture=arch, chat_template=tpl)
         ctx = CheckContext(model=model, engines=[engine], fixtures=fixtures,
                            upstream_template=upstream,
@@ -195,6 +227,14 @@ def survey(client: Any, top: int, per_org: int) -> dict[str, Any]:
     divergent = [r for r in comparable if r["status"] == "output_differs"]
     dl_total = sum(r["downloads"] for r in comparable) or 1
     dl_div = sum(r["downloads"] for r in divergent)
+    coverage_gaps = dict(Counter(
+        r["status"] for r in records if r["status"] not in COMPARABLE))
+
+    examine_error_n = coverage_gaps.get("examine_error", 0)
+    # Guard len(records) == 0 the same way dl_total's `or 1` does above --
+    # an empty sample is "nothing to say", not "100% unreliable".
+    unreliable = bool(records) and (
+        examine_error_n / len(records) > UNRELIABLE_EXAMINE_ERROR_FRACTION)
 
     return {
         "records": records,
@@ -208,8 +248,8 @@ def survey(client: Any, top: int, per_org: int) -> dict[str, Any]:
             "download_weighted_pct": 100 * dl_div / dl_total,
             "publishers_total": len({r["org"] for r in comparable}),
             "publishers_affected": len({r["org"] for r in divergent}),
-            "coverage_gaps": dict(Counter(
-                r["status"] for r in records if r["status"] not in COMPARABLE)),
+            "coverage_gaps": coverage_gaps,
+            "unreliable": unreliable,
         },
     }
 
@@ -226,6 +266,16 @@ def to_markdown(result: dict[str, Any]) -> str:
             "failure. The figures below cover only the repos collected "
             "before that point -- do not quote this run as a complete "
             "survey of the requested sample size.")
+        lines.append("")
+    if a.get("unreliable"):
+        lines.append(
+            "> **Unreliable sample:** "
+            f"{a['coverage_gaps'].get('examine_error', 0)} of {a['sampled']} "
+            "repos failed to fetch (`examine_error`) -- likely Hugging Face "
+            "rate limiting rather than genuinely gone or broken repos. The "
+            "comparable/divergent figures below were computed over a sample "
+            "missing a meaningful share of what it was supposed to cover; "
+            "do not quote them as representative.")
         lines.append("")
     lines += [
         f"- Sampled: **{a['sampled']}** repos (per-org cap: {a['per_org']})",

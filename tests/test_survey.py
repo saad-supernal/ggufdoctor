@@ -1,4 +1,8 @@
+import json
+import urllib.error
+
 from ggufdoctor.checks.sanity import NON_CHAT_ARCHITECTURES
+from ggufdoctor.hf import HfClient
 from ggufdoctor.survey import sample_repos, survey, to_markdown
 
 
@@ -246,6 +250,11 @@ class UpstreamOnlySpeechPipelineClient:
     recognition. A GGUF-side-only check lets this through as
     `output_differs`, which is exactly the false positive a live --top 400
     run against Hugging Face turned up.
+
+    Final fix C: this check is now deliberately lazy -- it only runs once a
+    repo has survived every other filter (including the upstream_template
+    fetch), so upstream_template is called here and must succeed rather
+    than being unreachable code.
     """
 
     def list_gguf_models(self, skip, limit):
@@ -267,9 +276,8 @@ class UpstreamOnlySpeechPipelineClient:
         return (info.get("cardData") or {}).get("base_model")
 
     def upstream_template(self, repo):
-        raise AssertionError("upstream pipeline-tag exclusion must "
-                             "short-circuit before fetching the upstream "
-                             "template")
+        assert repo == "Qwen/Qwen3-ASR-0.6B", repo
+        return "T", "ok"
 
 
 def test_upstream_pipeline_tag_excludes_when_gguf_side_carries_no_evidence():
@@ -363,3 +371,130 @@ def test_both_sides_failing_to_render_is_unrenderable_not_cosmetic_only():
     assert r["aggregate"]["comparable"] == 0
     assert r["aggregate"]["coverage_gaps"].get("unrenderable") == 1
     assert "cosmetic_only" not in r["aggregate"]["coverage_gaps"]
+
+
+# --- Final fix C: the upstream pipeline_tag check must be lazy (only spend
+# its extra Hub call on a repo that is one step from being counted as
+# comparable), the survey must not silently misreport a run crippled by
+# rate-limited fetches, and a transient 429 must be retried rather than
+# filed as an examine_error. ---
+
+class LazyPipelineCheckClient:
+    """orgA/one has no gguf-side chat_template -- excluded as
+    missing_template before the upstream pipeline_tag check would ever
+    matter. Before final-fix-c, that check ran unconditionally for every
+    repo carrying a base model, so this repo cost a wasted second
+    model_info(base) call even though it was always going to be excluded
+    for an unrelated reason. base_model_info_calls records whether that
+    extra, unnecessary call still happens.
+    """
+
+    def __init__(self):
+        self.base_model_info_calls = 0
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/one", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        if repo_id == "orgA/one":
+            return {"gguf": {"architecture": "llama", "chat_template": None},
+                    "cardData": {"base_model": "up/stream"}}
+        self.base_model_info_calls += 1
+        return {}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        return "T", "ok"
+
+
+def test_upstream_pipeline_check_is_lazy_and_skipped_for_missing_template():
+    client = LazyPipelineCheckClient()
+    r = survey(client, top=10, per_org=2)
+    assert r["aggregate"]["coverage_gaps"].get("missing_template") == 1
+    assert client.base_model_info_calls == 0
+
+
+class HighExamineErrorRateClient:
+    """19 of 20 repos blow up during examine (95% examine_error)."""
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": f"orgA/repo{i}", "downloads": 1} for i in range(20)]
+
+    def model_info(self, repo_id):
+        if repo_id != "orgA/repo0":
+            raise RuntimeError("simulated rate-limited/failed fetch")
+        return {"gguf": {"architecture": "llama", "chat_template": "T"},
+                "cardData": {"base_model": "up/stream"}}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        return "T", "ok"
+
+
+def test_high_examine_error_rate_is_flagged_unreliable():
+    r = survey(HighExamineErrorRateClient(), top=20, per_org=20)
+    assert r["aggregate"]["sampled"] == 20
+    assert r["aggregate"]["coverage_gaps"].get("examine_error") == 19
+    assert r["aggregate"]["unreliable"] is True
+    md = to_markdown(r)
+    assert "unreliable" in md.lower()
+    assert "examine_error" in md
+
+
+def test_low_examine_error_rate_is_not_flagged_unreliable():
+    # Only the first of 20 repos in HighExamineErrorRateClient succeeds --
+    # sampling just that one repo (top=1) gives a run with zero
+    # examine_error, well under the unreliability threshold.
+    r = survey(HighExamineErrorRateClient(), top=1, per_org=1)
+    assert r["aggregate"]["sampled"] == 1
+    assert r["aggregate"]["coverage_gaps"].get("examine_error") is None
+    assert r["aggregate"]["unreliable"] is False
+    assert "unreliable" not in to_markdown(r).lower()
+
+
+def test_survey_completes_despite_transient_rate_limiting(monkeypatch):
+    # Exercises the real HfClient (not a duck-typed FakeClient) end to end,
+    # since the retry/backoff lives inside HfClient itself: every distinct
+    # endpoint (list_gguf_models, model_info for the repo, model_info for
+    # its base model, upstream_template's tokenizer_config.json fetch) is
+    # rate-limited exactly once and then succeeds -- the same shape as a
+    # real Hub throttling episode. Before the retry/backoff fix, each of
+    # these would have surfaced as a permanent HTTPError, and the repo would
+    # have been recorded as examine_error rather than comparable.
+    monkeypatch.setattr("ggufdoctor.hf.time.sleep", lambda s: None)
+    failed_once: set[str] = set()
+
+    list_body = json.dumps([{"id": "orgA/one", "downloads": 10}])
+    info_body = json.dumps({
+        "gguf": {"architecture": "llama", "chat_template": "T"},
+        "cardData": {"base_model": "up/stream"},
+    })
+    tok_body = json.dumps({"chat_template": "T"})
+
+    def flaky(url):
+        key = url.split("?")[0]
+        if key not in failed_once:
+            failed_once.add(key)
+            raise urllib.error.HTTPError(url, 429, "rate limited", {}, None)
+        if "tokenizer_config.json" in url:
+            return tok_body
+        if url.startswith("https://huggingface.co/api/models?"):
+            return list_body
+        return info_body
+
+    client = HfClient(opener=flaky)
+    result = survey(client, top=5, per_org=2)
+
+    assert result["aggregate"]["sampled"] == 1
+    assert result["aggregate"]["comparable"] == 1
+    assert result["aggregate"]["coverage_gaps"].get("examine_error", 0) == 0
+    assert result["aggregate"]["unreliable"] is False
+    assert "unreliable" not in to_markdown(result).lower()

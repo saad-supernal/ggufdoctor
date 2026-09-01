@@ -60,7 +60,12 @@ def resolve(target: str, compare_upstream: str | None = None,
                           architecture=gg.get("architecture"),
                           chat_template=gg.get("chat_template"))
         base = compare_upstream or hf.base_model_of(info)
-        if not base:
+        if not base or base.lower() == target.lower():
+            # Mirrors survey.py's guard: a repo can't be its own upstream --
+            # comparing a template against itself always scores "identical"
+            # and would silently misreport a self-referential base_model tag
+            # as a clean, verified comparison instead of no comparison at
+            # all.
             return model, None, Coverage("no_base_model", families)
         upstream, why = hf.upstream_template(base)
         if why == "ok":

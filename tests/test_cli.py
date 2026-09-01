@@ -170,6 +170,36 @@ def test_survey_help_documents_its_own_flags(capsys):
     assert "--markdown" in out
 
 
+# --- Final fix C: a template that declines every fixture must not read as
+# a clean pass end to end through the CLI. ---
+
+def test_template_declining_everything_is_not_clean_end_to_end(tmp_path, capsys):
+    tpl = "{{ raise_exception('nope') }}<|im_start|><|im_end|>"
+    path = _model(tmp_path, **{
+        "tokenizer.chat_template": ("string", tpl),
+        "tokenizer.ggml.tokens": ("array_string", ["<unk>", "<s>", "</s>"]),
+        "tokenizer.ggml.bos_token_id": ("u32", 1),
+        "tokenizer.ggml.eos_token_id": ("u32", 2),
+        "tokenizer.ggml.add_bos_token": ("bool", True),
+    })
+    out_path = tmp_path / "r.json"
+    exit_status = main([path, "--json", str(out_path)])
+
+    human = capsys.readouterr().out
+    # Before this fix: a single "S003 INFO", "0 error, 0 warn", exit 0, and
+    # no "not evaluated" note at all -- indistinguishable from a template
+    # this tool actually checked and found clean.
+    assert exit_status == 0
+    assert "S003" in human
+    for check_id in ("S004", "S005", "S006", "S007"):
+        assert f"note: {check_id} not evaluated" in human
+
+    data = json.loads(out_path.read_text())
+    assert data["coverage"]["checks_not_evaluated"] == [
+        "S004", "S005", "S006", "S007"]
+    assert data["summary"] == {"error": 0, "warn": 0, "info": 1}
+
+
 def test_file_literally_named_survey_is_linted_not_dispatched(tmp_path, monkeypatch):
     # A local file (or repo) that happens to be named exactly "survey" must
     # still be treated as a lint target, the same way is_repo_id() always

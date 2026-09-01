@@ -79,3 +79,31 @@ def test_existing_local_path_is_never_a_repo_id(tmp_path):
     d = tmp_path / "myorg" / "myrepo"
     d.mkdir(parents=True)
     assert not is_repo_id(str(d))
+
+
+# --- Final fix C: mirror survey.py's self-referential base_model guard on
+# the lint path -- a repo can't be its own upstream. Without this,
+# `ggufdoctor <repo>` on a repo whose base_model (card data) points at
+# itself compares its chat_template against itself and reports "identical",
+# a false "verified against upstream" instead of no comparison at all.
+
+class SelfReferentialClient:
+    """Reports itself (different case) as its own base_model."""
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "llama", "chat_template": "T"},
+                "cardData": {"base_model": "OrgA/Model-GGUF"}}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        raise AssertionError("must not compare a repo's template against itself")
+
+
+def test_self_referential_base_model_is_skipped_on_lint_path():
+    model, upstream, coverage = resolve("orga/model-gguf",
+                                        client=SelfReferentialClient())
+    assert upstream is None
+    assert coverage.upstream == "no_base_model"
+    assert coverage.families_run == ["S"]

@@ -102,3 +102,73 @@ def test_gguf_chat_template_handles_bare_string_model_info():
     c = HfClient(opener=fake_opener({"models": '"just a string"'}))
     result = c.gguf_chat_template("bad/repo")
     assert result is None
+
+
+# --- Final fix C: bounded retry/backoff on HTTP 429, so a rate-limited
+# request becomes a successful (if slightly delayed) call rather than a
+# permanent failure that survey.py has to file as examine_error. ---
+
+def test_model_info_retries_past_a_transient_rate_limit(monkeypatch):
+    monkeypatch.setattr("ggufdoctor.hf.time.sleep", lambda s: None)
+    calls = {"n": 0}
+    body = json.dumps({"gguf": {"chat_template": "T"}})
+
+    def flaky(url):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise urllib.error.HTTPError(url, 429, "rate limited", {}, None)
+        return body
+
+    c = HfClient(opener=flaky)
+    info = c.model_info("org/model")
+    assert info["gguf"]["chat_template"] == "T"
+    assert calls["n"] == 2
+
+
+def test_upstream_template_retries_past_a_transient_rate_limit(monkeypatch):
+    monkeypatch.setattr("ggufdoctor.hf.time.sleep", lambda s: None)
+    calls = {"n": 0}
+    body = json.dumps({"chat_template": "{{ 'hi' }}"})
+
+    def flaky(url):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise urllib.error.HTTPError(url, 429, "rate limited", {}, None)
+        return body
+
+    c = HfClient(opener=flaky)
+    tpl, why = c.upstream_template("org/model")
+    assert why == "ok"
+    assert tpl == "{{ 'hi' }}"
+
+
+def test_non_429_http_error_is_not_retried(monkeypatch):
+    monkeypatch.setattr("ggufdoctor.hf.time.sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def always_404(url):
+        calls["n"] += 1
+        raise urllib.error.HTTPError(url, 404, "not found", {}, None)
+
+    c = HfClient(opener=always_404)
+    with pytest.raises(urllib.error.HTTPError):
+        c.model_info("org/model")
+    assert calls["n"] == 1
+
+
+def test_persistent_rate_limit_eventually_raises_after_bounded_retries(monkeypatch):
+    sleeps: list[float] = []
+    monkeypatch.setattr("ggufdoctor.hf.time.sleep", sleeps.append)
+    calls = {"n": 0}
+
+    def always_429(url):
+        calls["n"] += 1
+        raise urllib.error.HTTPError(url, 429, "rate limited", {}, None)
+
+    c = HfClient(opener=always_429)
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        c.model_info("org/model")
+    assert exc_info.value.code == 429
+    # Bounded: a handful of attempts, not an infinite or unbounded retry loop.
+    assert 2 <= calls["n"] <= 6
+    assert len(sleeps) == calls["n"] - 1

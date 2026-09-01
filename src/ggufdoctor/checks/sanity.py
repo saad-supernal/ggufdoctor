@@ -170,13 +170,25 @@ def s004_unknown_special_token(ctx: CheckContext) -> list[Finding]:
     if not candidates:
         return []
     confirmed: set[str] = set()
+    any_rendered = False
     for fx in ctx.fixtures:
         if confirmed == candidates:
             break
         r = _render_fixture(ctx, fx)
-        if not r.ok or not r.text:
+        if not r.ok:
             continue
-        confirmed.update(t for t in candidates if t not in confirmed and t in r.text)
+        any_rendered = True
+        if r.text:
+            confirmed.update(t for t in candidates if t not in confirmed and t in r.text)
+    if not any_rendered:
+        # Every fixture failed to render (e.g. the template declines every
+        # conversation shape this corpus offers, or fails outright) -- this
+        # check never got to observe what the template actually emits, so
+        # the absence of a finding here is a coverage gap, not confirmation
+        # that these candidate tokens never surface. S003 already reports
+        # the render failures themselves.
+        ctx.checks_not_evaluated.append("S004")
+        return []
     if not confirmed:
         return []
     return [Finding("S004", Severity.ERROR,
@@ -213,7 +225,11 @@ def s005_eos_mismatch(ctx: CheckContext) -> list[Finding]:
         return []
     r = _render_fixture(ctx, fx)
     if not r.ok:
-        # S003 already reports the render failure; nothing more to say here.
+        # S003 already reports the render failure itself, but that leaves
+        # this check's own question -- does the template ever emit the
+        # declared EOS? -- genuinely unanswered, not answered "no". Record
+        # the coverage gap rather than silently falling through as clean.
+        ctx.checks_not_evaluated.append("S005")
         return []
     if eos not in (r.text or ""):
         return [Finding("S005", Severity.WARN,
@@ -254,6 +270,10 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
         return []
     r = _render_fixture(ctx, fx)
     if not r.ok:
+        # The render this check needs failed (S003 already reports that),
+        # so whether the template also duplicates BOS was never observed --
+        # a coverage gap, not a clean "no double-BOS found".
+        ctx.checks_not_evaluated.append("S006")
         return []
     if not (r.text or "").startswith(bos):
         return []
@@ -265,10 +285,12 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
     # repos/ggml-org/llama.cpp/contents/common/chat.cpp`): the two lines
     #     if (inputs.add_bos && string_starts_with(result, tmpl.bos_token()))
     #         result = result.substr(tmpl.bos_token().size());
-    # run on every call path in that file (llama-server's --jinja chat
-    # completions, llama-cli's -cnv template application). So through
-    # llama.cpp's own template machinery this combination does NOT reach
-    # the tokenizer as two BOS tokens -- it's a real, deliberate mitigation,
+    # run on every call path in that file (llama-server's chat completions --
+    # Jinja templating is its default since `use_jinja = true` in
+    # common/common.h, not an opt-in flag -- and llama-cli's -cnv template
+    # application). So through llama.cpp's own template machinery this
+    # combination does NOT reach the tokenizer as two BOS tokens -- it's a
+    # real, deliberate mitigation,
     # not just the `check_double_bos_eos` warning in src/llama-vocab.cpp
     # (which only logs, never strips, and only fires downstream of a raw
     # prompt string that already contains two BOS tokens).
@@ -283,9 +305,11 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
     # is neutralized; it is real only for callers outside that path.
     return [Finding("S006", Severity.INFO,
                     "template emits BOS while add_bos_token metadata also adds one; "
-                    "llama.cpp's own chat-template application (common_chat_apply_template, "
-                    "as used by llama-server --jinja and llama-cli -cnv) strips this "
-                    "duplicate automatically, but rendering this template yourself and then "
+                    "llama.cpp's own chat-template application "
+                    "(common_chat_template_direct_apply_impl in common/chat.cpp) strips "
+                    "this duplicate automatically -- Jinja templating is llama-server's "
+                    "and llama-cli's default (use_jinja = true in common/common.h), not "
+                    "an opt-in flag -- but rendering this template yourself and then "
                     "tokenizing with add_special_tokens=True (e.g. via transformers, or any "
                     "runtime that reimplements template application) will genuinely produce "
                     "two BOS tokens",
@@ -325,7 +349,14 @@ def s007_generation_prompt_noop(ctx: CheckContext) -> list[Finding]:
         return []
     on = _primary(ctx).render(tpl, _with_real_tokens(ctx, {**fx.context, "add_generation_prompt": True}))
     off = _primary(ctx).render(tpl, _with_real_tokens(ctx, {**fx.context, "add_generation_prompt": False}))
-    if not (on.ok and off.ok) or on.text != off.text:
+    if not (on.ok and off.ok):
+        # The render itself failed on both/either side (S003 already
+        # reports that) -- this check never got to observe whether the flag
+        # changes anything, which is a coverage gap distinct from "it does
+        # change something, so there's no finding here".
+        ctx.checks_not_evaluated.append("S007")
+        return []
+    if on.text != off.text:
         return []
     # We can only observe that the flag changed nothing -- not why, and not
     # whether the assistant turn is actually opened some other way, so the
