@@ -33,8 +33,9 @@ recommendations in this evaluation were killed by one `--help` invocation each.
 
 - **Verified empty.** Zero results on GitHub for GGUF/chat-template linting
   across five query variants.
-- **Measured pain.** 15.1% of comparable top-downloaded GGUF chat models render
-  different prompt text than upstream; 30.8% weighted by downloads. See
+- **Measured pain.** 14.8% of comparable top-downloaded GGUF chat models render
+  different prompt text than upstream; 31.4% weighted by downloads (measured by the
+  shipped tool, 2026-09-01; the probe's earlier 15.1% is superseded). See
   `README.md` and `2026-08-31-survey-raw.json`.
 - **Neutrality moat.** Hugging Face cannot publicly rank the quality of its own
   users' uploads; llama.cpp and Ollama will not ship the tool that says their

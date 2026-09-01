@@ -13,6 +13,12 @@ template the model was trained with, and nothing in the ecosystem checks this.
 A survey run on 2026-08-31 against the most-downloaded GGUF repositories on
 Hugging Face found:
 
+> **Superseded (2026-09-01):** the figures in this section come from the throwaway
+> probe and are kept as the historical record of what motivated the design. The
+> shipped tool measures **14.8%** (16/108), 31.4% download-weighted, 15 of 87
+> publishers. See `docs/research/README.md` for the four reasons the numbers
+> differ. Quote the tool's figure, not this one.
+
 | Metric | Value |
 |---|---|
 | Comparable chat models sampled | 106 |

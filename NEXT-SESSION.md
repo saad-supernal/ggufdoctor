@@ -1,69 +1,55 @@
-# Resume here
+# Where this stands
 
-State as of 2026-08-31. Design and planning are **complete and approved**;
-**no implementation code exists yet**. Task 1 was about to be dispatched.
+**v0.1 is built.** Branch `feat/v0.1`, 166 tests passing, the CLI and the `survey`
+subcommand both work end to end against live Hugging Face.
 
-## What this is
+## The number
 
-`ggufdoctor` — a CLI that lints the chat template embedded in a GGUF file.
-Three check families: self-contained sanity (offline), cross-engine equivalence
-(Jinja2 vs minja vs Ollama's Go conversion), and opt-in upstream comparison.
+**14.8%** of comparable top-downloaded GGUF chat models (16/108) render different prompt
+text than their upstream; **31.4%** weighted by downloads; 15 of 87 publishers. Measured
+2026-09-01 by the shipped tool, zero fetch failures. Regenerate with:
 
-Chosen after evaluating and rejecting four other ideas — see
-`docs/research/idea-evaluation.md` before proposing anything different.
+```bash
+ggufdoctor survey --top 400 --per-org 2 --markdown survey.md
+```
 
-## Where things stand
+The earlier 15.1% from the throwaway probe is **superseded** — `docs/research/README.md`
+explains the four reasons they differ. Do not quote 15.1% anywhere.
 
-| | |
-|---|---|
-| Branch | `feat/v0.1` (implementation must not land on `main`) |
-| Spec | `docs/superpowers/specs/2026-08-31-ggufdoctor-design.md` — **approved** |
-| Plan | `docs/superpowers/plans/2026-08-31-ggufdoctor-v0.1.md` — 12 TDD tasks, **approved** |
-| Execution method | subagent-driven-development, fresh subagent per task |
-| Ledger | `.superpowers/sdd/2026-08-31-ggufdoctor-v0.1/progress.md` (git-ignored, on disk) |
-| Progress | pre-flight scan done, 5 findings ruled on, **0 of 12 tasks implemented** |
+## Not done yet
 
-## To resume
+- **No git remote.** Nothing is pushed anywhere; `[project.urls]` is deliberately absent
+  until a real URL exists.
+- **v0.2:** minja via WASM, the `X` check family (cross-engine equivalence), `--engines`,
+  the engine conformance suite, and vendoring real templates as offline test data
+  (reuse `docs/research/2026-09-01-survey.json`).
+- **v0.3:** Ollama's Go template conversion, `--runtime`.
 
-1. Read the plan and the spec.
-2. Read the ledger — it holds the pre-flight scan table and five rulings that
-   **must** be carried into dispatches.
-3. Continue subagent-driven-development from Task 1. Record `BASE` before each
-   dispatch; the merge base is `36611bb`.
+## Things learned the hard way — read before changing checks
 
-## Rulings that must survive (from the pre-flight scan)
+Every one of these was a real defect that shipped into a review:
 
-These are plan defects already found and decided. Carry them into the relevant
-task dispatch or the tasks will fail:
+1. **Never ask template source a question only a render can answer.** S004, S005 and S006
+   all did, and S005 flagged the entire Mistral and Llama-2 families as broken because
+   those templates emit EOS through `{{ eos_token }}` rather than a literal.
+2. **A regression test scoped to one finding id will miss the next one.** The guard added
+   after that S005 bug asserted `"S005" not in ids` and sat green on top of an S003 bug in
+   the same fixtures for the rest of the build. The real-template tests now assert the
+   *complete* finding set with the models' genuine metadata.
+3. **Silence is a lie the tool tells.** Three separate times a check returned no findings
+   because it could not run, and the report read as clean. `Coverage.checks_not_evaluated`
+   exists for this; every bail-out must record itself.
+4. **A warning that fires on everything is not a warning.** Qualifying the headline on
+   every default run made "partial" meaningless. Declining to check is not the same as
+   failing to check.
+5. **Verify vendor behaviour in the vendor's source.** S006 was about to warn every
+   llama.cpp user about a double BOS that `common/chat.cpp` strips.
+6. **The survey must survive its own API budget.** An extra `model_info` per repo got us
+   rate-limited and silently computed the figure over a sample a fifth of which never
+   loaded. Fetch failures above 5% now flag the run unreliable.
 
-- **Task 2 must also create an empty `tests/__init__.py`.** Without it, pytest
-  puts `tests/` on `sys.path` instead of the repo root and every
-  `from tests.helpers.gguf_builder import …` fails (Tasks 3, 4, 6, 11, 12).
-- **Task 5 must also create an empty `src/ggufdoctor/fixture_data/__init__.py`.**
-  `importlib.resources.files()` needs an importable package.
-- **Task 5: drop the `force-include` block** from the pyproject edit — hatchling
-  already ships package data; the block risks double-inclusion.
-- **Task 6: ignore `CHAT_ARCHITECTURES`** in the interfaces list — it is never
-  defined or used; only `NON_CHAT_ARCHITECTURES` exists.
-- **Task 12: rewrite `cli.py` in full**, do not follow the prose rename
-  instruction — it is the one place the plan violates its own no-placeholder rule.
+## Where the process record lives
 
-## Evidence worth not losing
-
-- `docs/research/2026-08-31-survey-raw.json` — per-repo records behind the 15.1%.
-- `docs/research/probe2-throwaway.py` — the script that produced it. Superseded by
-  the `survey` subcommand once Task 12 lands; kept for auditability.
-- `docs/research/reports/` — eight full research reports with citations.
-
-## Things already learned the hard way
-
-- **Verify against the real CLI before recommending anything.** Two earlier
-  recommendations were killed by a single `--help` each (`claude plugin eval`,
-  `claude --max-budget-usd`).
-- **Check publisher concentration before quoting an ecosystem statistic.** The
-  first survey read 46.7%; it was one publisher dominating the download
-  rankings. The per-org cap is why the real figure is 15.1%.
-- **Compare rendered output, never template source.** Source diffs are dominated
-  by engine-compatibility rewrites that change nothing the model sees.
-- **Coverage gaps must be reported, never dropped.** Gated Google repos were
-  being silently misfiled as "no chat template", which shrank the denominator.
+`.superpowers/sdd/2026-08-31-ggufdoctor-v0.1/progress.md` — the full ledger, including
+rulings E1–E28 and the per-task review outcomes. It is git-ignored (`.superpowers/sdd/`
+carries a blanket ignore), so it will not survive `git clean -fdx`.
