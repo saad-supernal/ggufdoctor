@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from typing import Any
 
-from ggufdoctor.checks.reference import run_reference_checks
+from ggufdoctor.checks.reference import any_fixture_renders_both_sides, run_reference_checks
 from ggufdoctor.checks.sanity import NON_CHAT_ARCHITECTURES
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.fixtures import load_fixtures
@@ -11,18 +11,43 @@ from ggufdoctor.models import CheckContext, GgufModel
 
 COMPARABLE = {"identical", "cosmetic_only", "output_differs"}
 
-# Each of hf.upstream_template's five non-"ok" reasons gets its own
+# Each of hf.upstream_template's four non-"ok" reasons gets its own
 # coverage_gaps key. Collapsing "not_found" (the upstream repo no longer
 # exists) and "fetch_error" (we couldn't reach it, for some other reason)
 # into one bucket would erase a real, citable result -- "the upstream is
 # gone" is a materially different finding from "we hit a transient error"
 # even though neither one shrinks the comparable denominator.
+#
+# "genuinely_absent" maps to "upstream_has_no_template", not "non_chat_
+# model": all we observed is that the upstream repo's tokenizer_config.json
+# (and chat_template.json) have no chat_template field. That is equally
+# consistent with a pretrain base model that was never meant to be a chat
+# model -- calling it "non_chat_model" asserts an inference the data doesn't
+# support.
 UPSTREAM_REASON_TO_GAP = {
     "gated": "upstream_gated",
-    "genuinely_absent": "non_chat_model",
+    "genuinely_absent": "upstream_has_no_template",
     "not_found": "upstream_not_found",
     "fetch_error": "upstream_fetch_error",
 }
+
+# Hugging Face's own pipeline_tag/tags, not architecture-name guessing, is
+# the evidence used to exclude ASR/TTS repos that happen to report a
+# generic or shared architecture string (e.g. unslothai/Qwen3-ASR-* reports
+# `qwen3vl`, a real architecture for actual chat models -- adding it to
+# NON_CHAT_ARCHITECTURES would incorrectly exclude those). A speech
+# recognition or text-to-speech pipeline is definitionally not a chat
+# model, and pipeline_tag/tags are published, citable facts about the repo
+# rather than a guess from its architecture name.
+NON_CHAT_PIPELINE_TAGS = {"automatic-speech-recognition", "text-to-speech"}
+
+
+def _is_non_chat_pipeline(info: dict[str, Any]) -> bool:
+    pipeline_tag = str(info.get("pipeline_tag") or "").lower()
+    if pipeline_tag in NON_CHAT_PIPELINE_TAGS:
+        return True
+    tags = {str(t).lower() for t in (info.get("tags") or [])}
+    return bool(tags & NON_CHAT_PIPELINE_TAGS)
 
 
 def _sample_repos(client: Any, top: int,
@@ -72,15 +97,23 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
         gg = (info or {}).get("gguf") or {}
         tpl = gg.get("chat_template")
         arch = gg.get("architecture")
-        if arch in NON_CHAT_ARCHITECTURES:
+        if (arch or "").lower() in NON_CHAT_ARCHITECTURES:
             # ASR/TTS/embedding architectures are not chat models at all --
             # counting them as "no template" or (worse) as divergent would
             # distort the denominator with repos that were never comparable
             # in the first place. They get their own coverage_gaps reason.
             rec["status"] = "non_chat_architecture"
             return rec
+        if _is_non_chat_pipeline(info or {}):
+            # Same reasoning as above, evidenced by pipeline_tag/tags
+            # instead of architecture -- see NON_CHAT_PIPELINE_TAGS.
+            rec["status"] = "non_chat_pipeline_tag"
+            return rec
         base = client.base_model_of(info)
-        if not base:
+        if not base or base.lower() == repo["id"].lower():
+            # A repo can't be its own upstream: comparing a template against
+            # itself always scores "identical" and would silently inflate
+            # both the sample size and the (fake) agreement rate.
             rec["status"] = "no_base_model"
             return rec
         upstream, why = client.upstream_template(base)
@@ -101,6 +134,14 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
             rec["fixtures"] = sorted({f.fixture for f in findings if f.fixture})
         elif tpl == upstream:
             rec["status"] = "identical"
+        elif not any_fixture_renders_both_sides(ctx):
+            # Neither side ever rendered successfully on the same fixture,
+            # so "the templates render the same thing" was never actually
+            # observed -- only that the two source strings differ. Reporting
+            # that as "cosmetic_only" would publish "the rewrite changes
+            # nothing the model sees" about a repo this tool never
+            # successfully rendered at all.
+            rec["status"] = "unrenderable"
         else:
             rec["status"] = "cosmetic_only"
         return rec

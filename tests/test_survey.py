@@ -1,3 +1,4 @@
+from ggufdoctor.checks.sanity import NON_CHAT_ARCHITECTURES
 from ggufdoctor.survey import sample_repos, survey, to_markdown
 
 
@@ -145,3 +146,178 @@ def test_not_found_and_fetch_error_are_distinct_gap_keys():
     md = to_markdown(r)
     assert "upstream_not_found" in md
     assert "upstream_fetch_error" in md
+
+
+# --- Final fix B: encode the survey's audit criteria in code ---
+
+class GenuinelyAbsentUpstreamClient:
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/one", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "llama", "chat_template": "T"},
+                "cardData": {"base_model": "up/stream"}}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        return None, "genuinely_absent"
+
+
+def test_upstream_missing_template_is_labeled_by_observation_not_inference():
+    # "genuinely_absent" means the upstream repo's tokenizer_config.json (and
+    # chat_template.json) have no chat_template field -- that's equally
+    # consistent with a pretrain base model as with a "non chat model", so
+    # the coverage_gaps key must say the former, not assert the latter.
+    r = survey(GenuinelyAbsentUpstreamClient(), top=10, per_org=2)
+    gaps = r["aggregate"]["coverage_gaps"]
+    assert gaps.get("upstream_has_no_template") == 1
+    assert "non_chat_model" not in gaps
+
+
+class UppercaseNonChatArchClient:
+    """Architecture string cased like the raw GGUF metadata often is."""
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/embed-GGUF", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "BERT", "chat_template": None},
+                "cardData": {}}
+
+    def base_model_of(self, info):
+        raise AssertionError("architecture exclusion must short-circuit "
+                             "before base_model resolution")
+
+    def upstream_template(self, repo):
+        raise AssertionError("must not resolve upstream for a non-chat architecture")
+
+
+def test_non_chat_architecture_exclusion_is_case_insensitive():
+    r = survey(UppercaseNonChatArchClient(), top=10, per_org=2)
+    assert r["aggregate"]["coverage_gaps"].get("non_chat_architecture") == 1
+
+
+class SpeechPipelineClient:
+    """Reports a real chat-capable architecture name, but is an ASR model.
+
+    Mirrors unslothai/Qwen3-ASR-*-GGUF: architecture 'qwen3vl' is a
+    legitimate architecture for real chat models, so name-based exclusion
+    (NON_CHAT_ARCHITECTURES) must not catch it -- only the Hub's own
+    pipeline_tag/tags evidence should.
+    """
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "unslothai/Qwen3-ASR-0.6B-GGUF", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "qwen3vl", "chat_template": "T"},
+                "cardData": {"base_model": "Qwen/Qwen3-ASR-0.6B"},
+                "pipeline_tag": "automatic-speech-recognition",
+                "tags": ["gguf", "automatic-speech-recognition"]}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        raise AssertionError("pipeline-tag exclusion must short-circuit "
+                             "before upstream resolution")
+
+
+def test_speech_pipeline_tag_excludes_despite_chat_capable_architecture_name():
+    r = survey(SpeechPipelineClient(), top=10, per_org=2)
+    assert r["aggregate"]["comparable"] == 0
+    assert r["aggregate"]["coverage_gaps"].get("non_chat_pipeline_tag") == 1
+    assert "qwen3vl" not in NON_CHAT_ARCHITECTURES
+
+
+class TtsPipelineViaTagsClient:
+    """pipeline_tag absent, but 'text-to-speech' shows up in tags instead."""
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/tts-model-GGUF", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "llama", "chat_template": "T"},
+                "cardData": {"base_model": "up/stream"},
+                "tags": ["gguf", "text-to-speech"]}
+
+    def base_model_of(self, info):
+        raise AssertionError("pipeline-tag exclusion must short-circuit "
+                             "before base_model resolution")
+
+    def upstream_template(self, repo):
+        raise AssertionError("pipeline-tag exclusion must short-circuit "
+                             "before upstream resolution")
+
+
+def test_tts_tag_excludes_even_without_a_pipeline_tag_field():
+    r = survey(TtsPipelineViaTagsClient(), top=10, per_org=2)
+    assert r["aggregate"]["coverage_gaps"].get("non_chat_pipeline_tag") == 1
+
+
+class SelfReferentialBaseModelClient:
+    """Lists itself (different case) as its own base_model."""
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/Model-GGUF", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "llama", "chat_template": "T"},
+                "cardData": {"base_model": "orga/model-gguf"}}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        raise AssertionError("must not compare a repo's template against itself")
+
+
+def test_self_referential_base_model_is_excluded_not_compared_to_itself():
+    r = survey(SelfReferentialBaseModelClient(), top=10, per_org=2)
+    assert r["aggregate"]["comparable"] == 0
+    assert r["aggregate"]["coverage_gaps"].get("no_base_model") == 1
+
+
+class BothSidesFailToRenderClient:
+    """Neither the GGUF's template nor the upstream's ever renders."""
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "orgA/one", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        return {"gguf": {"architecture": "llama",
+                         "chat_template": "{{ raise_exception('gguf side') }}"},
+                "cardData": {"base_model": "up/stream"}}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        return "{{ raise_exception('upstream side') }}", "ok"
+
+
+def test_both_sides_failing_to_render_is_unrenderable_not_cosmetic_only():
+    # Before this fix: no R001 findings (r001 skips fixtures where either
+    # side errors), the two template strings differ, so the record fell
+    # through to "cosmetic_only" -- publishing "the rewrite changes nothing
+    # the model sees" about a repo the tool never actually rendered.
+    r = survey(BothSidesFailToRenderClient(), top=10, per_org=2)
+    statuses = {rec["id"]: rec["status"] for rec in r["records"]}
+    assert statuses["orgA/one"] == "unrenderable"
+    assert r["aggregate"]["comparable"] == 0
+    assert r["aggregate"]["coverage_gaps"].get("unrenderable") == 1
+    assert "cosmetic_only" not in r["aggregate"]["coverage_gaps"]

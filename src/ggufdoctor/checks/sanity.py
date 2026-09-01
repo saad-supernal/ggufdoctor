@@ -257,9 +257,38 @@ def s006_double_bos(ctx: CheckContext) -> list[Finding]:
         return []
     if not (r.text or "").startswith(bos):
         return []
-    return [Finding("S006", Severity.WARN,
-                    "template emits BOS while metadata also adds BOS; "
-                    "the prompt will start with a duplicated token",
+    # Severity: current mainline llama.cpp (common/chat.cpp,
+    # common_chat_template_direct_apply_impl) explicitly strips a leading
+    # bos_token string from the rendered template output whenever the
+    # vocab's own add_bos is set, before tokenizing -- confirmed by reading
+    # that function on ggml-org/llama.cpp main (fetched via `gh api
+    # repos/ggml-org/llama.cpp/contents/common/chat.cpp`): the two lines
+    #     if (inputs.add_bos && string_starts_with(result, tmpl.bos_token()))
+    #         result = result.substr(tmpl.bos_token().size());
+    # run on every call path in that file (llama-server's --jinja chat
+    # completions, llama-cli's -cnv template application). So through
+    # llama.cpp's own template machinery this combination does NOT reach
+    # the tokenizer as two BOS tokens -- it's a real, deliberate mitigation,
+    # not just the `check_double_bos_eos` warning in src/llama-vocab.cpp
+    # (which only logs, never strips, and only fires downstream of a raw
+    # prompt string that already contains two BOS tokens).
+    #
+    # That mitigation lives in llama.cpp's chat-template glue, not in the
+    # GGUF file or the template itself, so it does not help a caller who
+    # renders this same chat_template independently (transformers-style
+    # `apply_chat_template`, a DIY script, or any runtime that reimplements
+    # template application without llama.cpp's strip) and then tokenizes
+    # the result with add_special_tokens=True -- that caller genuinely gets
+    # two BOS tokens. INFO, not WARN: within the reference runtime the risk
+    # is neutralized; it is real only for callers outside that path.
+    return [Finding("S006", Severity.INFO,
+                    "template emits BOS while add_bos_token metadata also adds one; "
+                    "llama.cpp's own chat-template application (common_chat_apply_template, "
+                    "as used by llama-server --jinja and llama-cli -cnv) strips this "
+                    "duplicate automatically, but rendering this template yourself and then "
+                    "tokenizing with add_special_tokens=True (e.g. via transformers, or any "
+                    "runtime that reimplements template application) will genuinely produce "
+                    "two BOS tokens",
                     evidence={"add_bos_token": True})]
 
 

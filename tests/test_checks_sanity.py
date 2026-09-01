@@ -159,10 +159,15 @@ def test_mistral_v02_full_suite_matches_documented_real_world_footguns():
     #   - S003 INFO: the template's OWN alternation guard (identical to
     #     transformers) rejects the "system_user" fixture -- the author's
     #     deliberate, documented behaviour, quoted verbatim, not an error.
-    #   - S006 WARN: add_bos_token=true (real) + the template's own
-    #     `{{ bos_token }}` (real) is the documented llama.cpp "double BOS"
-    #     footgun for Mistral GGUF conversions -- S006 exists precisely to
-    #     catch this combination, and it does.
+    #   - S006 INFO: add_bos_token=true (real) + the template's own
+    #     `{{ bos_token }}` (real) is the double-BOS combination -- but
+    #     current mainline llama.cpp's own chat-template application
+    #     (common/chat.cpp, common_chat_template_direct_apply_impl) strips
+    #     exactly this leading duplicate before tokenizing, so the risk is
+    #     real only for callers that render this template themselves and
+    #     tokenize with add_special_tokens=True outside llama.cpp's own
+    #     template glue -- not a WARN-worthy near-certainty on llama.cpp
+    #     itself. S006 still exists precisely to catch this combination.
     #   - S007 INFO: add_generation_prompt is genuinely never referenced in
     #     this template -- true and unavoidable for this exact upstream
     #     text -- but the rendered output already ends in "[/INST]", which
@@ -175,7 +180,7 @@ def test_mistral_v02_full_suite_matches_documented_real_world_footguns():
                               add_bos_token=True))
     assert _severities(f) == {
         ("S003", Severity.INFO),
-        ("S006", Severity.WARN),
+        ("S006", Severity.INFO),
         ("S007", Severity.INFO),
     }
 
@@ -191,12 +196,14 @@ def test_llama2_chat_full_suite_matches_documented_real_world_footguns():
     # rejecting it outright, so system_user never raises and there is no
     # S003 here. add_generation_prompt is still never referenced, so S007
     # still fires; the rendered output still ends in "[/INST]", so INFO.
+    # S006 is INFO here for the same reason as Mistral above: llama.cpp's
+    # own chat-template application strips this exact leading duplicate.
     f = run_sanity_checks(ctx(chat_template=LLAMA2_CHAT_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
                               bos_token_id=1, eos_token_id=2,
                               add_bos_token=True))
     assert _severities(f) == {
-        ("S006", Severity.WARN),
+        ("S006", Severity.INFO),
         ("S007", Severity.INFO),
     }
 
@@ -214,7 +221,10 @@ def test_gemma2_full_suite_matches_documented_real_world_quirks():
     # issues (generation_config.json for Gemma-2 instruct models has
     # historically had to list *two* eos token ids for exactly this reason,
     # and "double BOS" was an open llama.cpp issue for Gemma conversions)
-    # -- not artifacts of this tool's fix.
+    # -- not artifacts of this tool's fix. S006 is INFO, not WARN: current
+    # mainline llama.cpp's own chat-template application strips the leading
+    # duplicate before tokenizing (see sanity.s006_double_bos), so the risk
+    # is real for callers outside that path, not for llama.cpp itself.
     f = run_sanity_checks(ctx(chat_template=GEMMA2_TPL,
                               tokens=["<pad>", "<eos>", "<bos>",
                                       "<start_of_turn>", "<end_of_turn>"],
@@ -223,7 +233,7 @@ def test_gemma2_full_suite_matches_documented_real_world_quirks():
     assert _severities(f) == {
         ("S003", Severity.INFO),   # declines a leading system role, by design
         ("S005", Severity.WARN),   # template only ever emits <end_of_turn>, never <eos>
-        ("S006", Severity.WARN),   # add_bos_token=True + template's own {{ bos_token }}
+        ("S006", Severity.INFO),   # add_bos_token=True + template's own {{ bos_token }}
     }
 
 
@@ -242,8 +252,9 @@ def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
     # tokens named above) so a placeholder there doesn't affect coverage.
     #
     # add_bos_token=true + the template's own `{{- bos_token }}` at the top
-    # is the same real double-BOS pattern as Gemma-2 above, independently
-    # documented for Llama-3.x GGUF conversions. Everything else about this
+    # is the same double-BOS pattern as Gemma-2 above -- INFO, not WARN, for
+    # the same reason (llama.cpp's own chat-template application strips the
+    # leading duplicate before tokenizing). Everything else about this
     # template -- including the "with_tools" fixture's real
     # `| tojson(indent=4)` tool-schema rendering -- is clean.
     tokens = ["<unk>"] * 128011
@@ -258,7 +269,7 @@ def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
         chat_template=LLAMA3_TOOLS_TPL,
         tokens=tokens,
         bos_token_id=128000, eos_token_id=128009, add_bos_token=True))
-    assert _severities(f) == {("S006", Severity.WARN)}
+    assert _severities(f) == {("S006", Severity.INFO)}
 
 
 def test_s005_flags_template_that_never_emits_eos():

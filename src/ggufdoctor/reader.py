@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ggufdoctor.bytesource import ByteSource, Cursor, LocalByteSource
+from ggufdoctor.bytesource import ByteSource, Cursor, LocalByteSource, TruncatedError
 from ggufdoctor.models import GgufModel
 
 T_UINT8, T_INT8, T_UINT16, T_INT16 = 0, 1, 2, 3
@@ -40,7 +40,15 @@ def _read_value(c: Cursor, vtype: int) -> Any:
 
 def read_gguf(source: ByteSource, source_id: str) -> GgufModel:
     c = Cursor(source)
-    if c.take(4) != b"GGUF":
+    try:
+        magic = c.take(4)
+    except TruncatedError:
+        # A source shorter than the 4-byte magic can never be a GGUF file --
+        # report that plainly rather than letting the read-ahead buffer's
+        # "needed 4 bytes at 0" leak out as if it meant something to a user
+        # who just pointed the tool at the wrong file.
+        raise NotGgufError(f"{source_id}: missing GGUF magic")
+    if magic != b"GGUF":
         raise NotGgufError(f"{source_id}: missing GGUF magic")
     c.u32()   # version
     c.u64()   # tensor count

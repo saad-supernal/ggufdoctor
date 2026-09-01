@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from ggufdoctor.cli import main
 from tests.helpers.gguf_builder import build_gguf
 
@@ -47,6 +49,15 @@ def test_unreadable_file_exits_two(tmp_path):
     bad = tmp_path / "x.gguf"
     bad.write_bytes(b"NOPE")
     assert main([str(bad)]) == 2
+
+
+def test_too_short_to_hold_the_magic_reports_not_a_gguf_file(tmp_path, capsys):
+    bad = tmp_path / "x.gguf"
+    bad.write_bytes(b"NO")  # shorter than the 4-byte "GGUF" magic
+    assert main([str(bad)]) == 2
+    err = capsys.readouterr().err
+    assert "missing GGUF magic" in err
+    assert "needed 4 bytes" not in err
 
 
 def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
@@ -126,3 +137,47 @@ def test_gated_upstream_produces_a_partial_headline(tmp_path, monkeypatch, capsy
 def test_require_upstream_without_compare_upstream_is_a_usage_error(tmp_path):
     path = _model(tmp_path)
     assert main([path, "--require-upstream"]) == 2
+
+
+# --- Final fix B: survey subcommand dispatch/visibility ---
+
+def test_survey_appears_in_top_level_help(capsys):
+    with pytest.raises(SystemExit):
+        main(["--help"])
+    out = capsys.readouterr().out
+    assert "survey" in out
+
+
+def test_survey_subcommand_dispatches_without_touching_the_real_hub(monkeypatch, capsys):
+    class FakeClient:
+        def __init__(self, *a, **k):
+            pass
+
+        def list_gguf_models(self, skip, limit):
+            return []
+
+    monkeypatch.setattr("ggufdoctor.hf.HfClient", FakeClient)
+    assert main(["survey", "--top", "5"]) == 0
+    out = capsys.readouterr().out
+    assert "GGUF chat-template survey" in out
+
+
+def test_survey_help_documents_its_own_flags(capsys):
+    with pytest.raises(SystemExit):
+        main(["survey", "--help"])
+    out = capsys.readouterr().out
+    assert "--per-org" in out
+    assert "--markdown" in out
+
+
+def test_file_literally_named_survey_is_linted_not_dispatched(tmp_path, monkeypatch):
+    # A local file (or repo) that happens to be named exactly "survey" must
+    # still be treated as a lint target, the same way is_repo_id() always
+    # prefers an on-disk path over guessing at a name's shape.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "survey").write_bytes(build_gguf({
+        "general.architecture": ("string", "llama"),
+        "tokenizer.chat_template": ("string", CHAT_TPL),
+        "tokenizer.ggml.tokens": ("array_string", ["<|im_start|>", "<|im_end|>"]),
+    }))
+    assert main(["survey"]) == 0

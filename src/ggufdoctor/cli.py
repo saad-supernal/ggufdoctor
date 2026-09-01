@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from ggufdoctor.checks.reference import run_reference_checks
@@ -17,15 +18,28 @@ from ggufdoctor.report.json_report import build_json, exit_code
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="ggufdoctor",
-        description="Lint the chat template embedded in a GGUF file.")
+        description="Lint the chat template embedded in a GGUF file.",
+        epilog="Also available: `ggufdoctor survey [--top N] [--per-org N] "
+               "[--out PATH] [--markdown PATH]`, which surveys chat-template "
+               "divergence across the GGUF ecosystem on Hugging Face rather "
+               "than linting a single file. Run `ggufdoctor survey --help` "
+               "for its own options. (If you have a local file or repo "
+               "literally named `survey`, this still lints it as normal --"
+               " see is_repo_id/`resolve` for how a target is told apart "
+               "from the subcommand.)")
     p.add_argument("target", help="local .gguf path or a Hugging Face repo id")
     p.add_argument("--compare-upstream", metavar="REPO",
                    help="compare rendered output against this source model")
     p.add_argument("--fail-on", choices=["error", "warn", "info", "never"],
-                   default="error")
+                   default="error",
+                   help="minimum severity that makes the process exit 1 "
+                        "(default: error)")
     p.add_argument("--fixtures", metavar="PATH", help="custom fixture corpus JSON")
-    p.add_argument("--json", metavar="PATH", dest="json_path")
-    p.add_argument("--ignore-file", metavar="PATH", default=".ggufdoctorignore")
+    p.add_argument("--json", metavar="PATH", dest="json_path",
+                   help="write the full machine-readable report to PATH")
+    p.add_argument("--ignore-file", metavar="PATH", default=".ggufdoctorignore",
+                   help="path to a file listing finding ids/fixtures to "
+                        "suppress (default: .ggufdoctorignore)")
     p.add_argument("--require-upstream", action="store_true",
                    help="fail (exit 1) if the upstream comparison requested "
                         "via --compare-upstream could not be resolved "
@@ -34,9 +48,35 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _build_survey_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="ggufdoctor survey",
+        description="Survey chat-template divergence from upstream across "
+                     "the GGUF ecosystem on Hugging Face.")
+    p.add_argument("--top", type=int, default=200,
+                   help="number of top-downloaded GGUF repos to sample "
+                        "(default: 200)")
+    p.add_argument("--per-org", type=int, default=2,
+                   help="cap on repos sampled per publisher/org, so the "
+                        "download ranking isn't dominated by a handful of "
+                        "publishers (default: 2)")
+    p.add_argument("--out", metavar="PATH",
+                   help="write the raw per-repo JSON results to PATH")
+    p.add_argument("--markdown", metavar="PATH",
+                   help="write the markdown report to PATH (it is also "
+                        "always printed to stdout)")
+    return p
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] == "survey":
+    # argv[0] == "survey" normally means the survey subcommand -- but a
+    # local file or repo id that happens to be named exactly "survey" must
+    # still lint as a normal target, the same way is_repo_id() always
+    # prefers an on-disk path over guessing at a name's shape. Checking
+    # existence here, before dispatch, keeps that one rule consistent in
+    # both places instead of only in resolve().
+    if argv and argv[0] == "survey" and not os.path.exists("survey"):
         return _survey_main(argv[1:])
     return _lint_main(argv)
 
@@ -109,12 +149,7 @@ def _survey_main(argv: list[str]) -> int:
     from ggufdoctor.hf import HfClient
     from ggufdoctor.survey import survey, to_markdown
 
-    p = argparse.ArgumentParser(prog="ggufdoctor survey")
-    p.add_argument("--top", type=int, default=200)
-    p.add_argument("--per-org", type=int, default=2)
-    p.add_argument("--out", metavar="PATH")
-    p.add_argument("--markdown", metavar="PATH")
-    args = p.parse_args(argv)
+    args = _build_survey_parser().parse_args(argv)
 
     try:
         result = survey(HfClient(), top=args.top, per_org=args.per_org)

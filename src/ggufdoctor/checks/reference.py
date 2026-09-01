@@ -40,6 +40,31 @@ def r002_annotated_patch(ctx: CheckContext) -> list[Finding]:
                     "divergence is annotated by the publisher as a deliberate fix")]
 
 
+def any_fixture_renders_both_sides(ctx: CheckContext) -> bool:
+    """True if at least one fixture renders successfully on both the GGUF's
+    own chat_template and ctx.upstream_template.
+
+    r001_output_differs silently skips any fixture where either side fails
+    to render, so a repo whose template and upstream both fail on every
+    fixture produces zero R001 findings -- indistinguishable, from the
+    finding list alone, from two templates that render identically. This
+    helper lets a caller (survey._examine) tell the two apart and label the
+    former "unrenderable" instead of quietly falling through to
+    "cosmetic_only"/"identical".
+    """
+    gguf_tpl, up_tpl = ctx.model.chat_template, ctx.upstream_template
+    if not gguf_tpl or not up_tpl:
+        return False
+    engine = ctx.engines[0]
+    for fx in ctx.fixtures:
+        real_context = _with_real_tokens(ctx, fx.context)
+        g = engine.render(gguf_tpl, real_context)
+        u = engine.render(up_tpl, real_context)
+        if g.ok and u.ok:
+            return True
+    return False
+
+
 def r001_output_differs(ctx: CheckContext, annotated: bool) -> list[Finding]:
     gguf_tpl, up_tpl = ctx.model.chat_template, ctx.upstream_template
     if not gguf_tpl or not up_tpl:

@@ -6,7 +6,29 @@ build-backend = "hatchling.build"
 name = "ggufdoctor"
 version = "0.1.0"
 description = "Lint chat templates embedded in GGUF files"
+readme = "README.md"
 requires-python = ">=3.11"
+# No `license` field yet: the license for this project has not been chosen.
+# Do not infer one (e.g. from classifiers or from this being open source on
+# a host) -- add `license = "..."` here explicitly once that choice is made.
+authors = [
+    {name = "Saad", email = "saadfarooq404@yahoo.com"},
+]
+keywords = [
+    "gguf", "llama.cpp", "chat-template", "jinja2", "llm",
+    "tokenizer", "cli", "lint",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 dependencies = ["jinja2>=3.1"]
 
 [project.scripts]

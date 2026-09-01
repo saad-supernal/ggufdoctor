@@ -40,6 +40,17 @@ def test_rejects_non_gguf(tmp_path):
         read_gguf_file(_write(tmp_path, b"NOPE" + b"\x00" * 32))
 
 
+def test_file_shorter_than_the_magic_reports_not_a_gguf_file(tmp_path):
+    # A source with fewer than 4 bytes can't even be compared against the
+    # "GGUF" magic -- the byte-source's read-ahead buffer used to raise its
+    # own TruncatedError ("needed 4 bytes at 0") before the magic check ever
+    # ran, leaking an internal detail instead of the same clear
+    # "missing GGUF magic" a merely-wrong-but-long-enough file gets.
+    for blob in (b"", b"G", b"GG", b"GGU"):
+        with pytest.raises(NotGgufError, match="missing GGUF magic"):
+            read_gguf_file(_write(tmp_path, blob))
+
+
 def test_tokens_excluded_from_metadata_blob(tmp_path):
     blob = build_gguf({
         "general.architecture": ("string", "llama"),

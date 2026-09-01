@@ -27,7 +27,8 @@ class HfClient:
         self._open = opener or _default_opener(token)
 
     def model_info(self, repo_id: str) -> dict[str, Any]:
-        url = f"{API}/{repo_id}?expand[]=gguf&expand[]=cardData&expand[]=tags"
+        url = (f"{API}/{repo_id}?expand[]=gguf&expand[]=cardData"
+               "&expand[]=tags&expand[]=pipeline_tag")
         return json.loads(self._open(url))
 
     def gguf_chat_template(self, repo_id: str) -> str | None:
