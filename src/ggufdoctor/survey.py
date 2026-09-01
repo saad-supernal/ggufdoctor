@@ -50,6 +50,22 @@ def _is_non_chat_pipeline(info: dict[str, Any]) -> bool:
     return bool(tags & NON_CHAT_PIPELINE_TAGS)
 
 
+def _safe_model_info(client: Any, repo_id: str) -> dict[str, Any]:
+    """client.model_info(repo_id), or {} if the lookup fails.
+
+    This is purely an extra evidence-gathering call on top of the
+    upstream-template fetch _examine already makes -- if the upstream repo
+    is gated, gone, or otherwise unreachable, that is upstream_template's
+    reason to report, not a new failure mode invented here. {} makes
+    _is_non_chat_pipeline report False, which just falls through to the
+    normal upstream_template call and its existing reason-handling.
+    """
+    try:
+        return client.model_info(repo_id) or {}
+    except Exception:
+        return {}
+
+
 def _sample_repos(client: Any, top: int,
                    per_org: int) -> tuple[list[dict[str, Any]], bool]:
     """Collect up to `top` repos, capped at `per_org` per organisation.
@@ -115,6 +131,20 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
             # itself always scores "identical" and would silently inflate
             # both the sample size and the (fake) agreement rate.
             rec["status"] = "no_base_model"
+            return rec
+        if _is_non_chat_pipeline(_safe_model_info(client, base)):
+            # The GGUF-side check above tests the GGUF repo's own
+            # pipeline_tag/tags -- but a GGUF repo built by a quantizer
+            # (e.g. unslothai/Qwen3-ASR-*-GGUF) routinely carries neither:
+            # pipeline_tag is often None and its tags are generic
+            # ("conversational"). The ASR/TTS fact lives on the *upstream*
+            # model card (Qwen/Qwen3-ASR-0.6B publishes pipeline_tag:
+            # automatic-speech-recognition), so it has to be checked there
+            # too. Either side firing excludes the repo; this is checked
+            # before fetching the upstream template so an excluded repo
+            # costs one model_info call, not also a wasted
+            # tokenizer_config.json/chat_template.json fetch.
+            rec["status"] = "upstream_non_chat_pipeline_tag"
             return rec
         upstream, why = client.upstream_template(base)
         if why != "ok":

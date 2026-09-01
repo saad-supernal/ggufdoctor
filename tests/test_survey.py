@@ -238,6 +238,48 @@ def test_speech_pipeline_tag_excludes_despite_chat_capable_architecture_name():
     assert "qwen3vl" not in NON_CHAT_ARCHITECTURES
 
 
+class UpstreamOnlySpeechPipelineClient:
+    """The real unslothai/Qwen3-ASR-*-GGUF bug: the GGUF repo itself carries
+    no ASR evidence at all (pipeline_tag is None, tags are generic --
+    "conversational") -- only the *upstream* model card
+    (Qwen/Qwen3-ASR-0.6B) publishes pipeline_tag: automatic-speech-
+    recognition. A GGUF-side-only check lets this through as
+    `output_differs`, which is exactly the false positive a live --top 400
+    run against Hugging Face turned up.
+    """
+
+    def list_gguf_models(self, skip, limit):
+        if skip:
+            return []
+        return [{"id": "unslothai/Qwen3-ASR-0.6B-GGUF", "downloads": 5}]
+
+    def model_info(self, repo_id):
+        if repo_id == "unslothai/Qwen3-ASR-0.6B-GGUF":
+            return {"gguf": {"architecture": "qwen3vl", "chat_template": "T"},
+                    "cardData": {"base_model": "Qwen/Qwen3-ASR-0.6B"},
+                    "pipeline_tag": None,
+                    "tags": ["gguf", "conversational"]}
+        assert repo_id == "Qwen/Qwen3-ASR-0.6B", repo_id
+        return {"pipeline_tag": "automatic-speech-recognition",
+                "tags": ["qwen3_asr", "automatic-speech-recognition"]}
+
+    def base_model_of(self, info):
+        return (info.get("cardData") or {}).get("base_model")
+
+    def upstream_template(self, repo):
+        raise AssertionError("upstream pipeline-tag exclusion must "
+                             "short-circuit before fetching the upstream "
+                             "template")
+
+
+def test_upstream_pipeline_tag_excludes_when_gguf_side_carries_no_evidence():
+    r = survey(UpstreamOnlySpeechPipelineClient(), top=10, per_org=2)
+    assert r["aggregate"]["comparable"] == 0
+    assert r["aggregate"]["divergent"] == 0
+    assert r["aggregate"]["coverage_gaps"].get("upstream_non_chat_pipeline_tag") == 1
+    assert "non_chat_pipeline_tag" not in r["aggregate"]["coverage_gaps"]
+
+
 class TtsPipelineViaTagsClient:
     """pipeline_tag absent, but 'text-to-speech' shows up in tags instead."""
 
