@@ -86,14 +86,14 @@ def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
 # --- Fix round 1 ---
 
 def test_unwritable_json_path_exits_two_without_traceback(tmp_path, capsys):
-    readonly_dir = tmp_path / "readonly"
-    readonly_dir.mkdir()
-    readonly_dir.chmod(0o500)  # read + execute, no write
-    target = str(readonly_dir / "r.json")
-    try:
-        exit_status = main([_model(tmp_path), "--json", target])
-    finally:
-        readonly_dir.chmod(0o700)  # let tmp_path cleanup remove it afterwards
+    # Make the write fail on every OS by putting a regular *file* where a
+    # directory has to be: POSIX raises NotADirectoryError, Windows raises an
+    # OSError of its own. A chmod-based "read-only directory" is not portable
+    # -- Windows ignores POSIX mode bits for the owner and the write succeeds.
+    blocker = tmp_path / "blocker"
+    blocker.write_text("not a directory")
+    target = str(blocker / "r.json")
+    exit_status = main([_model(tmp_path), "--json", target])
 
     assert exit_status == 2
     err = capsys.readouterr().err
