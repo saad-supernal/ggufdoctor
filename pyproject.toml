@@ -30,6 +30,11 @@ classifiers = [
 ]
 dependencies = ["jinja2>=3.1"]
 
+[project.urls]
+Homepage = "https://github.com/saad-supernal/ggufdoctor"
+Repository = "https://github.com/saad-supernal/ggufdoctor"
+Issues = "https://github.com/saad-supernal/ggufdoctor/issues"
+
 [project.scripts]
 ggufdoctor = "ggufdoctor.cli:main"
 
