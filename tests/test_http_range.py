@@ -18,6 +18,18 @@ GGUF_BLOB = build_gguf({
 })
 
 
+
+class QuietHTTPServer(HTTPServer):
+    """HTTPServer that does not print a traceback when a client disconnects early.
+
+    Both fixtures below serve multi-megabyte bodies to a client that reads only
+    the bytes it asked for and closes; the resulting BrokenPipe/ConnectionReset
+    on the server thread is expected, not a defect.
+    """
+
+    def handle_error(self, request, client_address):
+        pass
+
 class RangeAwareHTTPRequestHandler(SimpleHTTPRequestHandler):
     """HTTP handler that properly implements byte-range serving (206).
 
@@ -98,7 +110,7 @@ def served(tmp_path):
     # Reset request log for this fixture
     RangeAwareHTTPRequestHandler.request_log = []
     handler = partial(RangeAwareHTTPRequestHandler, directory=str(tmp_path))
-    srv = HTTPServer(("127.0.0.1", 0), handler)
+    srv = QuietHTTPServer(("127.0.0.1", 0), handler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
     yield f"http://127.0.0.1:{srv.server_port}/m.gguf"
@@ -112,7 +124,7 @@ def served_no_range(tmp_path):
     (tmp_path / "m.gguf").write_bytes(blob)
     # Use standard handler which doesn't implement ranges
     handler = partial(SimpleHTTPRequestHandler, directory=str(tmp_path))
-    srv = HTTPServer(("127.0.0.1", 0), handler)
+    srv = QuietHTTPServer(("127.0.0.1", 0), handler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
     yield f"http://127.0.0.1:{srv.server_port}/m.gguf"

@@ -1,7 +1,8 @@
 # Where this stands
 
-**v0.1 is built.** Branch `feat/v0.1`, 166 tests passing, the CLI and the `survey`
-subcommand both work end to end against live Hugging Face.
+**v0.1 is shipped.** Live at https://github.com/saad-supernal/ggufdoctor (public, MIT,
+default branch `main`; `feat/v0.1` is identical and kept for history). 166 tests, CI on
+three OSes × Python 3.11–3.13, wheel verified to carry the fixture corpus.
 
 ## The number
 
@@ -16,14 +17,32 @@ ggufdoctor survey --top 400 --per-org 2 --markdown survey.md
 The earlier 15.1% from the throwaway probe is **superseded** — `docs/research/README.md`
 explains the four reasons they differ. Do not quote 15.1% anywhere.
 
-## Not done yet
+## Next: v0.2 — start here
 
-- **Live at https://github.com/saad-supernal/ggufdoctor** (public, MIT, default branch
-  `main`). Not yet on PyPI; not yet announced anywhere.
-- **v0.2:** minja via WASM, the `X` check family (cross-engine equivalence), `--engines`,
-  the engine conformance suite, and vendoring real templates as offline test data
-  (reuse `docs/research/2026-09-01-survey.json`).
-- **v0.3:** Ollama's Go template conversion, `--runtime`.
+**Read `docs/v0.2-kickoff.md` first.** It carries the scope (minja engine, X001/X002/
+X004/X005, `--engines`, the conformance suite, vendored templates), the one design
+question that decides the architecture (how minja gets into Python — settle it with a
+spike, not a plan), a correction to the old deferred note (the survey JSON files do
+**not** contain template text, so vendoring needs a fetch step), and the v0.1 lessons
+the X family must not repeat. v0.3 (Ollama engine, X003, `--runtime`) follows it.
+
+Process is the same as v0.1: brainstorm → spec amendments → plan → subagent-driven
+development with two-verdict reviews and a whole-branch review. Branch `feat/v0.2`.
+
+## Open outside the code (Saad's calls)
+
+- **PyPI.** `pip install ggufdoctor` does not work yet; the name is free.
+  `.github/workflows/publish.yml` publishes on a `v*` tag via trusted publishing.
+  **Step 1 (Saad, needs PyPI login):** pypi.org → create project `ggufdoctor` or use
+  "pending publisher" → add GitHub publisher: owner `saad-supernal`, repo `ggufdoctor`,
+  workflow `publish.yml`, environment `pypi`. **Step 2 (Claude):**
+  `git tag v0.1.0 && git push origin v0.1.0`, then `gh release create v0.1.0`.
+  The tag is deliberately **not** pushed yet — doing so before step 1 produces a
+  guaranteed-failing publish run on a fresh public repo.
+- **Account.** Repo is under `saad-supernal` (work-flavoured handle). If reputation
+  should accrue to a personal handle, `gh repo transfer` *before* any announcement.
+- **Announcement.** Nothing posted anywhere. Lead with the 53 dead base-model pointers
+  and the Qwen-vs-Qwen row, not the tool.
 
 ## Things learned the hard way — read before changing checks
 
@@ -50,6 +69,8 @@ Every one of these was a real defect that shipped into a review:
 
 ## Where the process record lives
 
-`.superpowers/sdd/2026-08-31-ggufdoctor-v0.1/progress.md` — the full ledger, including
-rulings E1–E28 and the per-task review outcomes. It is git-ignored (`.superpowers/sdd/`
-carries a blanket ignore), so it will not survive `git clean -fdx`.
+`docs/process/v0.1/` — the full v0.1 ledger (`ledger.md`, rulings E1–E28 and every
+per-task review outcome), all twelve task briefs and reports, and the three final-fix
+reports. Committed, so it survives `git clean`. The live working copy for a plan in
+progress is `.superpowers/sdd/<plan-basename>/progress.md` (git-ignored); copy it into
+`docs/process/v0.2/` when v0.2 closes.

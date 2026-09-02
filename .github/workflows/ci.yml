@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[dev]"
+      # The default marker filter excludes anything tagged `network`; CI must
+      # never reach Hugging Face.
+      - run: python -m pytest -q
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build
+      - run: python -m build
+      # The fixture corpus is data, not code; a wheel without it is broken for
+      # every installed user while working fine from the source tree.
+      - name: wheel carries the fixture corpus and licence
+        run: |
+          python - <<'PY'
+          import glob, zipfile, sys
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          need = ["ggufdoctor/fixture_data/corpus.json"]
+          missing = [n for n in need if n not in names]
+          lic = [n for n in names if n.endswith("LICENSE")]
+          print("\n".join(names))
+          sys.exit(1 if missing or not lic else 0)
+          PY
+      - name: installed console script runs
+        run: |
+          python -m pip install dist/*.whl
+          cd /tmp && ggufdoctor --help

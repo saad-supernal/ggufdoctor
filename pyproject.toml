@@ -30,6 +30,9 @@ classifiers = [
 ]
 dependencies = ["jinja2>=3.1"]
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.urls]
 Homepage = "https://github.com/saad-supernal/ggufdoctor"
 Repository = "https://github.com/saad-supernal/ggufdoctor"
