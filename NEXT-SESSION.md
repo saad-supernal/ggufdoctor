@@ -18,8 +18,8 @@ explains the four reasons they differ. Do not quote 15.1% anywhere.
 
 ## Not done yet
 
-- **No git remote.** Nothing is pushed anywhere; `[project.urls]` is deliberately absent
-  until a real URL exists.
+- **Live at https://github.com/saad-supernal/ggufdoctor** (public, MIT, default branch
+  `main`). Not yet on PyPI; not yet announced anywhere.
 - **v0.2:** minja via WASM, the `X` check family (cross-engine equivalence), `--engines`,
   the engine conformance suite, and vendoring real templates as offline test data
   (reuse `docs/research/2026-09-01-survey.json`).
