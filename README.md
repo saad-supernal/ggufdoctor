@@ -1,5 +1,7 @@
 # ggufdoctor
 
+[![CI](https://github.com/saad-supernal/ggufdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/saad-supernal/ggufdoctor/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 **1 in 7 popular GGUF chat models sends your model a different prompt than its source model does.**
 
 `ggufdoctor` lints the chat template embedded in a GGUF file. It renders the template
