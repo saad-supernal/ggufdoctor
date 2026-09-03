@@ -127,3 +127,11 @@ its eleven task briefs and reports, copied there from
 committed, so they survive `git clean`. The live working copy for a plan in progress is
 `.superpowers/sdd/<plan-basename>/progress.md` (git-ignored); copy it into
 `docs/process/v<next>/` when that version closes.
+
+
+## v0.3 — start here
+
+Read `docs/v0.3-kickoff.md`. The Ollama spike (`docs/research/2026-09-03-ollama-spike.md`) found
+there is no Jinja→Go conversion to model: Ollama swaps recognised templates for curated Go ones
+and renders everything else with llama.cpp's engine (already embedded in v0.2). v0.3 is a
+registry-lookup check plus `--runtime`, not a WASM engine.
