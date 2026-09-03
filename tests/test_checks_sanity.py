@@ -16,7 +16,7 @@ def ids(findings):
 
 # Engine-neutral: byte-identical under Jinja2Engine and LlamaCppEngine on all
 # ten fixtures (see tests/test_cli.py's copy of this constant, and
-# docs/process/v0.2/task-6-report.md, for the full explanation of why the
+# the v0.2 implementation notes, for the full explanation of why the
 # elif branch joins with "\n" instead of concatenating the parts directly -- it mirrors
 # llama.cpp's own concat_content_parts normaliser, engine/shim.cpp, which is
 # what llama.cpp actually renders for typed_content once its caps probe
@@ -33,7 +33,7 @@ CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n"
 # rather than re-pasted (every test in this file only ever constructs
 # Jinja2Engine() via ctx(), so this is single-engine, jinja2-only
 # reasoning -- the cross-engine byte-identity claim lives in
-# tests/test_cli.py and docs/process/v0.2/task-6-report.md, not here):
+# tests/test_cli.py and the v0.2 implementation notes, not here):
 #
 #   - S001/S002: neither looks at content-handling logic at all (S001 only
 #     checks whether a template is present, S002 only whether it compiles),

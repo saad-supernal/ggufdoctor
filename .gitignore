@@ -4,3 +4,6 @@ __pycache__/
 .DS_Store
 .venv/
 engine/build/
+
+# Claude working notes (session handoff, ledgers, briefs, specs, plans) — local only
+.notes/

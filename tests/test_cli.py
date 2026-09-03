@@ -7,7 +7,7 @@ from tests.helpers.gguf_builder import build_gguf
 
 # Engine-neutral: byte-identical under Jinja2Engine and LlamaCppEngine on all
 # ten fixtures. Confirmed by a one-off render of every fixture through both
-# engines (see docs/process/v0.2/task-6-report.md) -- with a plain string
+# engines (see the v0.2 implementation notes) -- with a plain string
 # content, the elif branch simply never runs, so it can't be what makes the
 # two diverge; the
 # "elif ... | map(attribute='text') | join('\n')" arm matters only for

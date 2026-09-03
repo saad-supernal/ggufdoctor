@@ -71,7 +71,7 @@ probe output) — the measurement behind v0.2's second engine. Three results:
   not load). That is the finding corpus 2 and check family X were built around.
 
 Two things the spike did **not** know, both established while building v0.2 and recorded
-in the v0.2 ledger (`docs/process/v0.2/`):
+in the v0.2 ledger (the maintainer's working notes (not in the repo)):
 
 - **A fourth divergence class: llama.cpp's runtime defaults.** `llama-server` and
   `llama-cli` write `enable_thinking` into every render context and default
