@@ -152,7 +152,9 @@ def test_upstream_template_retries_past_a_transient_rate_limit(monkeypatch):
         calls["n"] += 1
         if calls["n"] == 1:
             raise urllib.error.HTTPError(url, 429, "rate limited", {}, None)
-        return body
+        if "tokenizer_config.json" in url:
+            return body
+        raise urllib.error.HTTPError(url, 404, "not found", {}, None)
 
     c = HfClient(opener=flaky)
     tpl, why = c.upstream_template("org/model")
@@ -229,3 +231,31 @@ def test_token_reaches_the_authorization_header_only(monkeypatch):
     HfClient().model_info("org/repo")
     assert seen["auth"] == "Bearer hf_secret"
     assert seen["ua"].startswith("ggufdoctor/0.")
+
+
+def test_upstream_template_reads_the_standalone_jinja_file_first():
+    # transformers >= 4.55 saves the template to chat_template.jinja and many
+    # repos (e.g. zai-org/GLM-5.3-Flash) carry ONLY that file; before this
+    # test existed such upstreams were misclassified as "genuinely_absent".
+    c = HfClient(opener=fake_opener({
+        "chat_template.jinja": "{{ 'from-jinja-file' }}",
+        "tokenizer_config.json": json.dumps({"chat_template": "{{ 'from-config' }}"}),
+    }))
+    tpl, why = c.upstream_template("zai-org/GLM-5.3-Flash")
+    assert (tpl, why) == ("{{ 'from-jinja-file' }}", "ok")
+
+
+def test_upstream_template_falls_back_to_tokenizer_config_when_jinja_file_is_404():
+    c = HfClient(opener=fake_opener({
+        "chat_template.jinja": 404, "chat_template.json": 404,
+        "tokenizer_config.json": json.dumps({"chat_template": "{{ 'cfg' }}"}),
+    }))
+    assert c.upstream_template("org/model") == ("{{ 'cfg' }}", "ok")
+
+
+def test_blank_jinja_file_is_absent_not_a_template():
+    c = HfClient(opener=fake_opener({
+        "chat_template.jinja": "   \n", "chat_template.json": 404,
+        "tokenizer_config.json": json.dumps({}),
+    }))
+    assert c.upstream_template("org/model")[1] == "genuinely_absent"

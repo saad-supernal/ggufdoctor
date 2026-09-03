@@ -107,11 +107,25 @@ class HfClient:
                     return cand
         return None
 
+    # Where a Hub repo can keep its chat template, in the order transformers
+    # itself prefers: the standalone `chat_template.jinja` (the save format
+    # since transformers 4.55 -- repos published after mid-2025 often have
+    # ONLY this file), then the older `chat_template.json`, then the
+    # `chat_template` key inside `tokenizer_config.json`.
+    TEMPLATE_FILES = ("chat_template.jinja", "chat_template.json", "tokenizer_config.json")
+
     def upstream_template(self, repo_id: str) -> tuple[str | None, str]:
         reasons: list[str] = []
-        for fn in ("tokenizer_config.json", "chat_template.json"):
+        for fn in self.TEMPLATE_FILES:
             try:
-                data = json.loads(self._fetch(RESOLVE.format(repo=repo_id, fn=fn)))
+                raw = self._fetch(RESOLVE.format(repo=repo_id, fn=fn))
+                if fn.endswith(".jinja"):
+                    # Raw template text, not JSON.
+                    if raw.strip():
+                        return raw, "ok"
+                    reasons.append("genuinely_absent")
+                    continue
+                data = json.loads(raw)
                 if not isinstance(data, dict):
                     reasons.append("fetch_error")
                     continue
