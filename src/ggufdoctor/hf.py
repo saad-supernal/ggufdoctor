@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 import time
 import urllib.error
+import os
 import urllib.request
+
+from ggufdoctor import __version__
 from typing import Any, Callable
 
 API = "https://huggingface.co/api/models"
@@ -22,7 +25,7 @@ _RATE_LIMIT_RETRY_DELAYS = (0.5, 1.0, 2.0)
 
 def _default_opener(token: str | None) -> Callable[[str], str]:
     def _open(url: str) -> str:
-        headers = {"User-Agent": "ggufdoctor/0.1"}
+        headers = {"User-Agent": f"ggufdoctor/{__version__}"}
         if token:
             headers["Authorization"] = f"Bearer {token}"
         req = urllib.request.Request(url, headers=headers)
@@ -31,9 +34,19 @@ def _default_opener(token: str | None) -> Callable[[str], str]:
     return _open
 
 
+HF_TOKEN_ENV = "HF_TOKEN"
+
+
 class HfClient:
     def __init__(self, token: str | None = None,
                  opener: Callable[[str], str] | None = None) -> None:
+        # An explicit token wins; otherwise honour the standard HF_TOKEN
+        # environment variable (the same one huggingface_hub reads). With a
+        # token, gated upstreams become comparable and the API rate limit is
+        # higher. The value is only ever sent as an Authorization header to
+        # huggingface.co; it is never logged or written to any report.
+        if token is None:
+            token = os.environ.get(HF_TOKEN_ENV) or None
         self.token = token
         self._open = opener or _default_opener(token)
 

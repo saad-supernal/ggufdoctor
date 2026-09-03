@@ -190,3 +190,42 @@ def test_persistent_rate_limit_eventually_raises_after_bounded_retries(monkeypat
     # Bounded: a handful of attempts, not an infinite or unbounded retry loop.
     assert 2 <= calls["n"] <= 6
     assert len(sleeps) == calls["n"] - 1
+
+
+def test_hf_token_env_var_is_used_when_no_explicit_token(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "hf_env")
+    assert HfClient(opener=fake_opener({})).token == "hf_env"
+
+
+def test_explicit_token_wins_over_env(monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "hf_env")
+    assert HfClient(token="hf_explicit", opener=fake_opener({})).token == "hf_explicit"
+
+
+def test_no_token_anywhere_means_none(monkeypatch):
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    assert HfClient(opener=fake_opener({})).token is None
+
+
+def test_token_reaches_the_authorization_header_only(monkeypatch):
+    # The default opener is the only place the token is used; capture the
+    # request it builds without touching the network.
+    import urllib.request
+    from ggufdoctor import hf
+    seen = {}
+
+    class _Resp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return b"{}"
+
+    def fake_urlopen(req, timeout=None):
+        seen["auth"] = req.get_header("Authorization")
+        seen["ua"] = req.get_header("User-agent")
+        return _Resp()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setenv("HF_TOKEN", "hf_secret")
+    HfClient().model_info("org/repo")
+    assert seen["auth"] == "Bearer hf_secret"
+    assert seen["ua"].startswith("ggufdoctor/0.")

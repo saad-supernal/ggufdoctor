@@ -257,7 +257,7 @@ output would manufacture an `X001` on every model in the `S006` population.
 - **`strftime_now` is pinned** to a fixed date so output is reproducible across runs. A
   template whose output depends on the date is not fully exercised.
 - **Top-downloads sample**, not the long tail. The figure describes popular models.
-- **Gated repos are excluded, not measured.** Running with a Hugging Face token would
+- **Gated repos are excluded, not measured** unless `HF_TOKEN` is set in the environment (the same variable `huggingface_hub` reads); with a token, gated upstreams become comparable and the API rate limit is higher. Running with a Hugging Face token would
   bring 33–34 more repos into the comparable set and could move the number either way.
 - **`survey` measures GGUF-vs-upstream, not engine-vs-engine.** The published percentages
   are the `R001` question — does this GGUF's template render differently from its source
