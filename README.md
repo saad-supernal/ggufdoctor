@@ -1,55 +1,57 @@
 # ggufdoctor
 
 [![CI](https://github.com/saad-supernal/ggufdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/saad-supernal/ggufdoctor/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/ggufdoctor.svg)](https://pypi.org/project/ggufdoctor/)
+[![Python](https://img.shields.io/pypi/pyversions/ggufdoctor.svg)](https://pypi.org/project/ggufdoctor/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-**1 in 7 popular GGUF chat models sends your model a different prompt than its source model does.**
 
-`ggufdoctor` lints the chat template embedded in a GGUF file. It renders the template
-against a fixed corpus of conversations and reports what actually reaches the model —
-including how the output compares to the upstream model the GGUF was converted from.
+Lint the chat template inside a GGUF file.
 
-```bash
-pip install ggufdoctor
-ggufdoctor model.gguf
-ggufdoctor model.gguf --compare-upstream mistralai/Mistral-7B-Instruct-v0.2
+ggufdoctor reads the template a GGUF carries, renders it against a fixed set of
+conversations with two real template engines, and reports what actually reaches the
+model: broken or missing templates, special tokens the vocabulary does not have, prompts
+that differ from the source model the GGUF was converted from, and prompts that differ
+between the transformers path and the llama.cpp path.
+
+```
+$ ggufdoctor Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
+Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf  [qwen3moe]  engines: jinja2 3.1.6, llama.cpp b10775 (67a17c17, wasmtime 48.0.0)
+
+  S003  INFO  template does not handle an extended conversation shape (typed_content); older templates predate these inputs — render:TypeError: can only concatenate str (not "list") to str   [typed_content]
+
+  X002  INFO  renders under llama.cpp only after its message normaliser rewrote the input; jinja2 (transformers path) fails on the original (TypeError: can only concatenate str (not "list") to str)   [typed_content]
+
+  engines agree: jinja2 and llama.cpp rendered 9 fixtures identically
+
+0 error, 0 warn, 2 info
+families run: S, X   upstream: not_requested
 ```
 
-That pulls `wasmtime` alongside `jinja2`. It runs the second engine — llama.cpp's own
-template engine, compiled to WebAssembly and shipped in the wheel — so ggufdoctor can
-show you what `llama-server` renders, not only what transformers renders. See
-[Two engines](#two-engines).
+## Why
 
-## The finding
+Quantised GGUFs are published by third parties, and the chat template inside them is
+often edited on the way: to work around an engine bug, to add tool calling, or by
+accident. Nothing checks that the edited template still produces the prompt the
+original model was trained on. A survey of the 400 most-downloaded GGUF repositories on
+Hugging Face (two per publisher, so a single prolific quantiser cannot dominate) found:
 
-A survey of the 400 most-downloaded GGUF repositories on Hugging Face, capped at two
-repos per publisher, run on 2026-09-01 against fixture corpus 1:
+| | corpus 1 (2026-09-01) | corpus 2 (2026-09-03) |
+|---|---|---|
+| Comparable chat models | 108 of 400 | 111 of 400 |
+| Render a different prompt than upstream | **16 (14.8%)** | **16 (14.4%)** |
+| Weighted by downloads | 31.4% | 31.2% |
+| Publishers affected | 15 of 87 | 15 of 91 |
 
-| | |
-|---|---|
-| Comparable chat models | **108** of 400 sampled |
-| Render differently from upstream | **16 (14.8%)** |
-| Weighted by downloads | **31.4%** |
-| Publishers affected | **15** of 87 |
+The two runs use different fixture corpora (corpus 2 adds a tool round-trip, typed
+content and a no-generation-prompt conversation) and are not comparable to one decimal;
+15 of the 16 divergent repositories are the same in both.
 
-Corpus 2 (v0.2, adds tool round-trip, typed content, no generation prompt): **14.4%**
-(16 of 111), run on 2026-09-03 — the two figures use different fixture corpora and are
-not comparable to one decimal.
+Most of the divergence is on the tool-calling path. In corpus 1, five of the sixteen
+divergent repositories differ on nothing but the tools fixture: chat with them and
+everything looks right, pass a tool schema and the model receives a prompt its upstream
+never would.
 
-Reproduce it yourself — this is the command that produced the table above:
-
-```bash
-ggufdoctor survey --top 400 --per-org 2 --markdown survey.md
-```
-
-Full output and per-repo records: [`docs/research/`](docs/research/).
-
-### The divergence hides on the tool-calling path
-
-**5 of the 16 divergent repos differ on nothing but the tools fixture.** Load one of
-those models, chat with it, and everything looks correct. Give it a tool schema and it
-receives a prompt its upstream never would.
-
-| Repo | Downloads | Diverges on |
+| Repository | Downloads | Diverges on |
 |---|---|---|
 | `unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF` | 12.7M | tools only |
 | `Qwen/Qwen2.5-3B-Instruct-GGUF` | 430k | tools only |
@@ -57,233 +59,278 @@ receives a prompt its upstream never would.
 | `legraphista/glm-4-9b-chat-IMat-GGUF` | 498k | all 7 fixtures |
 | `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` | 51k | 6 of 7 fixtures |
 
-The second row is worth reading twice: Qwen's own GGUF release disagrees with Qwen's own
-source model, on the tool-calling path.
+The second row is Qwen's own GGUF release disagreeing with Qwen's own source model.
 
-Corpus 1 again, and corpus 2 sharpened it rather than changing it: 14 of that run's 16
-divergent repos differ on at least one tool-calling fixture, and the four that differ on
-nothing else are the same publishers — `unsloth`, `Qwen`, and two re-quantisers of the
-same Qwen models.
+Only 108 of the 400 repositories could be compared at all. 53 of them declare a base
+model that no longer exists on the Hub, so nobody can check them against anything. 94
+have an upstream that declares no chat template, 72 declare no base model, 34 have a
+licence-gated upstream. Every excluded repository is counted under its reason; none is
+dropped silently. Per-repository records and the reproduction command are in
+[`docs/research/`](docs/research/).
 
-### Provenance is thinner than the headline
+The second engine produced the other headline: on the seven standard fixtures,
+llama.cpp's template engine agreed with transformers-style Jinja2 on 100 of 100 top
+templates. The disagreements that exist are on typed content, `None` content, `//`
+(which llama.cpp will not parse) and runtime defaults llama.cpp supplies that
+transformers leaves undefined. ggufdoctor reports those and says which side caused them.
 
-Only 108 of 400 repos could be compared at all. The rest are the finding underneath the
-finding:
+## Install
 
-| Why a repo could not be compared | Count |
-|---|---|
-| Upstream declares no chat template | 94 |
-| No `base_model` declared at all | 72 |
-| **Declared base model returns 404 — provenance gone** | **53** |
-| Upstream is licence-gated | 34 |
-| Not a chat architecture | 28 |
-| Non-chat pipeline tag | 9 |
-| No template in the GGUF | 2 |
-
-53 of the top 400 GGUF repos point at a source model that no longer exists. Nobody can
-check those against anything, including their publishers.
-
-## What it checks
-
-Offline, from the file alone — no network:
-
-| | |
-|---|---|
-| `S001` | no chat template on a chat architecture |
-| `S002` | template does not compile |
-| `S003` | template fails to render, or declines a conversation shape by design |
-| `S004` | template emits special tokens absent from the file's vocabulary |
-| `S005` | template never emits the declared EOS token |
-| `S006` | template emits BOS while `add_bos_token` is also set |
-| `S007` | `add_generation_prompt` has no effect on the output |
-| `S008` | template renders to empty output |
-
-With `--compare-upstream`, against the source model's template:
-
-| | |
-|---|---|
-| `R001` | rendered output differs from upstream (whitespace-only differences reported separately) |
-| `R002` | the GGUF author annotated the change — downgrades `R001` rather than raising anything |
-| `R003` | upstream could not be resolved |
-| `R004` | upstream changed after this GGUF was published |
-
-## Two engines
-
-A GGUF's template is rendered by whatever runtime you serve it through, and those
-runtimes are different programs. ggufdoctor renders every fixture twice and compares:
-
-| engine | what it is |
-|---|---|
-| `jinja2` | Jinja2 configured to match transformers' environment — the evaluation, fine-tuning and `apply_chat_template` path |
-| `llama.cpp` | llama.cpp's **own** engine, `common/jinja` (which replaced minja upstream in January 2026), pinned to build tag `b10775` (commit `67a17c17`), compiled to a 725 KB `wasm32-wasip1` module and run through `wasmtime` |
-
-The `llama.cpp` engine is not a reimplementation. It is llama.cpp's C++ sources at a
-pinned commit, compiled to WebAssembly, with the same entry point `llama-server` uses:
-the caps probe, llama.cpp's message normaliser, its `enable_thinking` and
-`preserve_reasoning` defaults, and its `add_generation_prompt` semantics. Every run
-prints what it used:
-
-```
-engines: jinja2 3.1.6, llama.cpp b10775 (67a17c17, wasmtime 48.0.0)
+```bash
+pip install ggufdoctor
 ```
 
-A [conformance suite](tests/conformance/) keeps that claim honest: the bundled module is
-checked against the real `llama-server` binary at the same build tag over ten vendored
-templates × ten fixtures. 99 of the 100 pairs are byte-identical; the one exception is
-skipped with a stated reason — a Gemma-4-specific `tool_responses` rewrite that
-llama.cpp performs in `chat.cpp` *above* the templating entry point, so it is not
-template rendering. The suite runs in CI and locally with `pytest -m conformance`.
+Python 3.11 or newer. Two dependencies: `jinja2` and `wasmtime`. The llama.cpp engine
+ships inside the wheel as a 725 KB WebAssembly module; no compiler or llama.cpp install
+is needed.
 
-| | | |
-|---|---|---|
-| `X001` | rendered output differs between the two engines | ERROR — **INFO when llama.cpp's own message normaliser or its runtime defaults explain it** |
-| `X002` | renders under one engine and fails under the other, either direction; a parse failure under llama.cpp reads "template will not load in llama.cpp" | ERROR — **INFO when the normaliser or the runtime defaults explain it**, the same ladder as `X001` |
-| `X004` | the difference is whitespace only | WARN |
-| `X005` | `X001` on a tool-calling fixture | ERROR |
+## Usage
 
-A fixture both engines decline is not an X finding — `S003` already owns that.
+Lint a local file:
 
-`--engines jinja2,llama.cpp` subsets them. `jinja2` is the reference engine and cannot be
-deselected. If `wasmtime` is missing the run says `llama.cpp unavailable — <reason>`,
-files the X family under checks not evaluated, and calls its own headline partial — it
-does not fail and it does not pretend to have checked.
-
-### What the second engine actually found
-
-**On the seven standard fixtures, llama.cpp's engine agreed with transformers-style
-Jinja2 on 100 of 100 top GGUF templates.** That is the headline, and it is a good result
-about llama.cpp. The divergence that exists lives on richer inputs: content passed as
-typed parts, `None` content on an assistant tool-call message, templates using `//`
-(which llama.cpp's parser will not load at all), and runtime defaults llama.cpp supplies
-that transformers leaves undefined (`enable_thinking`, `preserve_reasoning`). Corpus 2
-adds fixtures for the message shapes among those. Full measurement:
-[`docs/research/2026-09-03-engine-spike.md`](docs/research/2026-09-03-engine-spike.md).
-
-Two of those classes are llama.cpp's own doing, not the template's: the normaliser
-joining typed content parts into a string, and the runtime defaults llama.cpp injects
-into every render. A template author cannot remove either. So a divergence they fully
-account for is reported at **INFO** with the cause named and the fix in the message
-(pass those values explicitly, and the runtimes agree), and the downgrade is *confirmed*
-— by re-rendering under Jinja2 with the same rewrite applied — never assumed from a
-flag. A warning that fires on everything is not a warning.
-
-The rest stay at ERROR. Across the ten real templates vendored in the test suite, four
-ERROR findings remain, in three classes: templates that will not accept an assistant
-message with null content under transformers, where llama.cpp renders it as an empty
-assistant turn and the tool call silently vanishes; a template that raises under
-transformers on typed content where llama.cpp serves a prompt anyway; and one whose
-output forks on whether `add_generation_prompt` is *present* rather than true — llama.cpp
-omits the key entirely when generation prompting is off, so that template's own
-`is defined` fallback turns it back on and appends an assistant opener transformers
-never would.
-
-When X ran and found nothing, the report says so:
-
-```
-engines agree: jinja2 and llama.cpp rendered 10 fixtures identically
+```bash
+ggufdoctor model.gguf
 ```
 
-## Why the number is trustworthy
+Lint a file on the Hub without downloading it (only the header is fetched, by HTTP range
+request):
 
-Three ways this measurement can be got wrong, and what this tool does instead. Each of
-these moved the figure during development.
+```bash
+ggufdoctor unsloth/Qwen3-8B-GGUF
+```
 
-**Rendered output, not template source.** Diffing template text reports every
-engine-compatibility rewrite — `messages[0]` becoming `messages|first`, added whitespace
-markers — none of which changes a token the model sees. Source diffing put the rate at
-46.7%. Rendering both templates against the same conversations and diffing the *output*
-is the honest comparison.
+Compare against the model the GGUF was converted from:
 
-**Capped at two repos per publisher.** Download rankings are dominated by a handful of
-prolific quantisers, at least one of whom deliberately patches templates. Without a cap
-you measure that publisher, not the ecosystem. `--per-org` defaults to 2 and appears in
-the output, so the methodology travels with the number.
+```bash
+ggufdoctor model.gguf --compare-upstream Qwen/Qwen3-8B
+```
 
-**Every uncomparable repo is classified, never dropped.** Licence-gated repos return 401
-without a token. Filing them as "no chat template" quietly shrinks the denominator and
-inflates the rate. Each one lands under its own reason in the coverage table above, and
-the percentage's denominator is the comparable set, stated alongside it.
+For a Hub repository that declares `base_model` in its model card, the upstream is
+resolved automatically.
 
-A run whose fetch-failure rate is high enough to distort the result says so in its own
-output rather than printing a number anyway.
+| Flag | Effect |
+|---|---|
+| `--compare-upstream REPO` | also run the R family against `REPO`'s template |
+| `--require-upstream` | exit 1 if the requested upstream could not be resolved |
+| `--engines jinja2,llama.cpp` | subset the engines; `jinja2` cannot be dropped |
+| `--fixtures PATH` | use your own conversation corpus (JSON, same shape as the bundled one) |
+| `--json PATH` | write the machine-readable report |
+| `--ignore-file PATH` | suppression list, default `.ggufdoctorignore` |
+| `--fail-on error\|warn\|info\|never` | severity that makes the exit code 1, default `error` |
 
-## A note on double BOS
+Exit codes: `0` nothing at or above the threshold, `1` findings at or above it, `2`
+usage or operational error (unreadable file, unreachable Hub, bad ignore file). No
+traceback is ever printed for an expected failure.
 
-`S006` reports at INFO, not WARN, and it is worth explaining why, because the received
-wisdom says otherwise.
+Set `HF_TOKEN` in the environment to read licence-gated upstreams and get a higher API
+rate limit. It is sent only as an `Authorization` header to `huggingface.co`.
 
-When a GGUF sets `add_bos_token: true` and its template also emits `{{ bos_token }}`, the
-common assumption is that the model receives two BOS tokens. **Through llama.cpp this does
-not happen.** `common_chat_template_direct_apply_impl` in `common/chat.cpp` strips the
-template's rendered leading BOS whenever the vocabulary's `add_bos` flag is set, and the
-result is then tokenized with `add_special=true` — so exactly one survives. Jinja
-templating is the default (`--jinja`), and with `--no-jinja` the GGUF's template is never
-rendered at all. llama-cpp-python does not double either: its formatter reports
-`added_special=True` and the caller tokenizes with `add_bos=False`.
+### Suppressing a finding
 
-The configuration is still worth knowing about, because it does double for anyone who
-renders the template themselves and then tokenizes with `add_special_tokens=True` — the
-transformers-style path, common in evaluation and fine-tuning harnesses. That is what the
-finding says, and no more.
-
-This is also why the bundled `llama.cpp` engine deliberately does **not** perform that
-strip before family X compares the two engines: llama.cpp's tokenizer immediately re-adds
-the token, so the token streams agree, and comparing post-strip text against transformers'
-output would manufacture an `X001` on every model in the `S006` population.
-
-## Limitations
-
-- **Ollama's Go template conversion is not yet compared** (v0.3, with `X003` and
-  `--runtime`). Two of the three runtimes people actually serve GGUFs through are
-  covered; the third is not.
-- **`llama-server` also rewrites requests before templating**, above the entry point the
-  bundled engine mirrors — tool-call `arguments` move between object and string form,
-  assistant prefill is applied, and `common_chat_try_specialized_template` selects
-  per-family message rewrites by sniffing the template source (Gemma-4 `tool_responses`
-  collapsing, DeepSeek-V4 tool-result sorting, gpt-oss/LFM2 reasoning copying, StepFun
-  content trimming). The bundled engine reproduces
-  `common_chat_template_direct_apply_impl` and nothing above it. Specifically, it
-  mirrors: the `caps` probe; the message normaliser (typed content ⇄ string, both
-  directions); null or absent content as `""`; `enable_thinking` always defined and
-  defaulting to true; `add_generation_prompt` present only when the flag is on;
-  `preserve_reasoning` defaulted to true and expanded through
-  `caps_apply_preserve_reasoning` into `preserve_thinking`, `clear_thinking`,
-  `truncate_history_thinking` and `drop_thinking`; and `reasoning_effort` expansion. It
-  does **not** strip the leading BOS — llama.cpp's tokenizer re-adds it, so comparing
-  post-strip text would manufacture a divergence on every model in the `S006`
-  population. `datetime` / `date_string` are rendered at a pinned clock by design.
-  `engine/README.md` is the authority, and every engine bump re-checks it against
-  upstream `chat.cpp`.
-- **`strftime_now` is pinned** to a fixed date so output is reproducible across runs. A
-  template whose output depends on the date is not fully exercised.
-- **Top-downloads sample**, not the long tail. The figure describes popular models.
-- **Gated repos are excluded, not measured** unless `HF_TOKEN` is set in the environment (the same
-  variable `huggingface_hub` reads). Licence-gated upstreams return 401 without one. With a token
-  the 34 gated repos in the corpus-1 run would become comparable and could move the number either
-  way; the published figures were measured without one.
-- **`survey` measures GGUF-vs-upstream, not engine-vs-engine.** The published percentages
-  are the `R001` question — does this GGUF's template render differently from its source
-  model's — with both sides rendered through Jinja2. Counting family X across the survey
-  would need real vocabulary tokens for every repo and a second engine per record; it is
-  deliberately deferred, and the spike's 100/100 is the cross-engine statement until
-  then.
-
-## Ignoring findings
-
-A finding you have judged acceptable can be suppressed in `.ggufdoctorignore` — but only
-with a reason, because a list of unexplained suppressions is a way of hiding problems
-rather than resolving them:
+Findings you have judged acceptable go in `.ggufdoctorignore`, one per line, with a
+reason. A rule without a reason is rejected.
 
 ```
 S006 # llama.cpp strips the duplicate; we only serve through llama-server
 R001 with_tools # deliberate: upstream schema breaks our parser
 ```
 
-## Exit codes
+A rule may name a fixture to suppress only that case.
 
-`0` clean, `1` findings at or above `--fail-on` (default `error`), `2` usage or
-operational error.
+### JSON output
+
+`--json` writes a versioned report (`schema_version` `1`): tool version, fixture corpus
+version, the engines used with their versions, a coverage block (which families ran,
+which checks could not be evaluated and why, whether the upstream resolved), every
+finding with its evidence (diffs, missing tokens, the cause of a downgrade), suppressed
+findings, and a summary by severity. All fields added since 0.1 are additive.
+
+## What it checks
+
+Every finding has a stable id, a severity, and evidence. A check that cannot run
+(missing metadata, unavailable engine, custom corpus) is recorded as not evaluated and
+the headline says "partial"; it is never reported as clean.
+
+Offline, from the file alone:
+
+| | | |
+|---|---|---|
+| `S001` | chat architecture with no chat template | error |
+| `S002` | template does not compile | error |
+| `S003` | template fails to render a standard conversation; INFO when the template declines a shape by design (`raise_exception`) or when the shape is one older templates predate | error / info |
+| `S004` | template emits special tokens the vocabulary does not contain | error |
+| `S005` | template never emits the declared EOS token | warn |
+| `S006` | template emits BOS while `add_bos_token` is set (see [Double BOS](#double-bos)) | info |
+| `S007` | `add_generation_prompt` has no effect on the output | warn / info |
+| `S008` | template renders to empty output | error |
+
+Between the two engines, on the same input:
+
+| | | |
+|---|---|---|
+| `X001` | rendered output differs between jinja2 and llama.cpp | error; info when explained by llama.cpp's message normaliser or its runtime defaults |
+| `X002` | renders under one engine and fails under the other, either direction; a parse failure under llama.cpp reads "template will not load in llama.cpp" | error; info when explained the same way |
+| `X004` | the difference is whitespace only | warn |
+| `X005` | `X001` on a tool-calling fixture | error |
+
+Against the upstream model, with `--compare-upstream`:
+
+| | | |
+|---|---|---|
+| `R001` | rendered output differs from upstream; whitespace-only differences reported at info | error |
+| `R002` | the GGUF author annotated the change in the template; downgrades `R001` | info |
+| `R003` | upstream could not be resolved (gated, deleted, no base model) | warn |
+| `R004` | upstream template changed after this GGUF was published | info |
+
+The conversations rendered are a fixed, versioned corpus of ten: a single user turn,
+system plus user, multi-turn, a tool schema, three `enable_thinking` variants, a
+tool-call round trip, typed content parts, and a conversation with no generation prompt.
+The last three are marked "extended" because many templates predate those message
+shapes; a render failure on them is reported at info.
+
+## Engines
+
+A template is rendered by whatever you serve the model with, and the two common runtimes
+are different programs.
+
+| Engine | What it is |
+|---|---|
+| `jinja2` | Jinja2 configured like transformers' `apply_chat_template` environment: the evaluation and fine-tuning path |
+| `llama.cpp` | llama.cpp's own engine (`common/jinja`, which replaced minja upstream in January 2026), pinned to build `b10775`, compiled from the C++ sources to `wasm32-wasip1` and run through `wasmtime` |
+
+The `llama.cpp` engine is not a reimplementation. It is llama.cpp's code at a pinned
+commit, entered the way `llama-server` enters it: the capability probe, the message
+normaliser, the `enable_thinking` and `preserve_reasoning` defaults, the
+`add_generation_prompt` semantics. It does not strip the leading BOS, because llama.cpp's
+tokenizer re-adds it and comparing post-strip text would manufacture a divergence on
+every model that emits BOS.
+
+The claim is checked, not asserted. A [conformance suite](tests/conformance/) runs the
+real `llama-server` binary at the same build against ten vendored real templates and all
+ten fixtures and requires byte equality with the bundled module; 99 of 100 pairs match,
+and the one exception (a Gemma-4-specific rewrite llama.cpp applies above the templating
+entry point) is skipped with its reason in the code. The suite runs in CI.
+
+Where the two engines differ because of something llama.cpp does on purpose (joining
+typed content into a string, or defining `enable_thinking` and `preserve_reasoning` when
+the caller did not), the finding is reported at info with the cause named and the fix in
+the message. Each such downgrade is confirmed by re-rendering under Jinja2 with the same
+rewrite applied; a flag saying "the normaliser ran" is never enough on its own.
+
+Both engines run with `strftime_now` pinned to a fixed date so output is reproducible.
+Templates whose output depends on the date are not fully exercised.
+
+## The survey
+
+```bash
+ggufdoctor survey --top 400 --per-org 2 --out survey.json --markdown survey.md
+ggufdoctor survey --top 80 --per-org 1 --save-templates templates/
+```
+
+`survey` samples the most-downloaded GGUF repositories on the Hub, resolves each one's
+upstream, renders both templates against the corpus and reports the fraction that
+produce a different prompt. `--save-templates` also writes every fetched template with a
+provenance sidecar (repository, revision, licence, tokens), which is how the test
+suite's vendored templates were collected.
+
+Three choices keep the number honest, and each one moved it during development:
+
+- **Rendered output is compared, never template source.** Diffing source reports every
+  cosmetic or engine-compatibility rewrite. Source diffing put the rate at 46.7%.
+- **Two repositories per publisher.** Download rankings are dominated by a handful of
+  quantisers, at least one of whom patches templates deliberately. Without the cap you
+  measure that publisher.
+- **Every excluded repository is classified.** Gated, deleted, no base model, no
+  template, not a chat model, fetch error: each has its own bucket in the output, and
+  the percentage's denominator is stated next to it. A run with too many fetch errors
+  marks itself unreliable instead of printing a number.
+
+Every survey output carries the fixture corpus version it was measured with.
+
+## Double BOS
+
+`S006` is info, not a warning, and the reason is worth stating because the received
+wisdom is the opposite. When a GGUF sets `add_bos_token` and its template also emits
+`{{ bos_token }}`, llama.cpp does not send two BOS tokens: `common/chat.cpp` strips the
+template's leading BOS when the vocabulary's `add_bos` flag is set, then tokenizes with
+`add_special`, so exactly one survives. llama-cpp-python does not double either. The
+configuration does double for anyone who renders the template themselves and tokenizes
+with `add_special_tokens=True`, which is the transformers path common in evaluation
+harnesses. That is what the finding says.
+
+## Limitations
+
+- `llama-server` rewrites some requests above the templating entry point the bundled
+  engine mirrors (tool-call arguments between object and string form, assistant prefill,
+  per-family message rewrites selected by sniffing the template). Those are not
+  reproduced. [`engine/README.md`](engine/README.md) lists exactly what is.
+- Ollama is not modelled. Ollama has no template conversion: it matches a GGUF's
+  template against a small registry of known templates and substitutes a curated Go
+  template on a hit; everything else it renders with llama.cpp's engine, which is the
+  one bundled here. A check for the registry case is planned; see
+  [`docs/research/2026-09-03-ollama-spike.md`](docs/research/2026-09-03-ollama-spike.md).
+- The survey samples top downloads, not the long tail, and its percentages are the
+  GGUF-versus-upstream question rendered through Jinja2 on both sides. Cross-engine
+  divergence is not counted in the survey; the 100 of 100 result above is the
+  cross-engine statement.
+- Gated upstreams are excluded unless `HF_TOKEN` is set. The published figures were
+  measured without a token.
+- `S004`, `S005` and `S006` need the file's vocabulary and token ids. When a GGUF (or a
+  Hub repository's metadata) does not carry them, they are recorded as not evaluated.
+
+## Development
+
+```bash
+git clone https://github.com/saad-supernal/ggufdoctor
+cd ggufdoctor
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e ".[dev]"
+.venv/bin/python -m pytest -q
+```
+
+The default test run is offline and needs no toolchain. Two opt-in suites download
+things: `pytest -m conformance` fetches the pinned `llama-server` release binary and a
+1 MB model and checks the bundled engine against it; `pytest -m network` talks to the
+Hub. Every download is verified against a pinned sha256 before use.
+
+The WebAssembly engine is rebuilt with `engine/build.sh`, which fetches the pinned
+llama.cpp sources (checksummed) and wasi-sdk 34 (checksummed) and writes the module and
+its manifest. CI rebuilds it on every push and runs the suite against the fresh build.
+Bumping the llama.cpp pin is a deliberate change: edit `engine/LLAMACPP_PIN`, refetch,
+rebuild, re-run the conformance suite and the semantics table, update the version. The
+procedure is in [`engine/README.md`](engine/README.md).
+
+Layout:
+
+```
+src/ggufdoctor/
+  reader.py        GGUF header parser (local file or HTTP range)
+  sources.py       target and upstream resolution
+  engines/         jinja2_engine.py, llamacpp_engine.py, registry.py
+  engine_data/     llamacpp-jinja.wasm + manifest (built by engine/)
+  checks/          sanity.py (S), cross_engine.py (X), reference.py (R)
+  fixtures.py      the versioned conversation corpus
+  survey.py        the survey harness
+  report/          human and JSON output
+engine/            build pipeline and the C++ shim around llama.cpp's engine
+tests/             unit tests, ten vendored real templates, conformance suite
+docs/research/     survey data and the two engine studies
+```
+
+## Contributing
+
+Issues and pull requests are welcome. The most useful report is a false positive: a
+finding on a template that works correctly in practice, with the GGUF (or its Hub id)
+and what you ran it with. The project treats a false positive as a bug in the tool, not
+in the template, and every finding on the ten vendored real templates is pinned by a
+test with the reason it is a true positive written next to it.
+
+Bumps to the llama.cpp pin, new fixtures and new checks all go through the same bar:
+complete expected finding sets on the real templates, no assertion narrowed to make a
+run pass.
 
 ## Licence
 
-MIT.
+MIT. Vendored test templates under `tests/data/templates/` are unmodified copies of
+published model repositories and remain under their own licences, recorded in
+[`SOURCES.md`](tests/data/templates/SOURCES.md).
