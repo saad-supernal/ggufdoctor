@@ -83,6 +83,8 @@ Rules that bind every X check:
   before rendering), the resulting X001 or X002 is reported at INFO with the rewrite named.
   It is a true divergence between the transformers path and llama-server, but one caused
   by a deliberate compatibility shim, not by the template.
+  This classification is applied before the whitespace-only test: an explained divergence is
+  X001 INFO even when the residual difference is only whitespace.
 - **Both engines failing is not an X finding.** S003 already owns that.
 - **The message never calls the template broken.** X002's message names the engine that
   fails, the stage, and the engine's own error text. A template that uses `//` is a valid
