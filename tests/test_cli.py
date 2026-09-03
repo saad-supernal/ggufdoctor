@@ -308,3 +308,8 @@ def test_unavailable_engine_makes_the_run_partial(tmp_path, capsys, monkeypatch)
     out = capsys.readouterr().out
     assert "llama.cpp unavailable — wasmtime not importable: boom" in out
     assert "partial" in out and "X001, X002, X004, X005 not evaluated" in out
+
+
+def test_version_is_0_2_0():
+    import ggufdoctor
+    assert ggufdoctor.__version__ == "0.2.0"

@@ -40,7 +40,9 @@ jobs:
           python - <<'PY'
           import glob, zipfile, sys
           names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
-          need = ["ggufdoctor/fixture_data/corpus.json"]
+          need = ["ggufdoctor/fixture_data/corpus.json",
+                  "ggufdoctor/engine_data/llamacpp-jinja.wasm",
+                  "ggufdoctor/engine_data/llamacpp-jinja.json"]
           missing = [n for n in need if n not in names]
           lic = [n for n in names if n.endswith("LICENSE")]
           print("\n".join(names))
@@ -50,6 +52,41 @@ jobs:
         run: |
           python -m pip install dist/*.whl
           cd /tmp && ggufdoctor --help
+      - name: installed engine renders through the wheel's module
+        run: |
+          cd /tmp && python - <<'PY'
+          from ggufdoctor.engines.llamacpp_engine import LlamaCppEngine
+          e = LlamaCppEngine(); assert e.available, e.unavailable_reason
+          r = e.render("{{ messages[0].content }}", {"messages": [{"role": "user", "content": "ok"}]})
+          assert r.ok and r.text == "ok", r
+          print("engine ok:", e.version, e.backend)
+          PY
+
+  engine-build:
+    # Proves the committed module can be regenerated from the pinned sources
+    # with the pinned toolchain, and that the fresh build passes the suite.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - name: fetch pinned llama.cpp sources (verified against llamacpp-sources.sha256)
+        run: engine/fetch-llamacpp.sh
+      - name: build the module with wasi-sdk 34
+        run: engine/build.sh --out /tmp/fresh
+      - name: fresh module passes the whole suite
+        run: GGUFDOCTOR_ENGINE_WASM=/tmp/fresh/llamacpp-jinja.wasm python -m pytest -q
+      - name: report whether the fresh build is byte-identical to the committed one
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          fresh = hashlib.sha256(open("/tmp/fresh/llamacpp-jinja.wasm","rb").read()).hexdigest()
+          committed = json.load(open("src/ggufdoctor/engine_data/llamacpp-jinja.json"))["sha256"]
+          print("fresh    ", fresh); print("committed", committed)
+          print("byte-identical" if fresh == committed else "differs (informational: toolchain nondeterminism)")
+          PY
 
   conformance:
     # Real llama-server at the pinned build vs the bundled WASM engine.
