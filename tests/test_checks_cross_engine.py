@@ -128,6 +128,41 @@ def test_x004_whitespace_only_is_warn():
     assert _set(run_cross_engine_checks(ctx)) == {("X004", Severity.WARN, ALL)}
 
 
+def test_normaliser_explained_divergence_outranks_whitespace_only():
+    # Ruling R7: the *cause* of a divergence outranks its magnitude. A
+    # divergence llama.cpp's own message normaliser demonstrably created
+    # belongs in the X001 INFO bucket that says so, even when the surviving
+    # byte difference is only whitespace -- and whitespace is the common
+    # real-world shape of it: a template that walks typed content itself and
+    # joins the text parts with no separator, against llama.cpp's "\n" join
+    # (five of the ten vendored templates in tests/test_real_templates.py do
+    # exactly this). Before R7 the whitespace-only test ran first, so this
+    # landed at X004 WARN and the INFO downgrade was unreachable for precisely
+    # the overlap it was written for.
+    def has_list_content(context):
+        return any(isinstance(m.get("content"), list) for m in context["messages"])
+
+    # jinja2 joins the typed-content parts with no separator ("Hello there");
+    # on the normaliser's pre-flattened context (content already a string) it
+    # renders exactly what llama.cpp rendered, which is what
+    # _explained_by_normaliser demands before crediting the rewrite with the
+    # whole explanation. Every other fixture agrees byte for byte.
+    j2 = FakeEngine("jinja2",
+                    lambda c: "Hello there" if has_list_content(c) else "Hello  there")
+    llama = FakeEngine("llama.cpp", lambda c: RenderResult(
+        "Hello  there", None,
+        extra={"normalized": True, "caps": {"supports_typed_content": False}}))
+    ctx = _ctx("irrelevant", engines=[j2, llama])
+    found = run_cross_engine_checks(ctx)
+    # The divergence IS whitespace-only -- assert that, so this test cannot
+    # pass by accident on a non-whitespace diff that never reaches the branch
+    # under test.
+    assert "".join("Hello there".split()) == "".join("Hello  there".split())
+    assert _set(found) == {("X001", Severity.INFO, ("typed_content",))}
+    assert found[0].evidence["normalized"] is True and "normalis" in found[0].message
+    assert ctx.stats["engines_agreed_fixtures"] == len(ALL) - 1
+
+
 def test_single_engine_records_x_family_as_not_evaluated():
     ctx = _ctx("{{ messages[0].content }}", engines=[Jinja2Engine()])
     assert run_cross_engine_checks(ctx) == []

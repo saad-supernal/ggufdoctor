@@ -208,10 +208,21 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
                 evidence["normalized"] = True
                 evidence["llamacpp_caps"] = b.extra.get("caps", {})
             sig = _signature(a.text, b.text)
-            if _whitespace_only(a.text, b.text):
-                whitespace.append((fx.name, sig, evidence))
-            elif explained_flag:
+            # The normaliser test comes FIRST, before the whitespace-only test:
+            # the *cause* of a divergence outranks its magnitude. A divergence
+            # we can prove llama.cpp's own message normaliser created (see
+            # _explained_by_normaliser) is fully explained by that rewrite
+            # whether the resulting bytes differ by a newline or by a whole
+            # message, and it belongs in the X001 INFO bucket that says so.
+            # Testing whitespace first put the common real-world case --
+            # templates that walk typed content themselves and join the text
+            # parts with no separator, where llama.cpp joined them with "\n" --
+            # into X004 WARN, which made the INFO downgrade unreachable for
+            # exactly the overlap it was written for (ruling R7).
+            if explained_flag:
                 explained.append((fx.name, sig, evidence))
+            elif _whitespace_only(a.text, b.text):
+                whitespace.append((fx.name, sig, evidence))
             elif is_tool_fixture(fx):
                 differs_tools.append((fx.name, sig, evidence))
             else:
