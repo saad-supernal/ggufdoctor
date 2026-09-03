@@ -94,7 +94,7 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     reproduces llama.cpp's output byte for byte
 #     (cross_engine._explained_by_normaliser). A bare "normalized" flag is not
 #     enough.
-#   * THE `enable_thinking` FORK, which four of these ten entries are dominated
+#   * THE `enable_thinking` FORK, which three of these ten entries are dominated
 #     by. common_chat_template_direct_apply_impl (common/chat.cpp) writes
 #     `{"enable_thinking", inputs.enable_thinking}` into the render context
 #     unconditionally, from a generation param whose default is true. There is
@@ -105,14 +105,28 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     undefined there unless the caller passes it, which is why every model card
 #     tells you to. The engine mirrors llama.cpp (Task 9 ported this after the
 #     conformance suite caught it against the real llama-server), so on every
-#     fixture that does not set `enable_thinking` the two runtimes now render
-#     different prompts for the same GGUF, and the X family reports it. That is
-#     a true divergence, not a template defect, and it is deliberately NOT
-#     downgraded here: no ruling yet says how the X family should rank a
-#     divergence explained by a runtime's implicit default rather than by the
-#     template. The `thinking_true` and `thinking_false` fixtures pin both
-#     runtimes to the same value and agree everywhere -- which is what keeps
-#     `engines_agreed_fixtures` non-zero on these four.
+#     fixture that does not set `enable_thinking` the two runtimes render
+#     different prompts for the same GGUF.
+#
+#     Per ruling R9 that lands as X001 **INFO** with the fix in the message,
+#     never ERROR and never X005: it is a runtime default, not a template
+#     defect, and the author cannot remove it (`mudler`'s template already
+#     defaults the variable explicitly and llama.cpp overrides it anyway). Like
+#     the normaliser INFO it is confirmed, not assumed -- the check re-renders
+#     under jinja2 with `enable_thinking=True` and downgrades only if that
+#     reproduces llama.cpp byte for byte (cross_engine.
+#     _explained_by_thinking_default) -- and its evidence carries
+#     `"explained_by": "enable_thinking_default"`, against `"normaliser"` for
+#     the other class. Tool fixtures it explains stay in this X001 bucket
+#     because the cause outranks the fixture. `thinking_true` and
+#     `thinking_false` pin both runtimes to the same value and agree everywhere,
+#     which is what keeps `engines_agreed_fixtures` non-zero on these three.
+#
+#     Two `typed_content` entries below are still X001/X002 ERROR *despite*
+#     being partly this fork: their diff mixes it with the normaliser's join, so
+#     neither single explanation reproduces llama.cpp on its own and neither
+#     downgrade fires. Composing the two explanations is not something either
+#     ruling asks for, so the ERROR stands and is recorded at each entry.
 EXPECTED = {
     "HauhauCS__Gemma-4-E4B-Uncensored-HauhauCS-Aggressive": (
         {
@@ -135,35 +149,37 @@ EXPECTED = {
             # which this corpus has no vocab to supply.)
             #
             # ERROR, not the INFO it was before the engine gained llama.cpp's
-            # `enable_thinking` default: the diff is no longer *only* the
+            # `enable_thinking` default, and one of the two mixed-cause entries
+            # the header warns about: the diff is no longer *only* the
             # normaliser's join, it also carries the `<|think|>` system turn
-            # below, so pre-flattening typed content no longer makes jinja2
-            # reproduce llama.cpp byte for byte and the INFO downgrade
-            # correctly stops applying.
+            # below. So neither downgrade fires -- pre-flattening typed content
+            # does not reproduce llama.cpp (the think turn is still missing) and
+            # adding `enable_thinking=True` does not either (the parts are still
+            # joined with no separator). Both explanations together would; that
+            # composition is deliberately not implemented (ruling R9).
             ("X001", Severity.ERROR, ("typed_content",)),
-            # The enable_thinking fork (see the header). Line 157 opens a system
-            # turn for `(enable_thinking is defined and enable_thinking) or
-            # tools or messages[0].role in ['system','developer']` and line 161
-            # emits `<|think|>` inside it, so with llama.cpp's default the whole
-            # prompt gains a turn that transformers never renders:
+            # The enable_thinking fork, X001 INFO per ruling R9. Line 157 opens
+            # a system turn for `(enable_thinking is defined and
+            # enable_thinking) or tools or messages[0]['role'] in ['system',
+            # 'developer']` and line 161 emits `<|think|>` inside it, so with
+            # llama.cpp's default the whole prompt gains a turn that
+            # transformers never renders:
             #     --- jinja2
             #     +++ llama.cpp
             #     -<s><|turn>user
             #     +<s><|turn>system
             #     +<|think|><turn|>
             #     +<|turn>user
-            # Four fixtures share that exact diff; `system_user` is reported
-            # separately because it already had a system turn, so there the
-            # `<|think|>` is merely prepended to "Be brief." and the diff
-            # signature differs (checks.common.collapse_by_signature).
-            ("X001", Severity.ERROR,
+            ("X001", Severity.INFO,
              ("user_only", "multiturn", "thinking_unset", "no_generation_prompt")),
-            ("X001", Severity.ERROR, ("system_user",)),
-            # Same fork, reported by X005 instead of X001 because these two
-            # fixtures carry `tools`: the system turn exists either way (line
-            # 157's `or tools`), so the diff is the `<|think|>` prefix on the
-            # tool declaration block.
-            ("X005", Severity.ERROR, ("with_tools", "tool_roundtrip")),
+            # Same cause, second bucket: these three already had a system turn
+            # (`system_user` supplies one; the two tools fixtures get one from
+            # line 157's `or tools`), so the `<|think|>` is merely *prepended*
+            # inside an existing turn rather than adding one, and the character
+            # diff signature differs (checks.common.collapse_by_signature).
+            # `with_tools` and `tool_roundtrip` sit here rather than in an X005
+            # because the cause outranks the fixture (R9).
+            ("X001", Severity.INFO, ("system_user", "with_tools", "tool_roundtrip")),
             # Not reported, and worth recording because the previous revision of
             # this file did report them:
             #   - No S003: the content branches (`is string` / `is sequence`)
@@ -292,8 +308,8 @@ EXPECTED = {
             # pre-flattened jinja2 re-render no longer reproduces it byte for
             # byte and the normaliser is no longer the *whole* explanation.
             ("X002", Severity.ERROR, ("typed_content",)),
-            # The enable_thinking fork (see the header), in its sharpest form.
-            # Lines 4-9 read
+            # The enable_thinking fork, X001 INFO per ruling R9, in its sharpest
+            # form. Lines 4-9 read
             #   {%- if not thinking is defined -%}
             #     {%- if enable_thinking is defined -%}{%- set thinking = enable_thinking -%}
             #     {%- else -%}{%- set thinking = false -%}
@@ -303,10 +319,12 @@ EXPECTED = {
             #     -<s><｜User｜>Hello<｜Assistant｜></think>
             #     +<s><｜User｜>Hello<｜Assistant｜><think>
             # One token, opposite meaning: llama.cpp opens a reasoning block the
-            # transformers prompt closes immediately.
-            ("X001", Severity.ERROR, ("user_only", "system_user", "multiturn", "thinking_unset")),
-            # Same fork on the two tools fixtures, so X005 rather than X001.
-            ("X005", Severity.ERROR, ("with_tools", "tool_roundtrip")),
+            # transformers prompt closes immediately. All six fixtures collapse
+            # into one bucket -- the `<think>`/`</think>` swap is the whole diff
+            # everywhere, including the two tools fixtures, which therefore do
+            # not become an X005 (the cause outranks the fixture).
+            ("X001", Severity.INFO, ("user_only", "system_user", "multiturn",
+                                     "with_tools", "thinking_unset", "tool_roundtrip")),
             # No S005/S004 findings (and none possible here anyway): every
             # special token this template emits -- `<｜User｜>`,
             # `<｜Assistant｜>`, `<｜end▁of▁sentence｜>` -- uses the fullwidth
@@ -370,33 +388,38 @@ EXPECTED = {
             #      <assistant></think>
             # This is not whitespace-only (jinja2 emits no content whatsoever),
             # so it reached the X001 bucket even before ruling R7. It is ERROR
-            # rather than the INFO it was because the diff now also carries the
-            # enable_thinking `<think>` (below), which the pre-flattened jinja2
-            # re-render cannot reproduce -- so the normaliser stops being the
-            # whole explanation.
+            # rather than the INFO it was, and is the second mixed-cause entry
+            # the header warns about: the diff now also carries the
+            # enable_thinking `<think>` (below), so pre-flattening typed content
+            # no longer reproduces llama.cpp on its own and adding
+            # `enable_thinking=True` does not either (jinja2 still drops the
+            # list content entirely). Neither downgrade fires; both together
+            # would, and that composition is deliberately not implemented (R9).
             ("X001", Severity.ERROR, ("typed_content",)),
-            # The enable_thinking fork (see the header). Line 4 is
+            # The enable_thinking fork, X001 INFO per ruling R9. Line 4 is
             #   {%- set enable_thinking = enable_thinking | default(false) -%}
             # -- an explicit template-side default of *off*, which llama.cpp's
-            # unconditional true overrides. Line 88 then opens `<think>` where
-            # transformers closes `</think>`:
+            # unconditional true overrides, which is precisely why R9 calls this
+            # a runtime default and not a template defect: the author already
+            # said what they wanted and llama.cpp overrode it. Line 88 then
+            # opens `<think>` where transformers closes `</think>`:
             #     -<assistant></think>
             #     +<assistant><think>
-            ("X001", Severity.ERROR, ("user_only", "system_user", "thinking_unset")),
-            # `multiturn` and `no_generation_prompt` are reported separately
-            # because they contain a past assistant message, where line 54's
-            # `{%- if enable_thinking -%}{{- '<think>' + reasoning_content +
-            # '</think>' -}}` adds an empty reasoning block to the *history*
-            # too, giving those fixtures a different diff signature:
+            # `with_tools` shares that exact diff, so it collapses in here
+            # rather than becoming an X005.
+            ("X001", Severity.INFO, ("user_only", "system_user", "with_tools", "thinking_unset")),
+            # Same cause, separate bucket: these two contain a past assistant
+            # message, where line 54's `{%- if enable_thinking -%}{{- '<think>'
+            # + reasoning_content + '</think>' -}}` adds an empty reasoning
+            # block to the *history* too, so the character diff signature
+            # differs:
             #     -<assistant></think>Hey!</assistant>
             #     +<assistant><think></think>Hey!</assistant>
-            ("X001", Severity.ERROR, ("multiturn",)),
-            ("X001", Severity.ERROR, ("no_generation_prompt",)),
-            # Same fork on the tools fixtures, so X005; two entries because
-            # tool_roundtrip's history assistant message gets the extra empty
-            # reasoning block that with_tools has no assistant turn to receive.
-            ("X005", Severity.ERROR, ("with_tools",)),
-            ("X005", Severity.ERROR, ("tool_roundtrip",)),
+            ("X001", Severity.INFO, ("multiturn", "tool_roundtrip")),
+            # And `no_generation_prompt` again separately: it has the history
+            # block above but no trailing generation prompt, so its diff is the
+            # history half alone.
+            ("X001", Severity.INFO, ("no_generation_prompt",)),
             # No S003: `content is string else ""` plus the `{%- if content -%}`
             # guard mean `content: null` and list content both render rather
             # than raise -- the same defensiveness that costs it the X001 above.
@@ -511,8 +534,9 @@ def test_complete_finding_set(slug):
     # so this stays a real assertion rather than a tautology -- it would catch
     # an engine or corpus change that made the two engines stop agreeing
     # anywhere. The margin is much thinner than it was: the enable_thinking fork
-    # (see the EXPECTED header) took the four thinking templates down to 2, 2, 3
-    # and 7 agreeing fixtures out of 10, and the two that sit at 2 agree only on
+    # (see the EXPECTED header) took the three thinking templates down to 2, 2
+    # and 3 agreeing fixtures out of 10, and the two that sit at 2 agree only on
     # `thinking_true` and `thinking_false`, the fixtures that pin the variable
-    # on both sides.
+    # on both sides. Ruling R9 changed how that divergence is *reported*, not
+    # whether the engines agree, so this number is unaffected by it.
     assert stats["engines_agreed_fixtures"] >= 1, "both engines must agree on at least one fixture"

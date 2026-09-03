@@ -76,10 +76,14 @@ static njson normalize_messages(const njson & messages, const jinja::caps & caps
             out.push_back(std::move(copy));
             continue;
         }
-        // common_chat_msg::to_json_oaicompat: no content and no content_parts -> ""
+        // common_chat_msg::to_json_oaicompat: no content and no content_parts -> "".
+        // Deliberately does NOT set `changed`: that flag reports the content-parts
+        // normaliser (string <-> typed) to the caller, and the checks layer reads it
+        // as "llama.cpp reshaped the content parts before rendering". This is a
+        // different rewrite, from message *parsing*, and claiming it under the same
+        // flag would misattribute a divergence's cause (ruling R9).
         if (!copy.contains("content") || copy.at("content").is_null()) {
             copy["content"] = "";
-            changed = true;
         }
         if (only_string || only_typed) {
             njson & it = copy.at("content");

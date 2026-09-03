@@ -4,6 +4,13 @@ Both engines get the identical context -- BASE_CONTEXT defaults, the fixture,
 the model's real bos/eos tokens -- and the raw rendered text is compared.
 Neither side strips BOS (spec amendments §A). A fixture both engines fail on
 belongs to S003, not here.
+
+Two explanation classes downgrade a divergence to INFO, each confirmed by a
+re-render rather than assumed: llama.cpp's message normaliser rewrote the input
+("normaliser", _explained_by_normaliser), and llama.cpp defines
+enable_thinking=true by default where the transformers path leaves it undefined
+("enable_thinking_default", _explained_by_thinking_default). Evidence records
+which one under "explained_by".
 """
 from __future__ import annotations
 
@@ -115,6 +122,32 @@ def _explained_by_normaliser(j2: Any, tpl: str, context: dict[str, Any], llama_t
     return retried.ok and retried.text == llama_text
 
 
+def _explained_by_thinking_default(j2: Any, tpl: str, context: dict[str, Any],
+                                   llama_text: str) -> bool:
+    """True only if re-rendering under jinja2 with `enable_thinking=True` added
+    reproduces llama.cpp's own output -- i.e. llama.cpp's implicit default, and
+    not some unrelated engine difference, is what explains this divergence.
+
+    common_chat_template_direct_apply_impl (llama.cpp common/chat.cpp) writes
+    `enable_thinking` into every render context unconditionally, from a
+    generation param that defaults to true; there is no path through llama.cpp
+    that leaves the variable undefined (`--reasoning-budget 0` makes it false,
+    not absent). transformers injects nothing, so a caller who does not pass
+    `enable_thinking` gets the thinking form of a template under llama.cpp and
+    the non-thinking form under transformers. That is a runtime default, not a
+    template defect -- the template author cannot remove it -- so it is
+    reported, and reported as INFO with the fix in the message (ruling R9).
+
+    Only applies where the caller said nothing: if the context already carries
+    `enable_thinking`, both engines saw the same value and this is not the
+    explanation for anything.
+    """
+    if "enable_thinking" in context:
+        return False
+    retried = j2.render(tpl, {**context, "enable_thinking": True})
+    return retried.ok and retried.text == llama_text
+
+
 def _diff(a: str, b: str) -> str:
     lines = difflib.unified_diff(a.splitlines(), b.splitlines(),
                                  fromfile=JINJA2, tofile=LLAMACPP, lineterm="", n=1)
@@ -181,6 +214,7 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
     differs: list[tuple[str, Any, dict[str, Any]]] = []
     differs_tools: list[tuple[str, Any, dict[str, Any]]] = []
     explained: list[tuple[str, Any, dict[str, Any]]] = []   # llama.cpp rewrote the input first
+    thinking: list[tuple[str, Any, dict[str, Any]]] = []    # llama.cpp's implicit enable_thinking
     whitespace: list[tuple[str, Any, dict[str, Any]]] = []
     one_side: dict[tuple[Severity, str], list[tuple[str, Any, dict[str, Any]]]] = {}
     agreed = 0
@@ -206,6 +240,7 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
                 j2, tpl, context, b.text)
             if explained_flag:
                 evidence["normalized"] = True
+                evidence["explained_by"] = "normaliser"
                 evidence["llamacpp_caps"] = b.extra.get("caps", {})
             sig = _signature(a.text, b.text)
             # The normaliser test comes FIRST, before the whitespace-only test:
@@ -219,8 +254,17 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
             # parts with no separator, where llama.cpp joined them with "\n" --
             # into X004 WARN, which made the INFO downgrade unreachable for
             # exactly the overlap it was written for (ruling R7).
+            # The enable_thinking explanation sits between them, for the same
+            # reason and by the same rule: it is a *cause*, so it outranks the
+            # whitespace-only magnitude test, and it outranks the tool-fixture
+            # split below too -- a `with_tools` divergence that llama.cpp's
+            # implicit default fully explains is that default, not a
+            # tool-calling disagreement, so it does not become X005 (R9).
             if explained_flag:
                 explained.append((fx.name, sig, evidence))
+            elif _explained_by_thinking_default(j2, tpl, context, b.text):
+                evidence["explained_by"] = "enable_thinking_default"
+                thinking.append((fx.name, sig, evidence))
             elif _whitespace_only(a.text, b.text):
                 whitespace.append((fx.name, sig, evidence))
             elif is_tool_fixture(fx):
@@ -251,6 +295,11 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
         "rendered output differs only because llama.cpp's message normaliser rewrote the "
         "input before rendering (typed content joined to text); jinja2 (transformers path) "
         "rendered the original", explained)
+    findings += collapse_by_signature(
+        "X001", Severity.INFO,
+        "rendered output differs only because llama.cpp defines enable_thinking=true by "
+        "default while jinja2 (transformers path) leaves it undefined; pass enable_thinking "
+        "explicitly to make the runtimes agree", thinking)
     findings += collapse_by_signature(
         "X004", Severity.WARN, "rendered output differs between jinja2 and llama.cpp by whitespace only",
         whitespace)

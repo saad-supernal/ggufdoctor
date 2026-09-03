@@ -70,6 +70,47 @@ def test_x001_explained_by_the_normaliser_is_info():
                            ("X005", Severity.ERROR, ("tool_roundtrip",))}
     info = next(f for f in found if f.id == "X001")
     assert info.evidence["normalized"] is True and "normalis" in info.message
+    # Named, so the two INFO explanation classes are distinguishable in JSON.
+    assert info.evidence["explained_by"] == "normaliser"
+
+
+# Fixtures whose context does not pin `enable_thinking`, in corpus order --
+# i.e. every fixture on which llama.cpp's implicit default can diverge from the
+# transformers path. thinking_true and thinking_false are the two that pin it.
+NO_THINKING = ("user_only", "system_user", "multiturn", "with_tools", "thinking_unset",
+               "tool_roundtrip", "typed_content", "no_generation_prompt")
+
+
+def test_x001_explained_by_llama_cpps_enable_thinking_default_is_info():
+    # common_chat_template_direct_apply_impl always defines `enable_thinking`
+    # and defaults it to true; transformers defines nothing. So this template's
+    # `{% if not enable_thinking %}` branch is taken under jinja2 and skipped
+    # under llama.cpp on every fixture that does not pin the variable -- a real
+    # divergence, but a runtime default rather than a template defect, so INFO
+    # with the fix in the message (ruling R9).
+    ctx = _ctx("{% if not enable_thinking %}<think>\n\n</think>\n\n{% endif %}"
+               "{% for m in messages %}{{ m.role }}{% endfor %}")
+    found = run_cross_engine_checks(ctx)
+    # One collapsed finding: the inserted reasoning block is the same
+    # divergence on all eight, whatever the messages around it look like. Note
+    # with_tools and tool_roundtrip are in it rather than in an X005 -- the
+    # cause outranks the fixture.
+    assert _set(found) == {("X001", Severity.INFO, NO_THINKING)}
+    assert found[0].evidence["explained_by"] == "enable_thinking_default"
+    assert "pass enable_thinking explicitly" in found[0].message
+    # thinking_true and thinking_false hand both engines the same value, so
+    # they agree and are the only fixtures that do.
+    assert ctx.stats["engines_agreed_fixtures"] == 2
+
+
+def test_enable_thinking_default_is_not_the_explanation_when_the_caller_pinned_it():
+    # Same shape, but the divergence is `{{ none }}`, not the thinking branch:
+    # adding enable_thinking=True to the jinja2 re-render cannot reproduce
+    # llama.cpp's output, so the INFO downgrade must not apply.
+    ctx = _ctx("{{ none }}{% for m in messages %}{{ m.role }}{% endfor %}")
+    found = run_cross_engine_checks(ctx)
+    assert all(f.severity is Severity.ERROR for f in found), _set(found)
+    assert all("explained_by" not in f.evidence for f in found)
 
 
 def test_x005_owns_tool_fixtures_and_x001_the_rest():
