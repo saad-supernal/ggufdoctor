@@ -27,6 +27,25 @@ MODULE_NAME = "llamacpp-jinja.wasm"
 MANIFEST_NAME = "llamacpp-jinja.json"
 ENV_MODULE_PATH = "GGUFDOCTOR_ENGINE_WASM"
 
+# Every render runs in a bounded store, because the template text comes from
+# strangers' repos and `{% for i in range(200000000) %}{% endfor %}` is a
+# perfectly valid Jinja template. Once Python has called into the module there
+# is no way back out: a Ctrl-C sets a flag that is only checked between Python
+# bytecodes, and we are inside one native call for the whole render, so an
+# unbounded loop in there hangs the process until it is killed. Fuel makes the
+# runtime itself stop, and the resulting trap surfaces through the same
+# `render:wasm: ...` path as any other engine failure -- a reported render
+# error, never a hang and never a traceback.
+#
+# Both limits are far above what a real chat template needs. The whole
+# vendored corpus renders inside a few million fuel units and a couple of
+# megabytes of linear memory, so these are ~1000x and ~100x headroom
+# respectively: a template that trips either one is not a template ggufdoctor
+# can usefully report on anyway. Raising them is cheap if that is ever wrong;
+# the point is that the ceiling exists.
+FUEL_BUDGET = 5_000_000_000
+MEMORY_LIMIT_BYTES = 512 * 1024 * 1024
+
 
 def load_manifest() -> dict[str, Any]:
     raw = (resources.files("ggufdoctor.engine_data")
@@ -48,9 +67,14 @@ class LlamaCppEngine:
     name = "llama.cpp"
 
     def __init__(self, module_path: str | None = None) -> None:
-        manifest = load_manifest()
-        self.version: str = manifest["build_tag"]
-        self.commit: str = manifest["commit"]
+        # Constructing this engine NEVER raises (spec amendments §A):
+        # "unavailable" is a state with a stated reason, so a missing manifest,
+        # a broken wasmtime install or an absent dist-info degrades the run to
+        # jinja2-only instead of taking the CLI down with a traceback. Every
+        # attribute a report or the registry may read is therefore set before
+        # anything that can fail.
+        self.version: str = "unknown"
+        self.commit: str = "unknown"
         self.backend: str | None = None
         self.available = False
         self.unavailable_reason: str | None = None
@@ -61,11 +85,25 @@ class LlamaCppEngine:
         self._linker = None
 
         try:
+            manifest = load_manifest()
+            self.version = manifest["build_tag"]
+            self.commit = manifest["commit"]
+        except Exception as e:  # missing/corrupt/incomplete manifest data file
+            self.unavailable_reason = f"engine manifest unavailable: {e}"
+            return
+
+        try:
             import wasmtime  # noqa: F401  (import check only)
         except Exception as e:  # ImportError, or a broken native library
             self.unavailable_reason = f"wasmtime not importable: {e}"
             return
-        self.backend = f"wasmtime {metadata.version('wasmtime')}"
+        try:
+            self.backend = f"wasmtime {metadata.version('wasmtime')}"
+        except Exception:
+            # The import worked, so the runtime is there; only its dist-info is
+            # not (a vendored copy, a zipapp, a stripped container image). That
+            # is a missing version string, not a missing engine.
+            self.backend = "wasmtime"
 
         try:
             self._wasm_bytes = self._read_module()
@@ -86,6 +124,10 @@ class LlamaCppEngine:
         import wasmtime
         cfg = wasmtime.Config()
         cfg.wasm_exceptions = True
+        # Compiled-in fuel accounting; the per-render budget is set on the
+        # store in render(). Must be configured here, before the module is
+        # compiled, because it changes the generated code.
+        cfg.consume_fuel = True
         try:
             # ~120 ms JIT compile per process without this, ~6 ms with it.
             # A read-only or missing cache directory must never stop a render.
@@ -107,6 +149,13 @@ class LlamaCppEngine:
             self._ensure_compiled()
             import wasmtime
             store = wasmtime.Store(self._engine)
+            # Bound this render: see FUEL_BUDGET / MEMORY_LIMIT_BYTES. Exceeding
+            # either traps, and the except below turns that into a render error.
+            # (wasmtime-py 48 has no StoreLimits object -- the limits are set
+            # directly on the store, and a negative argument means "leave
+            # alone", which is why only memory_size is passed.)
+            store.set_fuel(FUEL_BUDGET)
+            store.set_limits(memory_size=MEMORY_LIMIT_BYTES)
             store.set_wasi(wasmtime.WasiConfig())
             exports = self._linker.instantiate(store, self._module).exports(store)
             exports["_initialize"](store)
@@ -125,7 +174,7 @@ class LlamaCppEngine:
         if result.get("ok"):
             text = result.get("text")
             if not isinstance(text, str):
-                return RenderResult(None, f"render:wasm: module returned ok without valid text", extra=extra)
+                return RenderResult(None, "render:wasm: module returned ok without valid text", extra=extra)
             return RenderResult(text, None, extra=extra)
         stage = result.get("stage", "render")
         err = result.get("error", "")

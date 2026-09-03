@@ -44,6 +44,10 @@ SYSROOT="$WASI_SDK/share/wasi-sysroot"
   "$SRC/common/json.cpp" "$SRC/common/unicode.cpp" \
   -lunwind -o "$OUT_DIR/llamacpp-jinja.wasm"
 
+# clang marks its output executable; this is a data file loaded by wasmtime,
+# never exec'd, and it is committed to the repo -- so ship it 0644.
+chmod 644 "$OUT_DIR/llamacpp-jinja.wasm"
+
 python3 - "$OUT_DIR/llamacpp-jinja.wasm" "$commit" "$build_tag" "$WASI_SDK_TAG" <<'PY'
 import datetime, hashlib, json, os, sys
 path, commit, tag, sdk = sys.argv[1:5]
