@@ -147,3 +147,15 @@ def test_real_tokens_reach_both_engines():
     llama = FakeEngine("llama.cpp", lambda c: seen.setdefault("llama", c["bos_token"]) and "x")
     run_cross_engine_checks(_ctx("irrelevant", engines=[j2, llama]))
     assert seen == {"j2": "<s>", "llama": "<s>"}
+
+
+def test_unavailable_engine_records_x_family_as_not_evaluated():
+    j2 = FakeEngine("jinja2", lambda c: "ok")
+    llama = FakeEngine(
+        "llama.cpp",
+        lambda c: RenderResult(None, "engine:unavailable: wasmtime not importable: boom"),
+    )
+    ctx = _ctx("irrelevant", engines=[j2, llama])
+    assert run_cross_engine_checks(ctx) == []
+    assert ctx.checks_not_evaluated == X_IDS
+    assert "engines_agreed_fixtures" not in ctx.stats

@@ -17,6 +17,7 @@ X_IDS = ["X001", "X002", "X004", "X005"]
 JINJA2 = "jinja2"
 LLAMACPP = "llama.cpp"
 DIFF_LINES = 40
+UNAVAILABLE_PREFIX = "engine:unavailable:"
 
 
 def is_tool_fixture(fixture: Fixture) -> bool:
@@ -28,6 +29,10 @@ def _engine_pair(ctx: CheckContext) -> tuple[Any, Any] | None:
     if JINJA2 in by_name and LLAMACPP in by_name:
         return by_name[JINJA2], by_name[LLAMACPP]
     return None
+
+
+def _engine_unavailable(r: RenderResult) -> bool:
+    return not r.ok and r.error.startswith(UNAVAILABLE_PREFIX)
 
 
 def _whitespace_only(a: str, b: str) -> bool:
@@ -68,7 +73,12 @@ def _flatten_typed_content(context: dict[str, Any]) -> dict[str, Any]:
     "normalized": True on such a fixture, even though the normalisation
     changed nothing observable. Returns `context` unchanged (same object) if
     there is nothing to flatten, so callers can check `is context` to skip
-    the confirmatory re-render entirely.
+    the confirmatory re-render entirely. This does NOT mirror every rewrite
+    llama.cpp's normaliser can make -- notably request-level rewrites of
+    tool_calls[].function.arguments (string <-> object) and
+    reasoning_content are not reproduced here, so a divergence caused by
+    those is reported at ERROR rather than INFO (the conservative
+    direction: a real divergence surfaced, never a real one hidden).
     """
     messages = context.get("messages")
     if not isinstance(messages, list):
@@ -127,8 +137,8 @@ def _failure_text(r: RenderResult) -> tuple[str, str]:
 
 
 def _x002(fx: Fixture, ok_engine: str, failing: RenderResult, ok_result: RenderResult,
-          failing_engine: str, *, j2: Any = None, tpl: str | None = None,
-          context: dict[str, Any] | None = None) -> tuple[Severity, str, dict[str, Any]]:
+          failing_engine: str, *, j2: Any, tpl: str,
+          context: dict[str, Any]) -> tuple[Severity, str, dict[str, Any]]:
     stage, msg = _failure_text(failing)
     normalized = False
     if ok_engine == LLAMACPP and ok_result.extra.get("normalized"):
@@ -149,12 +159,13 @@ def _x002(fx: Fixture, ok_engine: str, failing: RenderResult, ok_result: RenderR
     if failing_engine == LLAMACPP and stage in ("lexer", "parser"):
         return Severity.ERROR, f"template will not load in llama.cpp ({stage}: {msg})", evidence
     if failing_engine == LLAMACPP:
-        return Severity.ERROR, f"renders under jinja2 but fails under llama.cpp ({msg})", evidence
+        return Severity.ERROR, f"renders under jinja2 but fails under llama.cpp ({stage}: {msg})", evidence
     if normalized:
         return (Severity.INFO,
                 "renders under llama.cpp only after its message normaliser rewrote the "
                 f"input; jinja2 (transformers path) fails on the original ({msg})", evidence)
-    return Severity.ERROR, f"renders under llama.cpp but fails under jinja2 (transformers path) ({msg})", evidence
+    return (Severity.ERROR,
+            f"renders under llama.cpp but fails under jinja2 (transformers path) ({stage}: {msg})", evidence)
 
 
 def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
@@ -178,6 +189,14 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
         context = with_real_tokens(ctx, fx.context)
         a = j2.render(tpl, context)
         b = llama.render(tpl, context)
+        if _engine_unavailable(a) or _engine_unavailable(b):
+            # The CLI is expected to keep an unavailable engine out of
+            # ctx.engines and record the gap itself (ledger R3), but this
+            # check must not trust that -- an unavailable llama.cpp engine
+            # reaching here would otherwise collapse into a spurious X002
+            # "fails under llama.cpp (unavailable: ...)" on every fixture.
+            ctx.checks_not_evaluated.extend(X_IDS)
+            return []
         if a.ok and b.ok:
             if a.text == b.text:
                 agreed += 1
