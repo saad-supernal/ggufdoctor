@@ -3,11 +3,12 @@
 **v0.2 is built.** Two engines: Jinja2 configured to match transformers, and llama.cpp's
 own `common/jinja` engine at build tag `b10775` (commit `67a17c17`), compiled to a
 725,239-byte WASM module and run through `wasmtime`. Check family X compares them.
-Fixture corpus is version 2. 253 tests, offline, plus a conformance suite that drives the
-real `llama-server` binary. Branch `feat/v0.2`, draft PR #1.
+Fixture corpus is version 2. 262 tests, offline, plus a conformance suite that drives the
+real `llama-server` binary. **Merged to `main` on 2026-09-03** (PR #1, fast-forward,
+`main` = `ac2606c`); version 0.2.0 in `pyproject.toml`, no `v0.2.0` tag pushed yet and
+nothing on PyPI — both wait on Saad's PyPI trusted-publisher step.
 
-v0.1 is live at https://github.com/saad-supernal/ggufdoctor (public, MIT, default branch
-`main`).
+Live at https://github.com/saad-supernal/ggufdoctor (public, MIT, default branch `main`).
 
 ## The numbers, each with its corpus
 
