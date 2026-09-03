@@ -181,13 +181,16 @@ static njson render_job(const std::string & job_text) {
                 context.erase("add_generation_prompt");
             }
             // `preserve_reasoning` is not invented by direct_apply_impl -- it arrives
-            // in extra_context from the CLI layer, where common_params_parse defaults
-            // it to "true" whenever it was not given (common/arg.cpp:963-966), and
-            // llama-server reports it as in force only for a template whose caps say
-            // supports_preserve_reasoning (server-context.cpp:1493-1497). Mirror both:
-            // supply the default here when the caller said nothing and the template
-            // can use it, so a render matches a default `llama-server` run.
-            if (!context.contains("preserve_reasoning") && caps.supports_preserve_reasoning) {
+            // in extra_context from the CLI layer, where common_params_parse sets it
+            // to "true" for every llama.cpp CLI tool whenever it was not given
+            // explicitly (common/arg.cpp:963-966). direct_apply_impl then feeds it,
+            // unconditionally and with no reference to caps, to
+            // jinja::caps_apply_preserve_reasoning just below. (llama-server's caps
+            // check at server-context.cpp:1493-1512 only decides which log line it
+            // prints about the kwarg; it never gates the kwarg itself.) So default it
+            // whenever the caller said nothing, ungated -- that is what a template
+            // sees under `llama-server` and `llama-cli`.
+            if (!context.contains("preserve_reasoning")) {
                 context["preserve_reasoning"] = true;
             }
             // The two caps-driven context expansions, applied to the jinja context

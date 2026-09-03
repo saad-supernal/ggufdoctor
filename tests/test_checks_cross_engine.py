@@ -1,4 +1,5 @@
-from ggufdoctor.checks.cross_engine import X_IDS, run_cross_engine_checks
+from ggufdoctor.checks.cross_engine import (RUNTIME_DEFAULTS, X_IDS,
+                                            run_cross_engine_checks)
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.engines.llamacpp_engine import LlamaCppEngine
 from ggufdoctor.fixtures import load_fixtures
@@ -97,29 +98,61 @@ def test_x001_explained_by_llama_cpps_runtime_defaults_is_info():
     # cause outranks the fixture.
     assert _set(found) == {("X001", Severity.INFO, NO_THINKING)}
     assert found[0].evidence["explained_by"] == "runtime_defaults"
-    # Both defaults are reported because the fixture context supplies neither;
-    # `defaults` says what the confirming re-render had to add, not which key
-    # the template happened to read.
-    assert found[0].evidence["defaults"] == ["enable_thinking", "preserve_reasoning"]
+    # Every default is reported, because the fixture context supplies none of
+    # them: `defaults` says what the confirming re-render had to add, not which
+    # key the template happened to read. Compared against RUNTIME_DEFAULTS
+    # itself so the list cannot drift out of step with the source of truth.
+    assert found[0].evidence["defaults"] == list(RUNTIME_DEFAULTS)
     assert "pass them explicitly" in found[0].message
-    assert "enable_thinking, preserve_reasoning" in found[0].message
+    assert ", ".join(RUNTIME_DEFAULTS) in found[0].message
     # thinking_true and thinking_false hand both engines the same value, so
     # they agree and are the only fixtures that do.
     assert ctx.stats["engines_agreed_fixtures"] == 2
 
 
 def test_runtime_defaults_reports_only_the_keys_it_had_to_add():
-    # A context that already pins `preserve_reasoning` leaves only
-    # `enable_thinking` for the re-render to supply, and `defaults` says so.
+    # A context that already pins every preserve_reasoning variable leaves only
+    # `enable_thinking` for the re-render to supply, and `defaults` says so --
+    # a caller's value is never overridden by a default.
+    pinned = {k: v for k, v in RUNTIME_DEFAULTS.items() if k != "enable_thinking"}
     fx = [Fixture(name="pinned_preserve", tier="core",
                   context={"messages": [{"role": "user", "content": "Hi"}],
-                           "add_generation_prompt": True, "preserve_reasoning": True})]
+                           "add_generation_prompt": True, **pinned})]
     ctx = _ctx("{% if not enable_thinking %}<think>{% endif %}"
                "{% for m in messages %}{{ m.role }}{% endfor %}", fixtures=fx)
     found = run_cross_engine_checks(ctx)
     assert _set(found) == {("X001", Severity.INFO, ("pinned_preserve",))}
     assert found[0].evidence["defaults"] == ["enable_thinking"]
     assert "(enable_thinking)" in found[0].message
+
+
+def test_runtime_defaults_cover_the_expanded_preserve_reasoning_variables():
+    # `preserve_reasoning` is a switch llama.cpp expands into four variables via
+    # jinja::caps_apply_preserve_reasoning before rendering, and jinja2 has no
+    # such expansion -- so a template reading an expanded name diverges, and
+    # only a re-render that supplies the *expansion* can explain it. Handing
+    # jinja2 the bare switch would be inert here and this would be an ERROR
+    # (ruling R12a).
+    ctx = _ctx("{% if preserve_thinking is defined and preserve_thinking %}[keep]{% endif %}"
+               "{% for m in messages %}{{ m.role }}{% endfor %}")
+    found = run_cross_engine_checks(ctx)
+    # Every fixture diverges: unlike `enable_thinking`, no fixture in the corpus
+    # pins any preserve_reasoning variable, so there is nothing to agree on.
+    assert ctx.stats["engines_agreed_fixtures"] == 0
+    # Two buckets, not one, and the reason is the point of `defaults`: the text
+    # of the divergence is identical everywhere ("[keep]" appearing), but
+    # thinking_true and thinking_false pin `enable_thinking`, so the confirming
+    # re-render had one fewer key to add there and their finding says so.
+    assert _set(found) == {("X001", Severity.INFO, NO_THINKING),
+                           ("X001", Severity.INFO, ("thinking_true", "thinking_false"))}
+    by_fixtures = {tuple(f.evidence["fixtures"]): f for f in found}
+    unpinned = by_fixtures[NO_THINKING]
+    pinned = by_fixtures[("thinking_true", "thinking_false")]
+    assert unpinned.evidence["explained_by"] == "runtime_defaults"
+    assert "preserve_thinking" in unpinned.evidence["defaults"]
+    assert unpinned.evidence["defaults"] == list(RUNTIME_DEFAULTS)
+    assert "preserve_thinking" in pinned.evidence["defaults"]
+    assert "enable_thinking" not in pinned.evidence["defaults"]
 
 
 def test_x001_explained_by_the_normaliser_and_runtime_defaults_together_is_info():
@@ -147,7 +180,7 @@ def test_x001_explained_by_the_normaliser_and_runtime_defaults_together_is_info(
     composed = next(f for f in found
                     if f.evidence.get("explained_by") == "normaliser+runtime_defaults")
     assert tuple(f for f in composed.evidence["fixtures"]) == ("typed_content",)
-    assert composed.evidence["defaults"] == ["enable_thinking", "preserve_reasoning"]
+    assert composed.evidence["defaults"] == list(RUNTIME_DEFAULTS)
     assert composed.evidence["normalized"] is True
     assert "normaliser" in composed.message and "runtime defaults" in composed.message
 

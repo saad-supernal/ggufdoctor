@@ -29,13 +29,14 @@ defined and defaults to `true`; `add_generation_prompt` is present only when the
 `preserve_reasoning` is also *defaulted* here, which is the one place the module reaches
 above `direct_apply_impl` on purpose: `common_params_parse` sets it to `"true"` for every
 llama.cpp CLI tool unless `--no-reasoning-preserve` is given (`common/arg.cpp:963-966`), and
-`llama-server` treats it as in force for a template whose caps report
-`supports_preserve_reasoning` (`server-context.cpp:1493-1497`). So when the caller supplies
-no `preserve_reasoning` and the caps say the template can use it, the module supplies `true`
-— otherwise a render would match a bare library embedding rather than the `llama-server` and
-`llama-cli` everyone actually runs. Note that the transformers path has no such expansion at
-all, so a template reading the expanded variables genuinely diverges between the two
-runtimes; that is a finding, not a bug in this module.
+`direct_apply_impl` then feeds it to `jinja::caps_apply_preserve_reasoning` unconditionally,
+with no reference to caps. (`llama-server`'s caps check at `server-context.cpp:1493-1512`
+only chooses which log line it prints about the kwarg; it never gates the kwarg itself.) So
+the module supplies `true` whenever the caller said nothing — ungated, matching llama.cpp —
+because otherwise a render would match a bare library embedding rather than the
+`llama-server` and `llama-cli` everyone actually runs. Note that the transformers path has
+no such expansion at all, so a template reading the expanded variables genuinely diverges
+between the two runtimes; that is a finding, not a bug in this module.
 
 None of this is generated — it is hand-copied logic that **must be re-checked against
 upstream `chat.cpp` on every engine bump**, since a behavior change there would silently

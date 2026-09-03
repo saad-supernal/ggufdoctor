@@ -132,17 +132,18 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     ERROR earned only by having two causes.
 #
 #   * `preserve_reasoning`, the other runtime default, is a *switch* rather than
-#     a value: common_params_parse defaults it to "true" (common/arg.cpp:963-966)
-#     and jinja::caps_apply_preserve_reasoning expands it into preserve_thinking
-#     / clear_thinking / truncate_history_thinking / drop_thinking before
-#     rendering. The engine supplies that default when the template's caps say
-#     supports_preserve_reasoning (ruling R11), so it renders what a default
-#     `llama-server` renders -- and the transformers path has no such expansion
-#     at all, so a template that reads the *expanded* variables diverges in a
-#     way the runtime-defaults re-render cannot reproduce (adding the switch to
-#     a jinja2 context is inert). LuffyTheFox below is that case, and it stays a
-#     reported ERROR, which is right in outcome: the two runtimes really do
-#     disagree, and no explanation available to the checks layer covers it.
+#     a value: common_params_parse sets it to "true" for every llama.cpp CLI
+#     tool whenever it was not given (common/arg.cpp:963-966), and
+#     direct_apply_impl hands it -- unconditionally, with no reference to caps --
+#     to jinja::caps_apply_preserve_reasoning, which expands it into
+#     preserve_thinking / clear_thinking / truncate_history_thinking /
+#     drop_thinking (common/jinja/caps.cpp:22-27). The engine supplies that
+#     default the same ungated way (ruling R11a), so it renders what a default
+#     `llama-server` renders. The transformers path has no such expansion at
+#     all, so a template reading an *expanded* name diverges -- and because
+#     RUNTIME_DEFAULTS carries the expansion and not just the switch (ruling
+#     R12a), the confirming re-render can reproduce it and the divergence lands
+#     in the same X001 INFO bucket. LuffyTheFox below is that case.
 EXPECTED = {
     "HauhauCS__Gemma-4-E4B-Uncensored-HauhauCS-Aggressive": (
         {
@@ -233,6 +234,9 @@ EXPECTED = {
             ("X001", Severity.INFO, ("typed_content",)),
             # No `preserve_reasoning` finding, unlike LuffyTheFox below, and the
             # reason is a corpus gap rather than a property of the template.
+            # (The engine supplies that default here too -- ruling R11a removed
+            # the caps gate, and this template's caps say it is supported
+            # anyway -- so the difference is not in what the engine renders.)
             # Line 2 is `{%- set preserve_thinking = preserve_thinking |
             # default(false) -%}` and line 87
             #   {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}
@@ -256,7 +260,7 @@ EXPECTED = {
             # with no separator -- "Hellothere" against llama.cpp's
             # "Hello\nthere".
             ("X001", Severity.INFO, ("typed_content",)),
-            # X001 ERROR on multiturn: the `preserve_reasoning` fork (see the
+            # X001 INFO on multiturn: the `preserve_reasoning` fork (see the
             # header), and the one finding in this corpus that ruling R11
             # uncovered -- before it, the conformance harness handed the default
             # to *both* sides, so the two engines appeared to agree here and
@@ -279,20 +283,23 @@ EXPECTED = {
             #     +</think>
             #     +
             #      Hey!<|im_end|>
-            # ERROR, not INFO, and not for want of trying: the runtime-defaults
-            # re-render adds `preserve_reasoning` to the jinja2 context, but
-            # jinja2 has no caps_apply_preserve_reasoning to expand it into
-            # `preserve_thinking`, so the re-render cannot reproduce llama.cpp
-            # and no explanation applies. The divergence is real either way --
+            # INFO, with `preserve_thinking` among the reported `defaults`:
+            # RUNTIME_DEFAULTS carries the four variables
+            # caps_apply_preserve_reasoning sets, not just the switch, so the
+            # confirming re-render hands jinja2 `preserve_thinking = true` and
+            # reproduces llama.cpp byte for byte (ruling R12a). Before that it
+            # was an ERROR only because the re-render was given a switch jinja2
+            # has no way to expand. The divergence itself is real either way --
             # the same GGUF, the same caller code, a reasoning block in one
-            # runtime's history and not the other's.
+            # runtime's history and not the other's -- and it is a runtime
+            # default rather than a template defect, which is what INFO says.
             #
             # Only `multiturn` reports it: it is the only fixture with a
             # historical assistant turn that reaches line 100 with content to
             # render. `no_generation_prompt` has one too, but it is the *last*
             # message, so `loop.index0 > ns.last_query_index` already holds and
             # both engines take the reasoning branch.
-            ("X001", Severity.ERROR, ("multiturn",)),
+            ("X001", Severity.INFO, ("multiturn",)),
             # No S003: `render_content` covers `content is string`, the
             # iterable branch, and `{%- elif content is none or content is
             # undefined %}{{- '' }}` for tool_roundtrip's null, so its
@@ -617,4 +624,6 @@ def test_complete_finding_set(slug):
     # on both sides. Rulings R9, R10 and R12 changed how those divergences are
     # *reported*, not whether the engines agree, so they leave this number
     # alone; ruling R11 does move it, taking LuffyTheFox from 9 to 8.
+    # (R11a's removal of the caps gate moved nothing further: every template
+    # here that reads a preserve_reasoning variable already had caps saying so.)
     assert stats["engines_agreed_fixtures"] >= 1, "both engines must agree on at least one fixture"

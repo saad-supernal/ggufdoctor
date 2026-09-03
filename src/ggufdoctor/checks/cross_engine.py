@@ -124,17 +124,46 @@ def _explained_by_normaliser(j2: Any, tpl: str, context: dict[str, Any], llama_t
     return retried.ok and retried.text == llama_text
 
 
-# Every context value llama.cpp supplies on its own and the transformers path
-# does not. `enable_thinking` comes from a generation param that
-# common_chat_template_direct_apply_impl writes unconditionally (common/chat.cpp);
-# `preserve_reasoning` from common_params_parse, which defaults it to "true"
-# whenever the CLI did not say otherwise (common/arg.cpp). Insertion order fixes
-# the order of the reported "defaults" list.
-RUNTIME_DEFAULTS: dict[str, Any] = {"enable_thinking": True, "preserve_reasoning": True}
+# Every context value llama.cpp supplies on its own and the transformers path does
+# not -- as the *template* sees them, which is why this is six keys and not two.
+#
+# `enable_thinking` comes from a generation param that
+# common_chat_template_direct_apply_impl writes into every render context
+# unconditionally (common/chat.cpp). `preserve_reasoning` comes from
+# common_params_parse, which sets it to "true" for every llama.cpp CLI tool
+# whenever it was not given explicitly (common/arg.cpp:963-966) -- but a template
+# almost never reads that name: direct_apply_impl hands it to
+# jinja::caps_apply_preserve_reasoning, which *expands* it into the four variables
+# below (common/jinja/caps.cpp:22-27):
+#
+#     ctx.set_val("preserve_thinking",         enabled);
+#     ctx.set_val("clear_thinking",            !enabled);
+#     ctx.set_val("truncate_history_thinking", !enabled);
+#     ctx.set_val("drop_thinking",             !enabled);
+#
+# Jinja2Engine has no such expansion (nor does transformers), so listing only the
+# switch would leave every template that reads an expanded name unexplainable --
+# the whole point of ruling R12a. Values here are the expansion for
+# `preserve_reasoning = true`, the CLI default.
+#
+# Insertion order fixes the order of the reported "defaults" list.
+RUNTIME_DEFAULTS: dict[str, Any] = {
+    "enable_thinking": True,
+    "preserve_reasoning": True,
+    "preserve_thinking": True,
+    "clear_thinking": False,
+    "truncate_history_thinking": False,
+    "drop_thinking": False,
+}
 
 
 def _with_runtime_defaults(context: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
-    """(context plus every runtime default it lacks, the keys added)."""
+    """(context plus every runtime default it lacks, the keys added).
+
+    A key the caller already supplied is never overridden -- the caller outranks
+    a default, and a divergence on a value both engines were handed is not
+    explained by anything here.
+    """
     added = [k for k in RUNTIME_DEFAULTS if k not in context]
     if not added:
         return context, []
@@ -161,16 +190,11 @@ def _explained_by_runtime_defaults(j2: Any, tpl: str, context: dict[str, Any],
     caller already supplied every default, there is nothing to explain and this
     returns [].
 
-    Note the asymmetry this cannot cross: `preserve_reasoning` is a *switch* in
-    llama.cpp, expanded into preserve_thinking / clear_thinking /
-    truncate_history_thinking / drop_thinking by jinja::caps_apply_preserve_reasoning
-    before rendering. Jinja2Engine has no such expansion (neither does
-    transformers), so adding the switch to a jinja2 context is inert unless the
-    template reads that exact name. A template that reads the *expanded*
-    variables therefore stays a reported ERROR rather than being downgraded here
-    -- which is correct in outcome, since the two runtimes really do disagree,
-    but it does mean this function explains the `enable_thinking` fork and not
-    the `preserve_reasoning` one.
+    RUNTIME_DEFAULTS carries the *expanded* preserve_reasoning variables as well
+    as the switch, because Jinja2Engine has no caps_apply_preserve_reasoning to
+    expand it with: handing a jinja2 context the bare switch is inert unless the
+    template happens to read that exact name, so a template reading
+    `preserve_thinking` would go unexplained (ruling R12a).
     """
     filled, added = _with_runtime_defaults(context)
     if not added:
