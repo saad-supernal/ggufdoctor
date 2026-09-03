@@ -104,6 +104,24 @@ def test_gguf_chat_template_handles_bare_string_model_info():
     assert result is None
 
 
+def test_model_info_requests_every_field_its_callers_read():
+    # The Hub returns ONLY the fields named in expand[], silently omitting the
+    # rest, so an unnamed field reads as None forever. Ruling R8: `sha` was
+    # missing, which is why every `survey --save-templates` provenance sidecar
+    # recorded `"revision": null`. This pins the whole set, since the failure
+    # mode of forgetting one is silent.
+    seen = {}
+
+    def opener(url):
+        seen["url"] = url
+        return json.dumps({"sha": "abc123", "gguf": {}})
+
+    info = HfClient(opener=opener).model_info("org/model")
+    assert info["sha"] == "abc123"
+    for field in ("gguf", "cardData", "tags", "pipeline_tag", "sha"):
+        assert f"expand[]={field}" in seen["url"], field
+
+
 # --- Final fix C: bounded retry/backoff on HTTP 429, so a rate-limited
 # request becomes a successful (if slightly delayed) call rather than a
 # permanent failure that survey.py has to file as examine_error. ---

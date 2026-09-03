@@ -62,8 +62,13 @@ class HfClient:
         raise last_exc
 
     def model_info(self, repo_id: str) -> dict[str, Any]:
+        # Every field a caller reads has to be named in expand[]: the Hub's
+        # model endpoint returns only the requested ones, silently omitting
+        # the rest rather than erroring. `sha` is the repo's current commit,
+        # which survey.py records as a saved template's `revision` -- without
+        # it every provenance sidecar pinned `"revision": null` (ruling R8).
         url = (f"{API}/{repo_id}?expand[]=gguf&expand[]=cardData"
-               "&expand[]=tags&expand[]=pipeline_tag")
+               "&expand[]=tags&expand[]=pipeline_tag&expand[]=sha")
         return json.loads(self._fetch(url))
 
     def gguf_chat_template(self, repo_id: str) -> str | None:
