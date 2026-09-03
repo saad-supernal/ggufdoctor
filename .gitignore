@@ -7,3 +7,6 @@ engine/build/
 
 # Claude working notes (session handoff, ledgers, briefs, specs, plans) — local only
 .notes/
+
+# local secrets — never committed
+.env
