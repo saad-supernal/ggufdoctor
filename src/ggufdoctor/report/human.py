@@ -6,7 +6,7 @@ from typing import Any
 from ggufdoctor.models import Coverage, Finding, GgufModel
 from ggufdoctor.report.json_report import summarize
 
-ALL_FAMILIES = ["S", "R"]
+ALL_FAMILIES = ["S", "X", "R"]
 
 # C0 control characters and DEL. This is deliberately broad rather than a
 # narrow "just ANSI CSI sequences" pattern: every value sanitised here
@@ -74,14 +74,28 @@ def _coverage_caveats(coverage: Coverage) -> list[str]:
     return parts
 
 
+def _engine_label(e: Any) -> str:
+    label = f"{e.name} {e.version}"
+    details = []
+    commit = getattr(e, "commit", None)
+    if commit:
+        details.append(commit[:8])
+    backend = getattr(e, "backend", None)
+    if backend:
+        details.append(backend)
+    return f"{label} ({', '.join(details)})" if details else label
+
+
 def render_human(model: GgufModel, findings: list[Finding],
                  suppressed: list[Finding], coverage: Coverage,
                  engines: list[Any]) -> str:
     lines: list[str] = []
-    engine_names = ", ".join(f"{e.name} {e.version}" for e in engines)
+    engine_names = ", ".join(_engine_label(e) for e in engines)
     arch_display = _visible(model.architecture) if model.architecture else "unknown arch"
     lines.append(f"{_visible(model.source_id)}  [{arch_display}]"
                  f"  engines: {engine_names}")
+    for name, reason in coverage.engines_unavailable.items():
+        lines.append(f"  {name} unavailable — {_visible(reason)}")
     lines.append("")
 
     skipped = [fam for fam in ALL_FAMILIES if fam not in coverage.families_run]
@@ -114,6 +128,11 @@ def render_human(model: GgufModel, findings: list[Finding],
         if missing:
             lines.append(f"        missing from vocab: "
                          f"{', '.join(_visible(x) for x in missing)}")
+        lines.append("")
+
+    if "X" in coverage.families_run and coverage.engines_agreed_fixtures is not None:
+        lines.append(f"  engines agree: jinja2 and llama.cpp rendered "
+                     f"{coverage.engines_agreed_fixtures} fixtures identically")
         lines.append("")
 
     counts = summarize(findings)

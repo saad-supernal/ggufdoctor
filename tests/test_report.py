@@ -140,3 +140,14 @@ def test_collapsed_finding_shows_fixture_names_from_evidence():
     out = render_human(MODEL, [f], [], COV, [Jinja2Engine()])
     assert "fixture_a" in out
     assert "fixture_b" in out
+
+
+# --- Task 6: engine registry, --engines, family X wiring, report provenance ---
+
+def test_human_report_prints_agreement_line_only_when_x_ran():
+    model = GgufModel(source_id="m", architecture="llama", chat_template="x")
+    cov = Coverage(upstream="not_requested", families_run=["S", "X"], engines_agreed_fixtures=10)
+    text = render_human(model, [], [], cov, [Jinja2Engine()])
+    assert "engines agree: jinja2 and llama.cpp rendered 10 fixtures identically" in text
+    cov_no_x = Coverage(upstream="not_requested", families_run=["S"])
+    assert "engines agree" not in render_human(model, [], [], cov_no_x, [Jinja2Engine()])

@@ -54,6 +54,11 @@ class Coverage:
     upstream: str
     families_run: list[str] = field(default_factory=list)
     checks_not_evaluated: list[str] = field(default_factory=list)
+    # Engines the default selection could not construct (name -> reason).
+    # Distinct from a user-requested --engines subset, which is a decline.
+    engines_unavailable: dict[str, str] = field(default_factory=dict)
+    # Fixtures both engines rendered byte-identically when family X ran.
+    engines_agreed_fixtures: int | None = None
 
 
 FIXTURE_TIERS = ("core", "extended")

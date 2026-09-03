@@ -14,8 +14,18 @@ def ids(findings):
     return {f.id for f in findings}
 
 
-CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n{{ m['content'] }}"
-            "<|im_end|>\n{% endfor %}"
+# Engine-neutral: byte-identical under Jinja2Engine and LlamaCppEngine on all
+# ten fixtures (see tests/test_cli.py's copy of this constant, and
+# task-6-report.md, for the full explanation of why the elif branch joins
+# with "\n" instead of concatenating the parts directly -- it mirrors
+# llama.cpp's own concat_content_parts normaliser, engine/shim.cpp, which is
+# what llama.cpp actually renders for typed_content once its caps probe
+# decides this template is string-content-only).
+CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n"
+            "{% if m['content'] is string %}{{ m['content'] }}"
+            "{% elif m['content'] is not none %}"
+            "{{ m['content'] | map(attribute='text') | join('\n') }}"
+            "{% endif %}<|im_end|>\n{% endfor %}"
             "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}")
 
 

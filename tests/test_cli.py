@@ -5,16 +5,57 @@ import pytest
 from ggufdoctor.cli import main
 from tests.helpers.gguf_builder import build_gguf
 
-CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n{{ m['content'] }}"
-            "<|im_end|>\n{% endfor %}"
+# Engine-neutral: byte-identical under Jinja2Engine and LlamaCppEngine on all
+# ten fixtures. Confirmed by a one-off render of every fixture through both
+# engines (see task-6-report.md) -- with a plain string content, the elif
+# branch simply never runs, so it can't be what makes the two diverge; the
+# "elif ... | map(attribute='text') | join('\n')" arm matters only for
+# typed_content, and only on the jinja2 side. llama.cpp's own caps probe
+# (engine/build/llamacpp/jinja/caps.cpp) feeds this template a bare *string*
+# to decide whether it also understands typed (list) content; since the
+# "is string" branch is taken and the elif's for-loop/array access never
+# executes during that probe, llama.cpp concludes "string content only" and
+# pre-flattens any list content itself -- via concat_content_parts in
+# engine/shim.cpp, which joins each fixture's text parts with "\n" -- before
+# this template ever sees it. jinja2 gets no such rewrite, so its elif branch
+# must replicate that exact "\n" join by hand for the two engines to render
+# typed_content identically; a plain no-separator join (the natural reading
+# of "iterate the parts and print each") mismatches llama.cpp's normaliser by
+# exactly one "\n" and was the actual cause of a real divergence, verified
+# empirically. `tool_roundtrip`'s assistant content is null on both engines
+# either way (None is never string-vs-array normalised), so it renders as
+# nothing under this template with no further handling needed.
+CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n"
+            "{% if m['content'] is string %}{{ m['content'] }}"
+            "{% elif m['content'] is not none %}"
+            "{{ m['content'] | map(attribute='text') | join('\n') }}"
+            "{% endif %}<|im_end|>\n{% endfor %}"
             "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}")
 
 
 def _model(tmp_path, **kv):
+    # eos_token_id=1 ("<|im_end|>", which CHAT_TPL does emit every turn) and
+    # add_bos_token=False (CHAT_TPL never emits bos_token, so this only
+    # settles S006 into its correct no-op) together give S005/S006 a clean,
+    # fully-evaluated pass with real metadata rather than a "not evaluated"
+    # coverage gap -- see test_default_local_run_headline_is_not_alarming,
+    # which independently established this exact pair produces a clean run.
+    # A gap-free baseline matters for Task 6: several of its CLI tests key
+    # on the human report's absence of "partial" (a genuine coverage gap)
+    # to isolate what --engines itself does or doesn't change; with the old
+    # bare defaults (no eos/bos metadata at all) S005+S006 always recorded
+    # themselves as not evaluated, so every run -- regardless of --engines --
+    # was "partial" for a reason that had nothing to do with engine
+    # selection. test_checks_not_evaluated_reaches_the_reports still tests
+    # that original missing-metadata gap; it now builds its GGUF directly
+    # instead of through this helper, since real metadata is the correct
+    # default here.
     base = {"general.architecture": ("string", "llama"),
             "tokenizer.chat_template": ("string", CHAT_TPL),
             "tokenizer.ggml.tokens": ("array_string",
-                                      ["<|im_start|>", "<|im_end|>"])}
+                                      ["<|im_start|>", "<|im_end|>"]),
+            "tokenizer.ggml.eos_token_id": ("u32", 1),
+            "tokenizer.ggml.add_bos_token": ("bool", False)}
     base.update(kv)
     p = tmp_path / "m.gguf"
     p.write_bytes(build_gguf(base))
@@ -61,8 +102,10 @@ def test_too_short_to_hold_the_magic_reports_not_a_gguf_file(tmp_path, capsys):
 
 
 def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
-    # _model() never sets tokenizer.ggml.eos_token_id or
-    # tokenizer.ggml.add_bos_token, so both S005 (no eos id to compare
+    # Task 6: _model() now supplies eos_token_id/add_bos_token by default
+    # (a clean, gap-free baseline -- see _model()'s own comment), so this
+    # test builds its GGUF directly instead, omitting both exactly as
+    # _model() used to. With neither set, both S005 (no eos id to compare
     # against) and S006 (no way to know whether the tokenizer itself adds a
     # BOS) record themselves on ctx.checks_not_evaluated and return no
     # finding -- a "clean" run that is not actually a clean bill of health.
@@ -71,8 +114,14 @@ def test_checks_not_evaluated_reaches_the_reports(tmp_path, capsys):
     # coverage afterwards. Without that merge this test fails: the human
     # report says a bare "no findings" and the JSON's checks_not_evaluated
     # stays empty, silently hiding that neither check ever ran.
+    path = tmp_path / "m.gguf"
+    path.write_bytes(build_gguf({
+        "general.architecture": ("string", "llama"),
+        "tokenizer.chat_template": ("string", CHAT_TPL),
+        "tokenizer.ggml.tokens": ("array_string", ["<|im_start|>", "<|im_end|>"]),
+    }))
     out_path = tmp_path / "r.json"
-    exit_status = main([_model(tmp_path), "--json", str(out_path)])
+    exit_status = main([str(path), "--json", str(out_path)])
     assert exit_status == 0
 
     human = capsys.readouterr().out
@@ -211,3 +260,51 @@ def test_file_literally_named_survey_is_linted_not_dispatched(tmp_path, monkeypa
         "tokenizer.ggml.tokens": ("array_string", ["<|im_start|>", "<|im_end|>"]),
     }))
     assert main(["survey"]) == 0
+
+
+# --- Task 6: engine registry, --engines, family X wiring, report provenance ---
+
+def test_default_run_uses_both_engines_and_reports_agreement(tmp_path, capsys):
+    assert main([_model(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "engines: jinja2 " in out and "llama.cpp b10775 (67a17c17, wasmtime " in out
+    assert "engines agree:" in out
+
+
+def test_engines_flag_subsets_without_recording_a_gap(tmp_path, capsys):
+    assert main([_model(tmp_path), "--engines", "jinja2"]) == 0
+    out = capsys.readouterr().out
+    assert "llama.cpp" not in out
+    assert "partial" not in out and "X001" not in out
+
+
+def test_unknown_engine_exits_two_with_one_line(tmp_path, capsys):
+    assert main([_model(tmp_path), "--engines", "jinja2,minja"]) == 2
+    err = capsys.readouterr().err
+    assert err.startswith("ggufdoctor: unknown engine 'minja'")
+
+
+def test_json_carries_engine_provenance_and_agreement(tmp_path):
+    target = tmp_path / "r.json"
+    assert main([_model(tmp_path), "--json", str(target)]) == 0
+    payload = json.loads(target.read_text())
+    llama = next(e for e in payload["engines"] if e["name"] == "llama.cpp")
+    assert llama["version"] == "b10775" and llama["commit"].startswith("67a17c17")
+    assert llama["backend"].startswith("wasmtime ")
+    assert payload["coverage"]["families_run"] == ["S", "X"]
+    assert payload["coverage"]["engines_unavailable"] == {}
+    assert isinstance(payload["coverage"]["engines_agreed_fixtures"], int)
+    assert payload["fixture_corpus_version"] == "2"
+
+
+def test_unavailable_engine_makes_the_run_partial(tmp_path, capsys, monkeypatch):
+    from ggufdoctor.engines import registry
+    class Broken:
+        name = "llama.cpp"; version = "b0"; available = False
+        unavailable_reason = "wasmtime not importable: boom"
+    monkeypatch.setattr(registry, "_construct",
+                        lambda n: Broken() if n == "llama.cpp" else registry._construct_default(n))
+    assert main([_model(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "llama.cpp unavailable — wasmtime not importable: boom" in out
+    assert "partial" in out and "X001, X002, X004, X005 not evaluated" in out

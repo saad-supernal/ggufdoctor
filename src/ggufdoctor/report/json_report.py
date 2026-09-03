@@ -27,6 +27,17 @@ def summarize(findings: list[Finding]) -> dict[str, int]:
     return counts
 
 
+def _engine_entry(e: Any) -> dict[str, Any]:
+    entry: dict[str, Any] = {"name": e.name, "version": e.version}
+    commit = getattr(e, "commit", None)
+    if commit:
+        entry["commit"] = commit
+    backend = getattr(e, "backend", None)
+    if backend:
+        entry["backend"] = backend
+    return entry
+
+
 def build_json(model: GgufModel, findings: list[Finding],
                suppressed: list[Finding], coverage: Coverage,
                engines: list[Any]) -> dict[str, Any]:
@@ -36,10 +47,12 @@ def build_json(model: GgufModel, findings: list[Finding],
         "fixture_corpus_version": CORPUS_VERSION,
         "generated_at": datetime.datetime.now(datetime.UTC).isoformat(),
         "target": {"id": model.source_id, "architecture": model.architecture},
-        "engines": [{"name": e.name, "version": e.version} for e in engines],
+        "engines": [_engine_entry(e) for e in engines],
         "coverage": {"upstream": coverage.upstream,
                      "families_run": coverage.families_run,
-                     "checks_not_evaluated": coverage.checks_not_evaluated},
+                     "checks_not_evaluated": coverage.checks_not_evaluated,
+                     "engines_unavailable": coverage.engines_unavailable,
+                     "engines_agreed_fixtures": coverage.engines_agreed_fixtures},
         "findings": [
             {"id": f.id, "severity": f.severity.value, "message": f.message,
              "fixture": f.fixture, "evidence": f.evidence} for f in findings],

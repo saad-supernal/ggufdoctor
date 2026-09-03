@@ -7,7 +7,6 @@ import sys
 
 from ggufdoctor.checks.reference import run_reference_checks
 from ggufdoctor.checks.sanity import run_sanity_checks
-from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.fixtures import load_fixtures
 from ggufdoctor.ignorefile import apply_ignores, load_ignores
 from ggufdoctor.models import CheckContext
@@ -45,6 +44,9 @@ def build_parser() -> argparse.ArgumentParser:
                         "via --compare-upstream could not be resolved "
                         "(gated, not found, or otherwise unreachable); "
                         "requires --compare-upstream")
+    p.add_argument("--engines", metavar="NAMES",
+                   help="comma-separated engines to run (default: all available; "
+                        "choose from jinja2, llama.cpp). jinja2 is always included.")
     return p
 
 
@@ -100,11 +102,26 @@ def _lint_main(argv: list[str] | None = None) -> int:
         from ggufdoctor.sources import resolve
         model, upstream, coverage = resolve(args.target, args.compare_upstream)
         fixtures = load_fixtures(args.fixtures)
-        engines = [Jinja2Engine()]
+
+        from ggufdoctor.checks.cross_engine import X_IDS, run_cross_engine_checks
+        from ggufdoctor.engines.registry import select_engines
+
+        requested = ([n.strip() for n in args.engines.split(",") if n.strip()]
+                     if args.engines else None)
+        selection = select_engines(requested)   # ValueError -> "ggufdoctor: ..." exit 2 below
+        engines = selection.engines
+        coverage.engines_unavailable = dict(selection.unavailable)
         ctx = CheckContext(model=model, engines=engines, fixtures=fixtures,
                            upstream_template=upstream,
                            upstream_meta={"coverage": coverage.upstream})
         findings = run_sanity_checks(ctx)
+        if len(engines) >= 2:
+            findings += run_cross_engine_checks(ctx)
+            coverage.families_run.insert(coverage.families_run.index("S") + 1, "X")
+            coverage.engines_agreed_fixtures = ctx.stats.get("engines_agreed_fixtures")
+        elif selection.unavailable:
+            # X was not declined -- it could not run. That is a coverage gap.
+            ctx.checks_not_evaluated.extend(X_IDS)
         if upstream or coverage.upstream == "not_found":
             findings += run_reference_checks(ctx)
         rules = load_ignores(args.ignore_file)
