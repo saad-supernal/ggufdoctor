@@ -160,12 +160,16 @@ def test_mistral_v02_full_suite_matches_documented_real_world_footguns():
     #     transformers) rejects the "system_user" fixture -- the author's
     #     deliberate, documented behaviour, quoted verbatim, not an error.
     #     Task 4 (corpus v2): the same alternation guard also rejects
-    #     "tool_roundtrip" (system, user, assistant, tool -- four turns, so
-    #     the guard's even/odd check falls out of sync exactly like a
-    #     five-message conversation would) via the identical raise_exception
-    #     call, so it collapses into this same finding rather than adding a
-    #     new one. "typed_content" (single user turn, list content) does not
-    #     trip the alternation guard but does fail differently -- see below.
+    #     "tool_roundtrip" -- its first message is role "system", and the
+    #     guard's condition `(message['role'] == 'user') != (loop.index0 % 2
+    #     == 0)` expects "user" at index 0 (an even index), so a "system"
+    #     role there mismatches and fires `raise_exception(...)` on the very
+    #     first message -- exactly how "system_user" fails too, since it
+    #     also opens with a "system" role at index 0. Same author message,
+    #     same `raise:` signature, so it collapses into this same finding
+    #     rather than adding a new one. "typed_content" (single user turn,
+    #     list content) does not trip the alternation guard but does fail
+    #     differently -- see below.
     #   - S003 INFO on `typed_content`: the template does
     #     `message['content']` concatenated with `+` (`message['content'] +
     #     eos_token` for the assistant branch, `'[INST] ' + message['content']
@@ -295,8 +299,10 @@ def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
     #
     # Task 4 (corpus v2): this template is exactly the shape the three new
     # extended fixtures model (it explicitly branches on `'tool_calls' in
-    # message`, on `message.role == 'tool'`, and stringifies non-mapping
-    # content via `| tojson`/plain emission), so it renders all three --
+    # message`, on `message.role == 'tool'`, and for the tool-result branch
+    # checks `message.content is mapping or message.content is iterable` --
+    # emitting `message.content | tojson` when that's true and the plain
+    # `message.content` otherwise), so it renders all three --
     # "tool_roundtrip", "typed_content", "no_generation_prompt" -- cleanly
     # with no new findings. No assertion change needed; verified directly.
     tokens = ["<unk>"] * 128011
