@@ -2,7 +2,7 @@
 
 All notable changes to `ggufdoctor`. Dates are the day the work landed on `main`.
 
-## 0.2.1 — unreleased
+## 0.2.1 — 2026-09-03
 
 ### Fixed
 

@@ -311,6 +311,6 @@ def test_unavailable_engine_makes_the_run_partial(tmp_path, capsys, monkeypatch)
     assert "partial" in out and "X001, X002, X004, X005 not evaluated" in out
 
 
-def test_version_is_0_2_0():
+def test_version_is_0_2_1():
     import ggufdoctor
-    assert ggufdoctor.__version__ == "0.2.0"
+    assert ggufdoctor.__version__ == "0.2.1"
