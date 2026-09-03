@@ -1,6 +1,6 @@
 {
  "repo": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
- "revision": null,
+ "revision": "b17cb02dd882d5b6ab62fc777ad2995f19668350",
  "fetched_at": "2026-09-03T07:29:38Z",
  "license": "apache-2.0",
  "gated": null,

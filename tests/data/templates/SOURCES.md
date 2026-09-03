@@ -100,23 +100,29 @@ here" is exactly the sort of real-world defect this corpus should carry.
 
 | Repo | Architecture | Revision | Licence | Fetched at | Upstream repo (`.upstream.jinja` vendored) |
 |------|--------------|----------|---------|------------|--------------------------------------------|
-| unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF | qwen3moe | — | apache-2.0 | 2026-09-03T07:29:38Z | Qwen/Qwen3-Coder-30B-A3B-Instruct ✓ |
-| ornith-ai/Ornith-1.0-9B-GGUF | qwen35 | — | mit | 2026-09-03T07:29:38Z | — (no base model declared) |
-| HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive | gemma4 | — | gemma | 2026-09-03T07:29:39Z | google/gemma-4-e4b-it (not vendored — upstream publishes no template) |
-| antirez/deepseek-v4-gguf | deepseek4 | — | mit | 2026-09-03T07:29:41Z | deepseek-ai/DeepSeek-V4-Flash (not vendored — upstream publishes no template) |
-| mudler/Laguna-XS-2.1-APEX-GGUF | laguna | — | openmdw-1.1 | 2026-09-03T07:29:43Z | poolside/Laguna-XS-2.1 ✓ |
-| LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Genesis-Hermes-V13-GGUF | qwen35moe | — | apache-2.0 | 2026-09-03T07:29:45Z | HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive (not vendored — upstream not found) |
-| rippertnt/HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF | llama | — | other | 2026-09-03T07:29:46Z | naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B (not vendored — upstream gated) |
-| LiquidAI/LFM2.5-2.6B-GGUF | lfm2 | — | other | 2026-09-03T07:29:47Z | LiquidAI/LFM2.5-2.6B (not vendored — upstream publishes no template) |
-| PaddlePaddle/PaddleOCR-VL-1.6-GGUF | paddleocr | — | apache-2.0 | 2026-09-03T07:29:49Z | — (no base model declared) |
-| legraphista/glm-4-9b-chat-IMat-GGUF | chatglm | — | other | 2026-09-03T07:29:49Z | THUDM/glm-4-9b-chat ✓ |
+| unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF | qwen3moe | `b17cb02dd882` | apache-2.0 | 2026-09-03T07:29:38Z | Qwen/Qwen3-Coder-30B-A3B-Instruct ✓ |
+| ornith-ai/Ornith-1.0-9B-GGUF | qwen35 | `3296bc7a4048` | mit | 2026-09-03T07:29:38Z | — (no base model declared) |
+| HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive | gemma4 | `45b6a334b4bc` | gemma | 2026-09-03T07:29:39Z | google/gemma-4-e4b-it (not vendored — upstream publishes no template) |
+| antirez/deepseek-v4-gguf | deepseek4 | `f71f23d552d6` | mit | 2026-09-03T07:29:41Z | deepseek-ai/DeepSeek-V4-Flash (not vendored — upstream publishes no template) |
+| mudler/Laguna-XS-2.1-APEX-GGUF | laguna | `e9e9293c1979` | openmdw-1.1 | 2026-09-03T07:29:43Z | poolside/Laguna-XS-2.1 ✓ |
+| LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Genesis-Hermes-V13-GGUF | qwen35moe | `0095a3d1c1e1` | apache-2.0 | 2026-09-03T07:29:45Z | HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive (not vendored — upstream not found) |
+| rippertnt/HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF | llama | `3d2edd543d75` | other | 2026-09-03T07:29:46Z | naver-hyperclovax/HyperCLOVAX-SEED-Text-Instruct-1.5B (not vendored — upstream gated) |
+| LiquidAI/LFM2.5-2.6B-GGUF | lfm2 | `84022ce711b2` | other | 2026-09-03T07:29:47Z | LiquidAI/LFM2.5-2.6B (not vendored — upstream publishes no template) |
+| PaddlePaddle/PaddleOCR-VL-1.6-GGUF | paddleocr | `511b09642bb3` | apache-2.0 | 2026-09-03T07:29:49Z | — (no base model declared) |
+| legraphista/glm-4-9b-chat-IMat-GGUF | chatglm | `0c1dbb84faf5` | other | 2026-09-03T07:29:49Z | THUDM/glm-4-9b-chat ✓ |
 
-**Revision is `—` for all ten** because that is what the fetch recorded: the
-sidecar's `revision` comes from the Hub `model_info` response's `sha`, and this
-run's responses carried no `sha` for any of the 62 repos, so every sidecar has
-`"revision": null`. These files are therefore pinned by content (they are
-vendored verbatim) and by `fetched_at`, not by commit. Closing that gap is a
-change to `survey --save-templates`, not to this directory.
+**On the Revision column.** The original fetch recorded `"revision": null`
+for all sixty repos: `survey --save-templates` reads it from the Hub
+`model_info` response's `sha`, and `HfClient.model_info` was not asking for
+that field — the Hub returns only the fields named in `expand[]` and silently
+omits the rest. Ruling R8 fixed that (`&expand[]=sha`), and the survey was
+re-run on 2026-09-03 against `/tmp/gd-templates-2`. **All ten of these
+templates re-fetched byte-identical to the vendored copies**, so each sidecar's
+`revision` was filled in from that second run and nothing else in it changed;
+the template text was not touched. Had any template's bytes moved, its
+`revision` would have stayed null and be listed here as such — none did, so
+there is nothing to list. Every entry above is now pinned by commit as well as
+by content and `fetched_at`.
 
 Three `.upstream.jinja` files are present (the ✓ rows). Of those,
 `mudler__Laguna-XS-2.1-APEX-GGUF.upstream.jinja` is byte-identical to the
@@ -136,6 +142,16 @@ template, published in the GGUF field where a Jinja template belongs. It is
 kept verbatim. The real GLM-4 Jinja template is vendored beside it as
 `legraphista__glm-4-9b-chat-IMat-GGUF.upstream.jinja` (from THUDM/glm-4-9b-chat)
 for comparison. `tests/test_real_templates.py` pins what ggufdoctor says about
-it: it "renders" the constant `ChatGLM4` for every fixture, so S005 fires (the
-declared EOS is never emitted) and S007 fires at WARN (`add_generation_prompt`
-cannot change a constant, and nothing in the output opens an assistant turn).
+it: it "renders" the constant `ChatGLM4` for every fixture, so S007 fires at
+WARN (`add_generation_prompt` cannot change a constant, and nothing in the
+output opens an assistant turn).
+
+Its worse property — that a constant prompt can never emit an EOS token, so a
+turn would never terminate — is what S005 exists to catch, and S005 is
+*unevaluated* on this corpus rather than firing. That is not the check being
+wrong: HF's `gguf` metadata carries `bos_token`/`eos_token` strings but no
+vocabulary, so the tests build the model with no vocab at all and S004/S005/S006
+correctly record themselves as not evaluated (ruling R6 — an earlier revision
+synthesised a two-token vocab from those strings and got false S004 ERRORs on
+six of these ten working models). Establishing the S005 fact needs a real GGUF
+file, which is outside what this metadata-only corpus can offer.

@@ -3,6 +3,27 @@
 Every expected finding below is a true positive with a stated reason. If a
 change to the checks alters any set, this test fails loudly -- that is the
 point. Never narrow an assertion to a single id to make it pass.
+
+`run()` deliberately builds the model with NO vocabulary (`tokens=[]`, no
+bos/eos ids). The Hugging Face `gguf` metadata block these templates were
+fetched from carries `bos_token`/`eos_token` *strings* and nothing else -- no
+vocab, no `add_bos_token`. An earlier revision of this file synthesised a
+two-entry vocab from those two strings, which pinned S004 "template emits
+special tokens absent from this file's vocab" at ERROR on six of these ten
+working, popular models: against a two-token vocab, an ordinary
+`<|im_start|>` is "missing". That is a fabricated finding about a fabricated
+vocab, and pinning it would have taught the corpus to expect false positives
+(ruling R6). So the checks that ask *which* tokens appear -- S004, S005, S006
+-- get nothing to work with and correctly record themselves in
+`checks_not_evaluated` for all ten templates. That is an honest coverage gap
+in what HF metadata can tell us, not a clean pass, and closing it needs a real
+vocab (a local GGUF file), not a cleverer test.
+
+Both engines therefore render with the same fabricated placeholder
+`bos_token`/`eos_token` from `Jinja2Engine.BASE_CONTEXT` (`<s>` / `</s>`) --
+symmetric, so it cannot manufacture a divergence between them, which is why
+the X family is unaffected in kind. The `<s>` visible in some expected diffs
+below is that placeholder, not the repo's own BOS.
 """
 import json
 import pathlib
@@ -18,6 +39,10 @@ from ggufdoctor.models import CheckContext, GgufModel, Severity
 
 DATA = pathlib.Path(__file__).parent / "data" / "templates"
 
+# S004, S005 and S006 cannot evaluate without a vocab -- see the module
+# docstring. Every template shares this, so it is named once here.
+NO_VOCAB_GAPS = ["S004", "S005", "S006"]
+
 
 def load(slug):
     tpl = (DATA / f"{slug}.jinja").read_text(encoding="utf-8")
@@ -27,10 +52,11 @@ def load(slug):
 
 def run(slug):
     tpl, side = load(slug)
-    tokens = [side["bos_token"] or "<s>", side["eos_token"] or "</s>"]
+    # No vocab and no token ids: HF metadata carries neither, and fabricating
+    # them produced false S004 errors on working models (see module docstring).
     model = GgufModel(source_id=side["repo"], architecture=side["architecture"],
-                      chat_template=tpl, tokens=tokens, bos_token_id=0, eos_token_id=1,
-                      add_bos_token=None)  # HF metadata does not carry add_bos_token
+                      chat_template=tpl, tokens=[], bos_token_id=None,
+                      eos_token_id=None, add_bos_token=None)
     ctx = CheckContext(model=model, engines=[Jinja2Engine(), LlamaCppEngine()],
                        fixtures=load_fixtures())
     findings = run_sanity_checks(ctx) + run_cross_engine_checks(ctx)
@@ -50,190 +76,188 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 
 # slug -> (expected finding set, expected checks_not_evaluated)
 #
-# Two facts about `run()` above apply to every entry, so they are stated once
-# here instead of ten times below:
+# Recurring shapes, stated once here rather than ten times below:
 #
-#   * S006 is in `checks_not_evaluated` for all ten. `run()` passes
-#     add_bos_token=None because the Hugging Face `gguf` metadata block the
-#     templates were fetched from carries bos_token/eos_token *strings* but no
-#     add_bos_token flag, so sanity.s006_double_bos cannot even tell whether
-#     it applies and records the coverage gap. That is the honest state of
-#     this corpus, not a template property -- do not "fix" it by inventing a
-#     flag value.
-#
-#   * The vocab `run()` builds is exactly two entries -- [bos_token,
-#     eos_token] from the sidecar -- because HF metadata carries no vocab.
-#     S004 asks whether a template emits `<|...|>` tokens absent from *this
-#     file's* vocab, so against a two-token vocab it fires wherever a
-#     template emits any other special token, and it fires at ERROR because
-#     that is what the check says about the (template, vocab) pair it was
-#     handed. Each S004 line below therefore names the exact tokens the check
-#     confirmed by rendering, and says which of them are artefacts of this
-#     two-token vocab versus a real disagreement with the repo's own declared
-#     bos/eos. S004 only reports tokens it observed in real rendered output,
-#     never every `<|...|>` in the source -- see the PaddleOCR entry.
+#   * `typed_content` (extended tier) supplies content as a list of text parts.
+#     A template that concatenates `message['content']` into a string raises
+#     under jinja2 -- S003 INFO, plus a one-sided X002 INFO because llama.cpp's
+#     normaliser had already joined the parts. A template that walks the list
+#     itself renders under both engines but joins the parts with no separator
+#     ("Hellothere") where llama.cpp's normaliser joined them with "\n"
+#     ("Hello\nthere") -- X001 INFO. That INFO (rather than X004 WARN) is
+#     ruling R7: run_cross_engine_checks tests the normaliser explanation
+#     before the whitespace-only test, because the cause of a divergence
+#     outranks its magnitude.
+#   * Every X001/X002 INFO below is confirmed, not assumed: the check
+#     re-renders under jinja2 with the typed content pre-flattened the way
+#     llama.cpp's normaliser does, and only downgrades to INFO if that
+#     reproduces llama.cpp's output byte for byte
+#     (cross_engine._explained_by_normaliser). A bare "normalized" flag is not
+#     enough.
 EXPECTED = {
     "HauhauCS__Gemma-4-E4B-Uncensored-HauhauCS-Aggressive": (
         {
-            # S004: the two tokens listed are the ones this template was
-            # observed to emit and that are neither of the declared
-            # bos/eos (<bos>, <eos>):
-            #   - `<|"|>` from the tool-schema quoting, e.g.
-            #     `description:<|"|>{{ value['description'] }}<|"|>`, emitted
-            #     on the with_tools/tool_roundtrip fixtures;
-            #   - `<|think|>` from `{{- '<|think|>' -}}` inside
-            #     `{%- if enable_thinking is defined and enable_thinking -%}`,
-            #     emitted on the thinking_true fixture.
-            # Both are almost certainly present in the real Gemma-4 vocab;
-            # against this corpus's two-token vocab they are absent, which is
-            # exactly what the check reports.
-            ("S004", Severity.ERROR, ()),
-            # S005: the declared eos_token is `<eos>` and this template never
-            # emits it. It closes every turn with the literal `{{- '<turn|>\n' -}}`
-            # and contains no `eos_token` reference at all (zero occurrences of
-            # the string in the file). A genuine metadata/template disagreement,
-            # independent of the synthetic vocab.
-            ("S005", Severity.WARN, ()),
-            # X004: on typed_content the template walks the content list itself --
-            # `{%- for item in message['content'] -%}` ... `{{- item['text'] | trim -}}`
-            # -- concatenating the two text parts with no separator ("Hellothere"),
-            # while llama.cpp's message normaliser had already joined them with
-            # "\n" into a single string before rendering ("Hello\nthere"). The
-            # renders differ only in that newline, so X004 (whitespace-only)
-            # rather than X001. `_whitespace_only` is tested before the
-            # normaliser-explained branch in run_cross_engine_checks, which is
-            # why this lands at X004 WARN and not X001 INFO.
-            ("X004", Severity.WARN, ("typed_content",)),
+            # X001 INFO on typed_content: the template walks the content list
+            # itself --
+            #   {%- for item in message['content'] -%}
+            #     {%- if item['type'] == 'text' -%} ... {{- item['text'] | trim -}}
+            # -- concatenating the two text parts with no separator, against
+            # llama.cpp's normaliser-joined "Hello\nthere":
+            #     --- jinja2
+            #     +++ llama.cpp
+            #     @@ -1,3 +1,4 @@
+            #      <s><|turn>user
+            #     -Hellothere<turn|>
+            #     +Hello
+            #     +there<turn|>
+            #      <|turn>model
+            # (The leading `<s>` is BASE_CONTEXT's placeholder bos_token, from
+            # the template's `{{ bos_token }}` on line 155 -- not Gemma's <bos>,
+            # which this corpus has no vocab to supply.)
+            ("X001", Severity.INFO, ("typed_content",)),
+            # Not reported, and worth recording because the previous revision of
+            # this file did report them:
+            #   - No S003: the content branches (`is string` / `is sequence`)
+            #     plus tool_roundtrip's unmatched `content: null` falling
+            #     through both mean nothing raises.
+            #   - No S005 finding: this template genuinely never emits an EOS
+            #     token -- it closes turns with `{{- '<turn|>\n' -}}` and the
+            #     file contains zero occurrences of `eos_token` -- but with no
+            #     vocab, S005 has no declared EOS string to look for and
+            #     records the gap instead. The fact about the template is real;
+            #     ggufdoctor cannot establish it from HF metadata alone.
+            #   - No S007: `{%- if add_generation_prompt -%}` emits
+            #     `'<|turn>model\n'`, so the flag changes the output.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "LiquidAI__LFM2.5-2.6B-GGUF": (
         {
-            # S004: emits `<|im_start|>` (from
-            # `{{- "<|im_start|>" + message.role + "\n" -}}`) plus
-            # `<|tool_call_start|>` and `<|tool_call_end|>` (from
-            # render_tool_calls' `{{- "<|tool_call_start|>[" + ... +
-            # "]<|tool_call_end|>" -}}`, reached on tool_roundtrip). The
-            # declared eos `<|im_end|>` is in vocab and is correctly not
-            # reported. All three are artefacts of the two-token vocab.
-            ("S004", Severity.ERROR, ()),
-            # X004: parse_content's iterable branch accumulates text parts with
-            # `{%- set _ns.result = _ns.result + ((item.get("text") or "") | string) -%}`
-            # -- no separator, so "Hellothere" -- against llama.cpp's
-            # normaliser-joined "Hello\nthere". Whitespace-only, same shape as
-            # the Gemma-4 entry above.
-            ("X004", Severity.WARN, ("typed_content",)),
+            # X001 INFO on typed_content: `parse_content`'s iterable branch
+            # accumulates text parts with
+            #   {%- set _ns.result = _ns.result + ((item.get("text") or "") | string) -%}
+            # -- no separator, so "Hellothere" against llama.cpp's
+            # normaliser-joined "Hello\nthere":
+            #     -Hellothere<|im_end|>
+            #     +Hello
+            #     +there<|im_end|>
+            ("X001", Severity.INFO, ("typed_content",)),
+            # No S003: parse_content handles string, mapping and iterable
+            # content, and the `{%- if message.get("content") -%}` guards keep
+            # tool_roundtrip's null away from it entirely.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "LuffyTheFox__Qwen3.6-35B-A3B-Uncensored-Genesis-Hermes-V13-GGUF": (
         {
-            # S004: `<|im_start|>` only, from
-            # `{{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}`.
-            # The declared eos `<|im_end|>` is in vocab and correctly unreported.
-            # An artefact of the two-token vocab.
-            ("S004", Severity.ERROR, ()),
-            # X004: the template's `render_content` macro loops
-            # `{%- for item in content %}` ... `{%- elif 'text' in item %}{{- item.text }}`
-            # with no separator, giving "Hellothere" against llama.cpp's
-            # normaliser-joined "Hello\nthere". Whitespace-only.
-            ("X004", Severity.WARN, ("typed_content",)),
+            # X001 INFO on typed_content: the `render_content` macro loops
+            #   {%- for item in content %} ... {%- elif 'text' in item %}{{- item.text }}
+            # with no separator -- "Hellothere" against llama.cpp's
+            # "Hello\nthere".
+            ("X001", Severity.INFO, ("typed_content",)),
+            # No S003: `render_content` covers `content is string`, the
+            # iterable branch, and `{%- elif content is none or content is
+            # undefined %}{{- '' }}` for tool_roundtrip's null, so its
+            # `raise_exception('Unexpected content type.')` branch is never
+            # reached by this corpus.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "PaddlePaddle__PaddleOCR-VL-1.6-GGUF": (
         {
             # S003 INFO on tool_roundtrip: that fixture's assistant message has
             # `content: null`, so `{%- if message["content"] is string -%}` is
-            # false and the else branch runs `{%- for content in message["content"] -%}`
-            # over None -- "TypeError: 'NoneType' object is not iterable".
-            # tool_roundtrip is extended tier, so INFO, never ERROR: this
-            # template legitimately predates tool-call round trips (it is an OCR
-            # model's template and has no tool branch at all).
+            # false and the else branch runs
+            # `{%- for content in message["content"] -%}` over None --
+            # "TypeError: 'NoneType' object is not iterable". tool_roundtrip is
+            # extended tier, so INFO, never ERROR: this is an OCR model's
+            # template with no tool branch at all, and it legitimately predates
+            # tool-call round trips.
             ("S003", Severity.INFO, ("tool_roundtrip",)),
-            # S004: `<|begin_of_sentence|>` only. The template supplies it as its
-            # own default -- `{%- set cls_token = "<|begin_of_sentence|>" -%}` --
-            # and emits it via `{{- cls_token -}}`, while the sidecar declares
-            # bos_token `<s>`. Note the template *text* also contains
-            # `<|IMAGE_START|><|IMAGE_PLACEHOLDER|><|IMAGE_END|>`, which S004
-            # does NOT report: no fixture supplies an image content part, so the
-            # check never observed those in rendered output and refuses to guess.
-            ("S004", Severity.ERROR, ()),
-            # X004: the user branch loops `{%- for content in message["content"] -%}`
-            # ... `{{ content["text"] }}` with no separator -- "User: Hellothere"
-            # -- against llama.cpp's normaliser-joined "User: Hello\nthere".
-            # Whitespace-only.
-            ("X004", Severity.WARN, ("typed_content",)),
+            # X001 INFO on typed_content: the user branch loops
+            # `{%- for content in message["content"] -%}` ... `{{ content["text"] }}`
+            # with no separator:
+            #     --- jinja2
+            #     +++ llama.cpp
+            #     @@ -1,2 +1,3 @@
+            #     -<|begin_of_sentence|>User: Hellothere
+            #     +<|begin_of_sentence|>User: Hello
+            #     +there
+            #      Assistant:
+            # `<|begin_of_sentence|>` is the template's own default
+            # (`{%- set cls_token = "<|begin_of_sentence|>" -%}`), emitted via
+            # `{{- cls_token -}}`, not a token this corpus supplied.
+            ("X001", Severity.INFO, ("typed_content",)),
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "antirez__deepseek-v4-gguf": (
         {
             # S003 INFO on typed_content: the user branch is
-            # `{{- '<｜User｜>' + (message['content'] or '') -}}`. A non-empty
-            # list is truthy, so `or ''` passes the list straight through and the
-            # `+` raises "TypeError: can only concatenate str (not "list") to
-            # str". Extended tier, so INFO. tool_roundtrip renders fine here
-            # because the same `or ''` idiom does neutralise `content: null`.
+            #   {{- '<｜User｜>' + (message['content'] or '') -}}
+            # A non-empty list is truthy, so `or ''` passes the list straight
+            # through and the `+` raises "TypeError: can only concatenate str
+            # (not "list") to str". Extended tier, so INFO. tool_roundtrip does
+            # NOT fail: the same `or ''` idiom does neutralise `content: null`.
             ("S003", Severity.INFO, ("typed_content",)),
-            # X002 INFO on typed_content: llama.cpp's normaliser joined the two
-            # text parts to "Hello\nthere" before rendering, so its `+` sees a
-            # string and succeeds where jinja2's raises. run_cross_engine_checks
-            # re-rendered under jinja2 with the content pre-flattened the same
-            # way and reproduced llama.cpp's output byte for byte, which is what
-            # downgrades this to INFO -- the normaliser is demonstrably the whole
-            # explanation, not an unrelated engine difference.
+            # X002 INFO on typed_content: one-sided, because only llama.cpp
+            # produced output at all -- its normaliser joined the parts to
+            # "Hello\nthere" first, so the same `+` saw a string. Confirmed by
+            # the pre-flattened jinja2 re-render, hence INFO not ERROR.
             ("X002", Severity.INFO, ("typed_content",)),
-            # No S004: every special token this template emits -- `<｜User｜>`,
+            # No S005/S004 findings (and none possible here anyway): every
+            # special token this template emits -- `<｜User｜>`,
             # `<｜Assistant｜>`, `<｜end▁of▁sentence｜>` -- uses the fullwidth
-            # vertical line U+FF5C, which SPECIAL_TOKEN_RE (ASCII `<\|...\|>`)
-            # does not match, so there are no candidates to confirm.
-            # No S005: the template emits the literal `<｜end▁of▁sentence｜>` on
-            # every assistant turn, which is exactly the declared eos_token.
+            # vertical line U+FF5C, which sanity.SPECIAL_TOKEN_RE's ASCII
+            # `<\|...\|>` shape does not match. It does emit a literal
+            # end-of-sentence token on every assistant turn, so unlike the
+            # Gemma-4 entry there is no latent S005 fact hiding behind the
+            # missing vocab.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "legraphista__glm-4-9b-chat-IMat-GGUF": (
         {
             # This repo's GGUF chat-template field is not a template at all: it
-            # is the eight-byte literal string `ChatGLM4`, i.e. llama.cpp's
-            # legacy *named* built-in template, published where a Jinja template
+            # is the eight-byte literal `ChatGLM4`, i.e. llama.cpp's legacy
+            # *named* built-in template, published where a Jinja template
             # belongs. (The real GLM-4 Jinja template is vendored alongside as
-            # the .upstream.jinja, fetched from THUDM/glm-4-9b-chat.) It
-            # compiles as a constant-output Jinja template, which is why S002
-            # and S008 stay silent -- it renders "ChatGLM4", non-empty -- and
-            # the two findings below are the ones that catch it.
+            # the .upstream.jinja, from THUDM/glm-4-9b-chat.) It compiles as a
+            # constant-output template, so S002 stays silent, and it renders
+            # "ChatGLM4" -- non-empty -- so S008 does too.
             #
-            # S005: rendering multiturn produces "ChatGLM4", which does not
-            # contain the declared eos `<|endoftext|>`. True and serious: this
-            # prompt would never terminate a turn.
-            ("S005", Severity.WARN, ()),
-            # S007 WARN (not INFO): output is a constant, so
-            # add_generation_prompt=True and False render identically, and
-            # "ChatGLM4" ends with none of _ASSISTANT_OPEN_MARKERS, so nothing
-            # suggests the assistant turn is opened by other means. WARN is the
-            # correct severity here, unlike the INFO S007 on Mistral/Llama-2
-            # whose output ends in "[/INST]".
-            #
-            # No S004: the string contains no `<|...|>` at all.
+            # S007 WARN, and WARN rather than INFO is the whole point: a
+            # constant cannot respond to add_generation_prompt, so
+            # `on.text == off.text`, and "ChatGLM4" ends with none of
+            # sanity._ASSISTANT_OPEN_MARKERS, so nothing suggests the assistant
+            # turn is opened by other means. Contrast the INFO S007 on
+            # Mistral/Llama-2 in tests/test_checks_sanity.py, whose output ends
+            # in "[/INST]".
             ("S007", Severity.WARN, ("user_only",)),
+            # The far worse property of this "template" -- that it can never
+            # emit an EOS token, so the prompt would never terminate a turn --
+            # is exactly what S005 exists to catch, and it is in
+            # checks_not_evaluated rather than reported, because with no vocab
+            # there is no declared EOS string to look for. The most defective
+            # entry in this corpus is the one the missing vocab costs us most
+            # on; that is the honest state of a metadata-only fetch.
+            #
             # No X findings: both engines render the same constant on all ten
-            # fixtures, so engines_agreed_fixtures is 10 -- the only entry in
-            # this corpus with full agreement, and only because the "template"
-            # ignores its input entirely.
+            # fixtures, so engines_agreed_fixtures is 10 -- the only full
+            # agreement in this corpus, and only because the "template" ignores
+            # its input entirely.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "mudler__Laguna-XS-2.1-APEX-GGUF": (
         {
-            # X001 INFO on typed_content -- the normaliser-explained variant, not
-            # the ERROR one. The main loop opens with
-            # `{%- set content = message.content if message.content is string else "" -%}`,
+            # X001 INFO on typed_content, and the most interesting one here.
+            # The main loop opens with
+            #   {%- set content = message.content if message.content is string else "" -%}
             # so under jinja2 a list content fails the `is string` test and is
-            # replaced by the empty string: jinja2 renders `<user></user>`, i.e.
-            # it silently drops the user's message. llama.cpp's normaliser had
-            # already joined the parts into a string, so `is string` holds there
-            # and it renders `<user>Hello\nthere</user>`. The diff:
+            # replaced by the empty string: jinja2 silently drops the user's
+            # message entirely. llama.cpp's normaliser had already joined the
+            # parts into a string, so `is string` holds there:
             #     --- jinja2
             #     +++ llama.cpp
             #     @@ -1,3 +1,4 @@
@@ -242,75 +266,57 @@ EXPECTED = {
             #     +<user>Hello
             #     +there</user>
             #      <assistant></think>
-            # Not whitespace-only (jinja2 emits no content whatsoever), so it
-            # does not collapse into X004; re-rendering under jinja2 with the
-            # content pre-flattened reproduces llama.cpp's text exactly, which
-            # is what earns the INFO downgrade.
+            # This is not whitespace-only (jinja2 emits no content whatsoever),
+            # so it reached the X001 INFO bucket even before ruling R7; the
+            # pre-flattened jinja2 re-render reproduces llama.cpp's text
+            # exactly, which is what earns the INFO.
             ("X001", Severity.INFO, ("typed_content",)),
-            # No S004: this template's special tokens use the fullwidth
-            # `〈|EOS|〉` (U+2329/U+232A angle brackets) and plain XML-ish tags
-            # (`<system>`, `<user>`, `<assistant>`), none of which match
-            # SPECIAL_TOKEN_RE's ASCII `<|...|>` shape.
-            # No S005: the template's first act is `{{- "〈|EOS|〉" -}}`, and this
-            # repo declares that same string as both bos_token and eos_token, so
-            # the declared eos is present in every render.
-            # No S003: `content is string else ""` and the `{%- if content -%}`
-            # guard mean `content: null` and list content both render rather than
-            # raise -- the same defensiveness that costs it the X001 above.
+            # No S003: `content is string else ""` plus the `{%- if content -%}`
+            # guard mean `content: null` and list content both render rather
+            # than raise -- the same defensiveness that costs it the X001 above.
+            # No S004 possible: its tokens are the fullwidth `〈|EOS|〉`
+            # (U+2329/U+232A angle brackets) and plain XML-ish tags
+            # (`<system>`, `<user>`, `<assistant>`), none matching the ASCII
+            # `<|...|>` shape.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "ornith-ai__Ornith-1.0-9B-GGUF": (
         {
-            # S004: `<|im_start|>` only, from
-            # `{{- '<|im_start|>' + message.role + '\n' + content + '<|im_end|>' + '\n' }}`;
-            # the declared eos `<|im_end|>` is in vocab and correctly unreported.
-            # An artefact of the two-token vocab. (This sidecar's bos_token is
-            # null, so `run()` substitutes the `<s>` placeholder for vocab slot 0.)
-            ("S004", Severity.ERROR, ()),
-            # X004: the `render_content` macro loops `{%- for item in content %}`
-            # ... `{%- elif 'text' in item %}{{- item.text }}` with no separator,
-            # giving "Hellothere" against llama.cpp's normaliser-joined
-            # "Hello\nthere". Whitespace-only.
-            ("X004", Severity.WARN, ("typed_content",)),
-            # No S003: `render_content` handles every shape this corpus offers --
-            # `{%- if content is string %}`, the iterable branch, and
-            # `{%- elif content is none or content is undefined %}{{- '' }}` for
-            # tool_roundtrip's `content: null` -- so nothing raises. Its
-            # `raise_exception('Unexpected content type.')` branch is never reached.
+            # X001 INFO on typed_content: the `render_content` macro's
+            #   {%- for item in content %} ... {%- elif 'text' in item %}{{- item.text }}
+            # concatenates the text parts with no separator -- "Hellothere"
+            # against llama.cpp's normaliser-joined "Hello\nthere".
+            ("X001", Severity.INFO, ("typed_content",)),
+            # No S003: same macro coverage as the LuffyTheFox entry (this
+            # template and that one share the Qwen-family render_content
+            # macro), including the `content is none or content is undefined`
+            # branch that absorbs tool_roundtrip's null.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "rippertnt__HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF": (
         {
-            # The whole template is one unguarded concatenation:
+            # The entire template is one unguarded concatenation:
             #   {{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}
-            # which explains four of the five findings below.
+            # which is responsible for all four findings below.
             #
-            # S003 INFO on tool_roundtrip: that fixture's assistant message has
-            # `content: null`, so the `+ message['content'] +` above raises
-            # "TypeError: can only concatenate str (not "NoneType") to str".
-            # Extended tier, so INFO.
+            # S003 INFO on tool_roundtrip: that `+ message['content'] +` meets
+            # the assistant message's `content: null` and raises "TypeError:
+            # can only concatenate str (not "NoneType") to str". Extended tier,
+            # so INFO.
             ("S003", Severity.INFO, ("tool_roundtrip",)),
-            # S003 INFO on typed_content: the same `+` with a list content --
-            # "TypeError: can only concatenate str (not "list") to str". Reported
-            # separately from the line above rather than collapsed, because the
-            # two render errors have different signatures ("NoneType" vs "list").
+            # S003 INFO on typed_content: the same `+` with list content --
+            # "TypeError: can only concatenate str (not "list") to str".
+            # Reported separately rather than collapsed with the line above
+            # because the two render errors have different signatures
+            # ("NoneType" vs "list"), which is what
+            # checks.common.collapse_by_signature keys on.
             ("S003", Severity.INFO, ("typed_content",)),
-            # S004: `<|im_start|>` AND `<|im_end|>`. `<|im_start|>` is the usual
-            # two-token-vocab artefact, but `<|im_end|>` is not: this repo
-            # declares eos_token `<|endofturn|>`, so the token the template
-            # actually uses to close turns is genuinely not the declared one --
-            # the same underlying disagreement S005 reports from the other side.
-            ("S004", Severity.ERROR, ()),
-            # S005: the declared eos `<|endofturn|>` never appears in the
-            # multiturn render; the template emits `<|im_end|>` instead. Real
-            # metadata/template disagreement, independent of the synthetic vocab.
-            ("S005", Severity.WARN, ()),
-            # X002 ERROR on tool_roundtrip -- a real, honest engine divergence,
-            # recorded rather than narrowed away. jinja2 (the transformers path)
-            # raises the "NoneType" TypeError above; llama.cpp's minja coerces
-            # the null to an empty string and renders happily:
+            # X002 ERROR on tool_roundtrip -- a real engine divergence,
+            # recorded rather than narrowed away. jinja2 (the transformers
+            # path) raises the "NoneType" TypeError above; llama.cpp's minja
+            # coerces the null to an empty string and renders happily:
             #   '<|im_start|>system\nBe brief.<|im_end|>\n'
             #   '<|im_start|>user\nWeather in Paris?<|im_end|>\n'
             #   '<|im_start|>assistant\n<|im_end|>\n'          <-- empty turn
@@ -318,52 +324,53 @@ EXPECTED = {
             #   '<|im_start|>assistant\n'
             # So llama.cpp silently drops the assistant's tool call and feeds
             # the model an empty assistant turn followed by a tool result for a
-            # call that was never shown -- while transformers refuses outright.
-            # ERROR is right: the two runtimes disagree about a conversation one
-            # of them will happily serve, and llama.cpp's answer is wrong.
-            # This is the `tool_roundtrip` divergence class the engine spike
-            # documented (assistant `content: null`), in its concatenating form.
-            # Not X001/X005: only one engine produced output at all, so it is a
-            # one-sided X002, and llama.cpp's normaliser is demonstrably not the
-            # explanation (evidence "normalized": False -- pre-flattening typed
-            # content does not make jinja2 reproduce llama.cpp's text here).
+            # call that was never shown, while transformers refuses the
+            # conversation outright. ERROR is right: the runtimes disagree
+            # about a conversation one of them will serve, and llama.cpp's
+            # answer is wrong. This is the `tool_roundtrip` divergence class the
+            # engine spike documented (assistant `content: null`), in its
+            # concatenating form -- because this template concatenates rather
+            # than prints, jinja2 raises instead of printing "None", which
+            # turns what would be a two-sided X001/X005 into a one-sided X002.
+            # Evidence carries "normalized": False -- pre-flattening typed
+            # content does NOT make jinja2 reproduce llama.cpp's text here, so
+            # the normaliser is demonstrably not the explanation and no INFO
+            # downgrade applies.
             ("X002", Severity.ERROR, ("tool_roundtrip",)),
             # X002 INFO on typed_content: same one-sided shape, but here the
             # normaliser IS the whole explanation -- it joined the text parts to
-            # "Hello\nthere" so llama.cpp's `+` saw a string, and re-rendering
-            # under jinja2 with the content pre-flattened reproduces llama.cpp's
-            # output exactly. INFO, not ERROR.
+            # "Hello\nthere" so llama.cpp's `+` saw a string, and the
+            # pre-flattened jinja2 re-render reproduces llama.cpp's output
+            # exactly. INFO, not ERROR.
             ("X002", Severity.INFO, ("typed_content",)),
-            # No S007: `{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}`
+            # Not reported, but true of the repo and worth recording: this GGUF
+            # declares eos_token `<|endofturn|>` while its template closes every
+            # turn with `<|im_end|>`. S005 is exactly the check for that, and it
+            # is in checks_not_evaluated because there is no vocab to resolve a
+            # declared EOS from. No S007 either: the trailing
+            # `{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}`
             # genuinely changes the output.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
     "unsloth__Qwen3-Coder-30B-A3B-Instruct-GGUF": (
         {
             # S003 INFO on typed_content: the user/system/assistant branch is
-            # `{{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}`
-            # -- string concatenation, so a list content raises "TypeError: can
+            #   {{- '<|im_start|>' + message.role + '\n' + message.content + '<|im_end|>' + '\n' }}
+            # -- string concatenation, so list content raises "TypeError: can
             # only concatenate str (not "list") to str". Extended tier, so INFO.
-            # tool_roundtrip does NOT fail here: the tool_calls branch guards its
-            # content with
-            # `{%- if message.content is defined and message.content is string and message.content | trim | length > 0 %}`,
+            # tool_roundtrip does NOT fail here, unlike the HyperCLOVAX entry
+            # above, because the tool_calls branch guards its content with
+            #   {%- if message.content is defined and message.content is string
+            #        and message.content | trim | length > 0 %}
             # so `content: null` never reaches a `+`.
             ("S003", Severity.INFO, ("typed_content",)),
-            # S004: `<|im_start|>` only; the declared eos `<|im_end|>` is in
-            # vocab and correctly unreported. An artefact of the two-token vocab.
-            # (This sidecar's bos_token is null, so `run()` substitutes `<s>`.)
-            ("S004", Severity.ERROR, ()),
-            # X002 INFO on typed_content: llama.cpp's normaliser joined the text
-            # parts to "Hello\nthere" before rendering, so its `+` saw a string
-            # where jinja2's saw a list. Confirmed by re-rendering under jinja2
-            # with the content pre-flattened, which reproduces llama.cpp's output
-            # byte for byte -- hence INFO.
+            # X002 INFO on typed_content: one-sided (jinja2 raised, llama.cpp
+            # rendered), explained by the normaliser's join and confirmed by the
+            # pre-flattened re-render.
             ("X002", Severity.INFO, ("typed_content",)),
-            # No S005: multiturn's assistant turn emits `<|im_end|>`, the declared
-            # eos_token.
         },
-        ["S006"],
+        NO_VOCAB_GAPS,
     ),
 }
 
@@ -374,4 +381,8 @@ def test_complete_finding_set(slug):
     expected_findings, expected_not_evaluated = EXPECTED[slug]
     assert found == expected_findings
     assert not_evaluated == expected_not_evaluated
+    # Kept per ruling R6: no template in this corpus agrees on zero fixtures
+    # (the minimum is 8 of 10), so this stays a real assertion rather than a
+    # tautology -- it would catch an engine or corpus change that made the two
+    # engines stop agreeing anywhere.
     assert stats["engines_agreed_fixtures"] >= 1, "both engines must agree on at least one fixture"

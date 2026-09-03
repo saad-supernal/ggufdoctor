@@ -1,6 +1,6 @@
 {
  "repo": "PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
- "revision": null,
+ "revision": "511b09642bb324401f15f97cc23bc67e8f0a291d",
  "fetched_at": "2026-09-03T07:29:49Z",
  "license": "apache-2.0",
  "gated": null,
