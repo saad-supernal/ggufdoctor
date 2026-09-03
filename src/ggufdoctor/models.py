@@ -39,6 +39,10 @@ class GgufModel:
 class RenderResult:
     text: str | None
     error: str | None
+    # Engine-specific facts about how this result was produced, for reports
+    # and checks that need to explain a divergence (llama.cpp: "caps" and
+    # "normalized"). Empty for engines with nothing to add.
+    extra: dict[str, Any] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
