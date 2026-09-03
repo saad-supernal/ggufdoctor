@@ -273,7 +273,10 @@ harnesses. That is what the finding says.
   GGUF-versus-upstream question rendered through Jinja2 on both sides. Cross-engine
   divergence is not counted in the survey; the 100 of 100 result above is the
   cross-engine statement.
-- Gated upstreams are excluded unless `HF_TOKEN` is set. The published figures were
+- Gated upstreams are excluded unless `HF_TOKEN` is set *and* the token's account has
+  accepted each repository's licence. A run with a token that had accepted none of them
+  left all 28 still-existing gated upstreams excluded and changed the figure only by
+  sampling noise (13.6% versus 14.4%; see `docs/research/`). The published figures were
   measured without a token.
 - `S004`, `S005` and `S006` need the file's vocabulary and token ids. When a GGUF (or a
   Hub repository's metadata) does not carry them, they are recorded as not evaluated.

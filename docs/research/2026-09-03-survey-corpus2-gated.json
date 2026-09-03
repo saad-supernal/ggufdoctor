@@ -1,0 +1,2539 @@
+{
+ "records": [
+  {
+   "id": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+   "org": "unsloth",
+   "downloads": 12331673,
+   "status": "output_differs",
+   "fixtures": [
+    "tool_roundtrip",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "unsloth/Qwen3.8-27B-GGUF",
+   "org": "unsloth",
+   "downloads": 9553042,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "ornith-ai/Ornith-1.0-9B-GGUF",
+   "org": "ornith-ai",
+   "downloads": 4353871,
+   "status": "no_base_model"
+  },
+  {
+   "id": "ornith-ai/Ornith-1.0-35B-GGUF",
+   "org": "ornith-ai",
+   "downloads": 3018040,
+   "status": "no_base_model"
+  },
+  {
+   "id": "mixedbread-ai/mxbai-embed-large-v1",
+   "org": "mixedbread-ai",
+   "downloads": 2966627,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+   "org": "HauhauCS",
+   "downloads": 2510343,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "lmstudio-community/Qwen3.8-27B-GGUF",
+   "org": "lmstudio-community",
+   "downloads": 2469900,
+   "status": "identical"
+  },
+  {
+   "id": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+   "org": "JonathanColetti",
+   "downloads": 2244539,
+   "status": "identical"
+  },
+  {
+   "id": "antirez/deepseek-v4-gguf",
+   "org": "antirez",
+   "downloads": 1957625,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF",
+   "org": "huihui-ai",
+   "downloads": 1933019,
+   "status": "identical"
+  },
+  {
+   "id": "mudler/Laguna-XS-2.1-APEX-GGUF",
+   "org": "mudler",
+   "downloads": 1926220,
+   "status": "identical"
+  },
+  {
+   "id": "handy-computer/nemotron-3.5-asr-streaming-0.6b-gguf",
+   "org": "handy-computer",
+   "downloads": 1787625,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+   "org": "HauhauCS",
+   "downloads": 1781216,
+   "status": "identical"
+  },
+  {
+   "id": "audio-cpp/audio.cpp-gguf",
+   "org": "audio-cpp",
+   "downloads": 1742149,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+   "org": "DavidAU",
+   "downloads": 1665904,
+   "status": "identical"
+  },
+  {
+   "id": "handy-computer/parakeet-unified-en-0.6b-gguf",
+   "org": "handy-computer",
+   "downloads": 1547103,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "mudler/ced-gguf",
+   "org": "mudler",
+   "downloads": 1508002,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "nvidia/parakeet-ctc-1.1b",
+   "org": "nvidia",
+   "downloads": 1441996,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+   "org": "0bserverx",
+   "downloads": 1279204,
+   "status": "identical"
+  },
+  {
+   "id": "cdiamond/Qwen3.8-27B-iMatrix-NVFP4-MTP-GGUF",
+   "org": "cdiamond",
+   "downloads": 1186283,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Abiray/MiniMax-H3-GGUF",
+   "org": "Abiray",
+   "downloads": 1074342,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "ggml-org/Qwen3.8-27B-GGUF",
+   "org": "ggml-org",
+   "downloads": 1020931,
+   "status": "identical"
+  },
+  {
+   "id": "datalab-to/surya-ocr-2-gguf",
+   "org": "datalab-to",
+   "downloads": 977890,
+   "status": "no_base_model"
+  },
+  {
+   "id": "LiquidAI/LFM2.5-2.6B-GGUF",
+   "org": "LiquidAI",
+   "downloads": 970988,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Genesis-Hermes-V13-GGUF",
+   "org": "LuffyTheFox",
+   "downloads": 941681,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "rippertnt/HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF",
+   "org": "rippertnt",
+   "downloads": 919263,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "nvidia/nemotron-3.5-asr-streaming-0.6b",
+   "org": "nvidia",
+   "downloads": 917259,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "LocalAI-io/privacy-filter-nemotron-GGUF",
+   "org": "LocalAI-io",
+   "downloads": 904197,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+   "org": "DavidAU",
+   "downloads": 872891,
+   "status": "identical"
+  },
+  {
+   "id": "Serveurperso/Qwen3-TTS-GGUF",
+   "org": "Serveurperso",
+   "downloads": 863192,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "OBLITERATUS/Qwen3.8-27B-OBLITERATED",
+   "org": "OBLITERATUS",
+   "downloads": 848781,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "tool_roundtrip",
+    "typed_content",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "bartowski/endless-frontier_BigBang-v1-GGUF",
+   "org": "bartowski",
+   "downloads": 731352,
+   "status": "identical"
+  },
+  {
+   "id": "legraphista/glm-4-9b-chat-IMat-GGUF",
+   "org": "legraphista",
+   "downloads": 719010,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "tool_roundtrip",
+    "typed_content",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "google/gemma-4-12B-it-qat-q4_0-gguf",
+   "org": "google",
+   "downloads": 713726,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
+   "org": "PaddlePaddle",
+   "downloads": 683023,
+   "status": "no_base_model"
+  },
+  {
+   "id": "FINAL-Bench/POCKET-35B-GGUF",
+   "org": "FINAL-Bench",
+   "downloads": 637998,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "mradermacher/Qwen3-VL-8B-Instruct-abliterated-GGUF",
+   "org": "mradermacher",
+   "downloads": 632410,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "bartowski/XYZAILab_XYZ-Aquila-mini-GGUF",
+   "org": "bartowski",
+   "downloads": 627385,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "lmstudio-community/gemma-4-E4B-it-GGUF",
+   "org": "lmstudio-community",
+   "downloads": 616130,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "city96/Wan2.1-I2V-14B-480P-gguf",
+   "org": "city96",
+   "downloads": 614001,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "prism-ml/Ternary-Bonsai-27B-gguf",
+   "org": "prism-ml",
+   "downloads": 612656,
+   "status": "identical"
+  },
+  {
+   "id": "poolside/Laguna-S-2.1-GGUF",
+   "org": "poolside",
+   "downloads": 605660,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_unset",
+    "tool_roundtrip",
+    "typed_content",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+   "org": "google",
+   "downloads": 591832,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "empero-ai/Qwythos-9B-v2-GGUF",
+   "org": "empero-ai",
+   "downloads": 574018,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "huihui-ai/Huihui-DeepSeek-V4-Flash-0731-abliterated-GGUF",
+   "org": "huihui-ai",
+   "downloads": 571963,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF",
+   "org": "yuxinlu1",
+   "downloads": 566278,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ggml-org/models-moved",
+   "org": "ggml-org",
+   "downloads": 556107,
+   "status": "no_base_model"
+  },
+  {
+   "id": "DeepBeepMeep/MiniMax-H3",
+   "org": "DeepBeepMeep",
+   "downloads": 549997,
+   "status": "no_base_model"
+  },
+  {
+   "id": "empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF",
+   "org": "empero-ai",
+   "downloads": 504066,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "prism-ml/Bonsai-27B-gguf",
+   "org": "prism-ml",
+   "downloads": 500494,
+   "status": "identical"
+  },
+  {
+   "id": "yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF",
+   "org": "yuxinlu1",
+   "downloads": 497223,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "meta-models/Muse-Glimmer-30B-GGUF",
+   "org": "meta-models",
+   "downloads": 497094,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "realrebelai/MiniMax-H3_GGUFs",
+   "org": "realrebelai",
+   "downloads": 493782,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "DeepBeepMeep/Wan2.1",
+   "org": "DeepBeepMeep",
+   "downloads": 473789,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Jackrong/Qwopus3.6-35B-A3B-Coder-MTP-GGUF",
+   "org": "Jackrong",
+   "downloads": 469054,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Mia-AiLab/Gemmable-4-12B-MTP-GGUF",
+   "org": "Mia-AiLab",
+   "downloads": 464711,
+   "status": "no_base_model"
+  },
+  {
+   "id": "wikeeyang/Flux2-Klein-9B-True-V2",
+   "org": "wikeeyang",
+   "downloads": 458060,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "AnkitAI/Parable-Qwen3-4B-Claude-Fable-5-GGUF",
+   "org": "AnkitAI",
+   "downloads": 448624,
+   "status": "identical"
+  },
+  {
+   "id": "city96/Wan2.1-FLF2V-14B-720P-gguf",
+   "org": "city96",
+   "downloads": 446193,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "deepgrove/maple-preview-GGUF",
+   "org": "deepgrove",
+   "downloads": 445295,
+   "status": "no_base_model"
+  },
+  {
+   "id": "ProCreations/grug-27b-gguf",
+   "org": "ProCreations",
+   "downloads": 444027,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "AnkitAI/Parable-Qwen3-8B-Claude-Fable-5-GGUF",
+   "org": "AnkitAI",
+   "downloads": 421033,
+   "status": "identical"
+  },
+  {
+   "id": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+   "org": "Qwen",
+   "downloads": 419659,
+   "status": "output_differs",
+   "fixtures": [
+    "tool_roundtrip",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "Qwen/Qwen3-30B-A3B-GGUF",
+   "org": "Qwen",
+   "downloads": 401009,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF",
+   "org": "Jackrong",
+   "downloads": 399608,
+   "status": "output_differs",
+   "fixtures": [
+    "thinking_false",
+    "tool_roundtrip",
+    "typed_content",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "QuantStack/Wan2.2-T2V-A14B-GGUF",
+   "org": "QuantStack",
+   "downloads": 387693,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Serveurperso/ACE-Step-1.5-GGUF",
+   "org": "Serveurperso",
+   "downloads": 372996,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "michaelw9999/Qwen3.6-35B-A3B-NVFP4-MTP-GGUF",
+   "org": "michaelw9999",
+   "downloads": 372781,
+   "status": "identical"
+  },
+  {
+   "id": "tvall43/Qwen3.6-14B-A3B-FableVibes-GGUF",
+   "org": "tvall43",
+   "downloads": 370232,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ReadyArt/Melody1437-26B-A4B-v2.0-GGUF",
+   "org": "ReadyArt",
+   "downloads": 369114,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ReadyArt/Serenity-26B-A4B-GGUF",
+   "org": "ReadyArt",
+   "downloads": 362869,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "LiquidAI/LFM2.5-230M-GGUF",
+   "org": "LiquidAI",
+   "downloads": 361440,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Jiunsong/supergemma4-26b-uncensored-gguf-v2",
+   "org": "Jiunsong",
+   "downloads": 360371,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "LocalAI-io/privacy-filter-multilingual-GGUF",
+   "org": "LocalAI-io",
+   "downloads": 358142,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "mradermacher/Q3.5-BlueStar-27B-GGUF",
+   "org": "mradermacher",
+   "downloads": 351404,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-GGUF",
+   "org": "GnLOLot",
+   "downloads": 348044,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-Thinking-GGUF",
+   "org": "GnLOLot",
+   "downloads": 337687,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "DevQuasar/amd.Instella-MoE-16B-A3B-Think-GGUF",
+   "org": "DevQuasar",
+   "downloads": 334270,
+   "status": "identical"
+  },
+  {
+   "id": "NorwAI/NorwAI-Magistral-24B-reasoning",
+   "org": "NorwAI",
+   "downloads": 332775,
+   "status": "no_base_model"
+  },
+  {
+   "id": "AngelSlim/Hy3-GGUF",
+   "org": "AngelSlim",
+   "downloads": 331564,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "michaelw9999/Qwopus3.6-27B-v2-MTP-NVFP4-GGUF",
+   "org": "michaelw9999",
+   "downloads": 325234,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "z-lab/Qwen3.8-27B-DFlash2-GGUF",
+   "org": "z-lab",
+   "downloads": 324529,
+   "status": "identical"
+  },
+  {
+   "id": "flywheel-ai/automotive",
+   "org": "flywheel-ai",
+   "downloads": 323212,
+   "status": "identical"
+  },
+  {
+   "id": "joeygambino/MiniMax-H3-encoder-GGUF",
+   "org": "joeygambino",
+   "downloads": 321786,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF",
+   "org": "Blackfrost-AI",
+   "downloads": 321681,
+   "status": "identical"
+  },
+  {
+   "id": "bytkim/Qwen3.6-27B-MTP-pi-tune-GGUF",
+   "org": "bytkim",
+   "downloads": 310381,
+   "status": "identical"
+  },
+  {
+   "id": "hesamation/Qwen3.6-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled-GGUF",
+   "org": "hesamation",
+   "downloads": 304449,
+   "status": "identical"
+  },
+  {
+   "id": "kai-os/Carnice-V2-27b-GGUF",
+   "org": "kai-os",
+   "downloads": 300849,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "KyleHessling1/Qwopus-GLM-18B-Merged-GGUF",
+   "org": "KyleHessling1",
+   "downloads": 299169,
+   "status": "identical"
+  },
+  {
+   "id": "culturerevolt/gemma-4-12b-heretic-abliterated-GGUF",
+   "org": "culturerevolt",
+   "downloads": 295440,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "AtomicChat/Qwen3.8-27B-GGUF",
+   "org": "AtomicChat",
+   "downloads": 288946,
+   "status": "identical"
+  },
+  {
+   "id": "migtissera/Tess-4-27B-GGUF",
+   "org": "migtissera",
+   "downloads": 287791,
+   "status": "identical"
+  },
+  {
+   "id": "FINAL-Bench/POCKET-26B-GGUF",
+   "org": "FINAL-Bench",
+   "downloads": 283015,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "SexGod1979/PinkCherry_NSFW_LTX23",
+   "org": "SexGod1979",
+   "downloads": 277491,
+   "status": "no_base_model"
+  },
+  {
+   "id": "webAI-Official/TwIL-LM3",
+   "org": "webAI-Official",
+   "downloads": 276543,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "MaziyarPanahi/Qwen3-4B-GGUF",
+   "org": "MaziyarPanahi",
+   "downloads": 268751,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "MaziyarPanahi/Qwen3-0.6B-GGUF",
+   "org": "MaziyarPanahi",
+   "downloads": 268182,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "AtomicChat/Ling-3.0-flash-GGUF",
+   "org": "AtomicChat",
+   "downloads": 265955,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "orcarouter/Qwen3.8-27B-Uncensored-GGUF",
+   "org": "orcarouter",
+   "downloads": 262325,
+   "status": "identical"
+  },
+  {
+   "id": "Agnuxo/CAJAL-4B",
+   "org": "Agnuxo",
+   "downloads": 258509,
+   "status": "no_base_model"
+  },
+  {
+   "id": "janhq/Jan-v3.5-4B-gguf",
+   "org": "janhq",
+   "downloads": 257866,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Abiray/MiniMax-H3-Pruned-GGUF",
+   "org": "Abiray",
+   "downloads": 257227,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "lmg-anon/vntl-llama3-8b-v2-gguf",
+   "org": "lmg-anon",
+   "downloads": 248613,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "KyleHessling1/Qwopus3.6-27B-Fusion-GGUF",
+   "org": "KyleHessling1",
+   "downloads": 247153,
+   "status": "output_differs",
+   "fixtures": [
+    "no_generation_prompt",
+    "tool_roundtrip",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "tencent/Hy-MT2-1.8B-GGUF",
+   "org": "tencent",
+   "downloads": 237183,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "QuantStack/Wan2.2-I2V-A14B-GGUF",
+   "org": "QuantStack",
+   "downloads": 226196,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "poolside/Laguna-XS-2.1-GGUF",
+   "org": "poolside",
+   "downloads": 210770,
+   "status": "identical"
+  },
+  {
+   "id": "molbal/MiniMax-H3-GGUF",
+   "org": "molbal",
+   "downloads": 208427,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "drbaph/Higgs-Audio-v3-Studio",
+   "org": "drbaph",
+   "downloads": 207517,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "speakleash/Bielik-11B-v3.0-Instruct-awq",
+   "org": "speakleash",
+   "downloads": 205656,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "InternScience/Agents-A1-4B-Q8_0-GGUF",
+   "org": "InternScience",
+   "downloads": 197623,
+   "status": "identical"
+  },
+  {
+   "id": "kenpath/svara-tts-v1",
+   "org": "kenpath",
+   "downloads": 195212,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "JetBrains/Mellum2-12B-A2.5B-Instruct-GGUF-Q8_0",
+   "org": "JetBrains",
+   "downloads": 185547,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Ma7ee7/Qwen3.8_4B_Distilled_GGUF",
+   "org": "Ma7ee7",
+   "downloads": 183695,
+   "status": "identical"
+  },
+  {
+   "id": "QuantFactory/SmolLM2-135M-GGUF",
+   "org": "QuantFactory",
+   "downloads": 183326,
+   "status": "no_base_model"
+  },
+  {
+   "id": "SulphurAI/Sulphur-2-base",
+   "org": "SulphurAI",
+   "downloads": 181409,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "esatapedico/Qwen3.8-27B-NVFP4-MTP-GGUF",
+   "org": "esatapedico",
+   "downloads": 178950,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "chimingw/Qwen3.8-27B-Uncensored-OrcaRouter-GGUF",
+   "org": "chimingw",
+   "downloads": 175826,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "smthem/LTX-2.3-test-gguf",
+   "org": "smthem",
+   "downloads": 174040,
+   "status": "no_base_model"
+  },
+  {
+   "id": "HuggingFaceBio/Carbon-8B-GGUF",
+   "org": "HuggingFaceBio",
+   "downloads": 172732,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Hcompany/Holo-3.1-35B-A3B-GGUF",
+   "org": "Hcompany",
+   "downloads": 166743,
+   "status": "identical"
+  },
+  {
+   "id": "Snowflake/snowflake-arctic-embed-m-v1.5",
+   "org": "Snowflake",
+   "downloads": 165051,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "paperscarecrow/Gemma-4-31B-it-abliterated",
+   "org": "paperscarecrow",
+   "downloads": 164591,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "HuggingFaceBio/Carbon-3B-GGUF",
+   "org": "HuggingFaceBio",
+   "downloads": 164248,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "InternScience/Agents-A1-4B-Q4_K_M-GGUF",
+   "org": "InternScience",
+   "downloads": 158688,
+   "status": "identical"
+  },
+  {
+   "id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF",
+   "org": "peculiar-ragdoll",
+   "downloads": 154626,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "tool_roundtrip",
+    "typed_content",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "ProCreations/grug-27b-mtp-gguf",
+   "org": "ProCreations",
+   "downloads": 145873,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "samuelchristlie/Wan2.1-VACE-1.3B-GGUF",
+   "org": "samuelchristlie",
+   "downloads": 144934,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "samuelchristlie/Wan2.1-T2V-1.3B-GGUF",
+   "org": "samuelchristlie",
+   "downloads": 144527,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF-MTP",
+   "org": "peculiar-ragdoll",
+   "downloads": 143830,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "DevQuasar/Qwen.Qwen3-VL-Embedding-2B-GGUF",
+   "org": "DevQuasar",
+   "downloads": 139069,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "batiai/Qwen3.6-27B-GGUF",
+   "org": "batiai",
+   "downloads": 136023,
+   "status": "identical"
+  },
+  {
+   "id": "VesNFF/Qwen3-VL-Embedding-8B-GGUF",
+   "org": "VesNFF",
+   "downloads": 135361,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "jinaai/jina-embeddings-v5-text-nano-retrieval",
+   "org": "jinaai",
+   "downloads": 134195,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "owao/Nanbeige4.2-3B-GGUF",
+   "org": "owao",
+   "downloads": 129161,
+   "status": "identical"
+  },
+  {
+   "id": "audio-cpp/MiniMax-Music3-GGUF",
+   "org": "audio-cpp",
+   "downloads": 128967,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Mungert/UI-TARS-1.5-7B-GGUF",
+   "org": "Mungert",
+   "downloads": 119423,
+   "status": "no_base_model"
+  },
+  {
+   "id": "zerodigest/Qwen3.8-27B-Uncensored-YMQ-MTP-GGUF",
+   "org": "zerodigest",
+   "downloads": 116227,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "bloomer010/Ling-3.0-tiny-GGUF",
+   "org": "bloomer010",
+   "downloads": 115799,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "zenmagnets/Nemotron-3-Embed-1B-Q4_K_M-GGUF",
+   "org": "zenmagnets",
+   "downloads": 115631,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ibm-granite/granite-4.2-30b-GGUF",
+   "org": "ibm-granite",
+   "downloads": 115113,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "second-state/All-MiniLM-L6-v2-Embedding-GGUF",
+   "org": "second-state",
+   "downloads": 110763,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Novice25/Qwen-Image-Edit-Rapid-AIO-GGUF",
+   "org": "Novice25",
+   "downloads": 109057,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "togatogah/jinen-v2-small.gguf",
+   "org": "togatogah",
+   "downloads": 106113,
+   "status": "no_base_model"
+  },
+  {
+   "id": "badtheorylabs/BTL-4-Compact",
+   "org": "badtheorylabs",
+   "downloads": 104464,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ibm-granite/granite-4.2-8b-GGUF",
+   "org": "ibm-granite",
+   "downloads": 104352,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "nomic-ai/nomic-embed-text-v1.5-GGUF",
+   "org": "nomic-ai",
+   "downloads": 104331,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "UmeAiRT/ComfyUI-Auto-Installer-Assets",
+   "org": "UmeAiRT",
+   "downloads": 103851,
+   "status": "no_base_model"
+  },
+  {
+   "id": "JetBrains/Mellum2-12B-A2.5B-Instruct-GGUF-Q4_K_M",
+   "org": "JetBrains",
+   "downloads": 101748,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF",
+   "org": "ISTA-DASLab",
+   "downloads": 100110,
+   "status": "identical"
+  },
+  {
+   "id": "Arki05/Qwen3.8-27B-GGUF-shards",
+   "org": "Arki05",
+   "downloads": 99547,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "williamliao/gemma-4-26B-A4B-it-speculator.eagle3-F16-GGUF",
+   "org": "williamliao",
+   "downloads": 99461,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "prithivMLmods/Qwen3.6-35B-A3B-MTP-GGUF",
+   "org": "prithivMLmods",
+   "downloads": 97687,
+   "status": "identical"
+  },
+  {
+   "id": "AngelSlim/Hy4-preview-GGUF",
+   "org": "AngelSlim",
+   "downloads": 97192,
+   "status": "no_base_model"
+  },
+  {
+   "id": "nsparks/DeepSeek-V4-Flash-FP4-FP8-GGUF",
+   "org": "nsparks",
+   "downloads": 96609,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "kekusprod/WAI-NSFW-illustrious-SDXL-v110-GGUF",
+   "org": "kekusprod",
+   "downloads": 96086,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Bucoid/Qwen3.8-27B-Uncensored-IQ4-XS-MTP-16GB-VRAM-GGUF",
+   "org": "Bucoid",
+   "downloads": 94020,
+   "status": "identical"
+  },
+  {
+   "id": "leejet/MiniMax-H3-GGUF",
+   "org": "leejet",
+   "downloads": 93742,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "pramodlohra/Qween3_4B_thinking_finetune",
+   "org": "pramodlohra",
+   "downloads": 93108,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Blackfrost-AI/Muse-Glimmer-30B-Abliterated-GGUF",
+   "org": "Blackfrost-AI",
+   "downloads": 90444,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "puwaer/DeepSeek-V4-Flash-0731-reap-150b-gguf",
+   "org": "puwaer",
+   "downloads": 90410,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "windowsxp811203/Qwen3.8-Flash-Next-Abliterated-GGUF",
+   "org": "windowsxp811203",
+   "downloads": 89463,
+   "status": "identical"
+  },
+  {
+   "id": "sugoitoolkit/Sugoi-32B-Ultra-GGUF",
+   "org": "sugoitoolkit",
+   "downloads": 87348,
+   "status": "identical"
+  },
+  {
+   "id": "orcarouter/Qwen3.8-Flash-Next-Uncensored-GGUF",
+   "org": "orcarouter",
+   "downloads": 85105,
+   "status": "identical"
+  },
+  {
+   "id": "Aitrepreneur/FLX",
+   "org": "Aitrepreneur",
+   "downloads": 84620,
+   "status": "no_base_model"
+  },
+  {
+   "id": "rahul7star/gemma-gguf",
+   "org": "rahul7star",
+   "downloads": 83898,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "openthaigpt/openthaigpt1.5-7b-instruct",
+   "org": "openthaigpt",
+   "downloads": 82930,
+   "status": "no_base_model"
+  },
+  {
+   "id": "pnnbao-ump/VieNeu-TTS-0.3B-q4-gguf",
+   "org": "pnnbao-ump",
+   "downloads": 81904,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "MonsterMMORPG/Wan_GGUF",
+   "org": "MonsterMMORPG",
+   "downloads": 78825,
+   "status": "no_base_model"
+  },
+  {
+   "id": "ManniX-ITA/Qwen3.6-27B-A3B-Coder-MTP-GGUF",
+   "org": "ManniX-ITA",
+   "downloads": 78476,
+   "status": "identical"
+  },
+  {
+   "id": "NovachronoAI/LFM2.5-1.2B-Nova-Function-Calling-GGUF",
+   "org": "NovachronoAI",
+   "downloads": 78417,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+   "org": "TheBloke",
+   "downloads": 77910,
+   "status": "identical"
+  },
+  {
+   "id": "incoai/Qwen3.8-27B-DFlash2-GGUF",
+   "org": "incoai",
+   "downloads": 77746,
+   "status": "identical"
+  },
+  {
+   "id": "Aero-Ex/Trellis2-GGUF",
+   "org": "Aero-Ex",
+   "downloads": 77636,
+   "status": "no_base_model"
+  },
+  {
+   "id": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-DS4-Headroom128",
+   "org": "apetersson",
+   "downloads": 76999,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "SC117/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-APEX-GGUF",
+   "org": "SC117",
+   "downloads": 76005,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "meshllm/gemma-4-E4B-it-Q4_K_M-layers",
+   "org": "meshllm",
+   "downloads": 75913,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "pnnbao-ump/VieNeu-TTS-v2",
+   "org": "pnnbao-ump",
+   "downloads": 74660,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "outsourc-e/Qwen3.8-27B-Unleashed-GGUF",
+   "org": "outsourc-e",
+   "downloads": 73951,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Bucoid/Qwen3.8-27B-Heretic-Ara-16GB-VRAM-IQ4-XS-MTP-GGUF",
+   "org": "Bucoid",
+   "downloads": 73573,
+   "status": "identical"
+  },
+  {
+   "id": "sugoitoolkit/Sugoi-14B-Ultra-GGUF",
+   "org": "sugoitoolkit",
+   "downloads": 73338,
+   "status": "identical"
+  },
+  {
+   "id": "Alittlehammmer/Qwen3.6-27B-DFlash-GGUF-llama.cpp",
+   "org": "Alittlehammmer",
+   "downloads": 73184,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Alittlehammmer/Qwen3.6-35B-A3B-DFlash-GGUF-llama.cpp",
+   "org": "Alittlehammmer",
+   "downloads": 71772,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "NaomiBTW/rwkv7-g1c-13.3b-gguf",
+   "org": "NaomiBTW",
+   "downloads": 71554,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "AInVFX/SeedVR2_comfyUI",
+   "org": "AInVFX",
+   "downloads": 71058,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "manuelgutierrez/WhiteRabbitNeo-33B-v1.5-GGUF",
+   "org": "manuelgutierrez",
+   "downloads": 68799,
+   "status": "no_base_model"
+  },
+  {
+   "id": "jinaai/jina-embeddings-v5-text-small-retrieval",
+   "org": "jinaai",
+   "downloads": 67378,
+   "status": "identical"
+  },
+  {
+   "id": "tobil/qmd-query-expansion-1.7B-gguf",
+   "org": "tobil",
+   "downloads": 66762,
+   "status": "identical"
+  },
+  {
+   "id": "mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+   "org": "mistralai",
+   "downloads": 65686,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "KBlueLeaf/TIPO-500M-ft",
+   "org": "KBlueLeaf",
+   "downloads": 64484,
+   "status": "no_base_model"
+  },
+  {
+   "id": "jukofyork/creative-writing-control-vectors-v3.0",
+   "org": "jukofyork",
+   "downloads": 63802,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Edge-Quant/Nanbeige4.1-3B-Q8_0-GGUF",
+   "org": "Edge-Quant",
+   "downloads": 62292,
+   "status": "identical"
+  },
+  {
+   "id": "Edge-Quant/Nanbeige4.1-3B-Q4_K_M-GGUF",
+   "org": "Edge-Quant",
+   "downloads": 62217,
+   "status": "identical"
+  },
+  {
+   "id": "shafire/Zero-Gemma4-E4B-OpenZero-GGUF",
+   "org": "shafire",
+   "downloads": 60707,
+   "status": "identical"
+  },
+  {
+   "id": "elizaos/eliza-1",
+   "org": "elizaos",
+   "downloads": 59869,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Isi99999/Wan2.2BasedModels",
+   "org": "Isi99999",
+   "downloads": 59449,
+   "status": "no_base_model"
+  },
+  {
+   "id": "AnonimousA/Qwen3.8-Flash-Next-REAP-256-duo-GGUF",
+   "org": "AnonimousA",
+   "downloads": 58616,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "ChrisColeTech/LTX-2.3-uncensored-v1.4-FP8",
+   "org": "ChrisColeTech",
+   "downloads": 58567,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "0xKitkat/Qwen3.8-27B-Uncensored-Aggressive",
+   "org": "0xKitkat",
+   "downloads": 57746,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "tool_roundtrip",
+    "typed_content",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "scragnog/MiniMax-Music3-GGUF",
+   "org": "scragnog",
+   "downloads": 57608,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Ttimofeyka/MistralRP-Noromaid-NSFW-Mistral-7B-GGUF",
+   "org": "Ttimofeyka",
+   "downloads": 57248,
+   "status": "no_base_model"
+  },
+  {
+   "id": "enfuse/smol-tools-4b-32k",
+   "org": "enfuse",
+   "downloads": 57193,
+   "status": "identical"
+  },
+  {
+   "id": "KBlueLeaf/TIPO-500M",
+   "org": "KBlueLeaf",
+   "downloads": 56863,
+   "status": "no_base_model"
+  },
+  {
+   "id": "nif0/Qwen3-VL-32B-Instruct-ultra-uncensored-heretic-H3-GGUF",
+   "org": "nif0",
+   "downloads": 56850,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "quimmedes/Qwen3.8-27B-XYZ",
+   "org": "quimmedes",
+   "downloads": 56561,
+   "status": "identical"
+  },
+  {
+   "id": "OBLITERATUS/Ornith-1.5-9B-OBLITERATED",
+   "org": "OBLITERATUS",
+   "downloads": 56281,
+   "status": "identical"
+  },
+  {
+   "id": "0bserverx/Muse-Glimmer-30B-Heretic-Uncensored-GGUF",
+   "org": "0bserverx",
+   "downloads": 56169,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "hugging-quants/Llama-3.2-1B-Instruct-Q4_K_M-GGUF",
+   "org": "hugging-quants",
+   "downloads": 56166,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "joeygambino/MiniMax-H3-curve-GGUF",
+   "org": "joeygambino",
+   "downloads": 56147,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "ilintar/trellis2-gguf",
+   "org": "ilintar",
+   "downloads": 55781,
+   "status": "no_base_model"
+  },
+  {
+   "id": "llmfan46/gemma-4-31B-it-uncensored-heretic-GGUF",
+   "org": "llmfan46",
+   "downloads": 55422,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "vantagewithai/MiniMax-H3-comfyUI-GGUF",
+   "org": "vantagewithai",
+   "downloads": 55228,
+   "status": "no_base_model"
+  },
+  {
+   "id": "SporkySporkness/FLUX.1-Canny-dev-GGUF",
+   "org": "SporkySporkness",
+   "downloads": 53775,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Mungert/Hunyuan-MT-7B-GGUF",
+   "org": "Mungert",
+   "downloads": 52273,
+   "status": "no_base_model"
+  },
+  {
+   "id": "BigDannyPt/Wan-2.2-Remix-GGUF",
+   "org": "BigDannyPt",
+   "downloads": 51678,
+   "status": "no_base_model"
+  },
+  {
+   "id": "PocketAiHub/Ornith-1.5-35B-A3B-Abliterated-GGUF",
+   "org": "PocketAiHub",
+   "downloads": 51088,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn"
+   ]
+  },
+  {
+   "id": "RavichandranJ/Dolphin3-Cyber-8B-GGUF",
+   "org": "RavichandranJ",
+   "downloads": 50723,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "nerkyor/Qwen3.6-35B-A3B-DSV4Pro-SFT-GPT56Sol-RL-Agent-GGUF",
+   "org": "nerkyor",
+   "downloads": 50312,
+   "status": "no_base_model"
+  },
+  {
+   "id": "neuphonic/neutts-air-q8-gguf",
+   "org": "neuphonic",
+   "downloads": 49937,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "SakuraLLM/Sakura-GalTransl-7B-v3.7",
+   "org": "SakuraLLM",
+   "downloads": 49714,
+   "status": "no_base_model"
+  },
+  {
+   "id": "silveroxides/Chroma1-HD-GGUF",
+   "org": "silveroxides",
+   "downloads": 49709,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "hyrelabs/Homura-30B-GGUF",
+   "org": "hyrelabs",
+   "downloads": 49098,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-Native-MTP-Preserved-GGUF",
+   "org": "llmfan46",
+   "downloads": 49006,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "TheBloke/Llama-2-7B-Chat-GGUF",
+   "org": "TheBloke",
+   "downloads": 47941,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "bullerwins/Wan2.2-I2V-A14B-GGUF",
+   "org": "bullerwins",
+   "downloads": 47726,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Granddyser/flux-klein-9b-Biglove-Collection",
+   "org": "Granddyser",
+   "downloads": 47054,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "bloomer010/Ling-3.0-flash-GGUF",
+   "org": "bloomer010",
+   "downloads": 46578,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "nif0/Qwen3-VL-32B-Instruct-MiniMax-H3-GGUF",
+   "org": "nif0",
+   "downloads": 45738,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "ToastyPigeon/Gemma4-Test-GGUFs",
+   "org": "ToastyPigeon",
+   "downloads": 44536,
+   "status": "no_base_model"
+  },
+  {
+   "id": "trklou/audio.cpp",
+   "org": "trklou",
+   "downloads": 44286,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "KridgeDookie/Qwen3.8-27B-ABLITERATED-UNCENSORED-PHILADELPHIA-CLASS",
+   "org": "KridgeDookie",
+   "downloads": 43816,
+   "status": "identical"
+  },
+  {
+   "id": "Isotr0py/test-gguf-sample",
+   "org": "Isotr0py",
+   "downloads": 43479,
+   "status": "no_base_model"
+  },
+  {
+   "id": "noctrex/Huihui-Qwen3-VL-30B-A3B-Instruct-abliterated-GGUF",
+   "org": "noctrex",
+   "downloads": 43354,
+   "status": "identical"
+  },
+  {
+   "id": "offgrid-ai/pony-diffusion-v6-xl-GGUF",
+   "org": "offgrid-ai",
+   "downloads": 43168,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "purplesmartai/pony-v7-base",
+   "org": "purplesmartai",
+   "downloads": 43041,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Noobito45/Qwen3.8-9B-heretic-uncensored-NVFP4-GGUF",
+   "org": "Noobito45",
+   "downloads": 42269,
+   "status": "identical"
+  },
+  {
+   "id": "dphn/Dolphin3.0-Llama3.1-8B-GGUF",
+   "org": "dphn",
+   "downloads": 41208,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "logic65/Qwen3.8-Whittle-MoE-27B-A17.8B-GGUF",
+   "org": "logic65",
+   "downloads": 40950,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "leejet/Z-Image-Turbo-GGUF",
+   "org": "leejet",
+   "downloads": 40812,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "calcuis/wan-1.3b-gguf",
+   "org": "calcuis",
+   "downloads": 40169,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "openbmb/MiniCPM-o-4_5-gguf",
+   "org": "openbmb",
+   "downloads": 39970,
+   "status": "identical"
+  },
+  {
+   "id": "NousResearch/Hermes-2-Pro-Mistral-7B-GGUF",
+   "org": "NousResearch",
+   "downloads": 39387,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "unslothai/Qwen3-ASR-0.6B-GGUF",
+   "org": "unslothai",
+   "downloads": 38505,
+   "status": "upstream_non_chat_pipeline_tag"
+  },
+  {
+   "id": "M4-ai/TinyMistral-248M-v2-Instruct-GGUF",
+   "org": "M4-ai",
+   "downloads": 38475,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "nomic-ai/nomic-embed-text-v2-moe-GGUF",
+   "org": "nomic-ai",
+   "downloads": 38069,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "TheDrummer/Artemis-31B-v1-GGUF",
+   "org": "TheDrummer",
+   "downloads": 38048,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "realrebelai/KREA-2_GGUFs",
+   "org": "realrebelai",
+   "downloads": 37836,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "vantagewithai/Krea-2-Turbo-GGUF",
+   "org": "vantagewithai",
+   "downloads": 37556,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "mirek190/audio.cpp",
+   "org": "mirek190",
+   "downloads": 37374,
+   "status": "no_base_model"
+  },
+  {
+   "id": "vcruz305/Qwen3.8-27B-AEON-ULTIMATE-UNCENSORED-GGUF",
+   "org": "vcruz305",
+   "downloads": 37186,
+   "status": "identical"
+  },
+  {
+   "id": "RubixYT/Zeptonic_1.1",
+   "org": "RubixYT",
+   "downloads": 37008,
+   "status": "no_base_model"
+  },
+  {
+   "id": "openbmb/MiniCPM5-1B-GGUF",
+   "org": "openbmb",
+   "downloads": 36868,
+   "status": "no_base_model"
+  },
+  {
+   "id": "gbuzhf/Ornith-1.5-35B-A3B-Abliterated-MTP-UD-APEX-GGUF",
+   "org": "gbuzhf",
+   "downloads": 36805,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn"
+   ]
+  },
+  {
+   "id": "mmnga/Moonlight-16B-A3B-Instruct-gguf",
+   "org": "mmnga",
+   "downloads": 36248,
+   "status": "missing_template"
+  },
+  {
+   "id": "CMSManhattan/JiRackUltra_14b",
+   "org": "CMSManhattan",
+   "downloads": 36246,
+   "status": "no_base_model"
+  },
+  {
+   "id": "gpustack/bge-m3-GGUF",
+   "org": "gpustack",
+   "downloads": 36087,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "kingjones777/Qwen3.8-Flash-Next-Uncensored-ROCmFP4-FAST-GGUF",
+   "org": "kingjones777",
+   "downloads": 35950,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "wikeeyang/Flux2-Klein-9B-True-V3",
+   "org": "wikeeyang",
+   "downloads": 35809,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "silveroxides/Chroma-GGUF",
+   "org": "silveroxides",
+   "downloads": 35710,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "mayocream/RORem-mixed-GGUF",
+   "org": "mayocream",
+   "downloads": 35494,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "neuralcrew/neutrino-instruct",
+   "org": "neuralcrew",
+   "downloads": 35487,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "techwithsergiu/Qwen3.5-text-2B-GGUF",
+   "org": "techwithsergiu",
+   "downloads": 35103,
+   "status": "identical"
+  },
+  {
+   "id": "jayn7/Z-Image-Turbo-GGUF",
+   "org": "jayn7",
+   "downloads": 35037,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "dealignai/Qwen3.8-27B-UNCENSORED-GGUF",
+   "org": "dealignai",
+   "downloads": 34942,
+   "status": "identical"
+  },
+  {
+   "id": "Lord-H4D3ZS/Qwen3.8-Distill-35B-A3B-Coder-Abliterated",
+   "org": "Lord-H4D3ZS",
+   "downloads": 34686,
+   "status": "identical"
+  },
+  {
+   "id": "cygnal/Qwen3.8-27B-heretic-ara-Q4_K_M-MTP-GGUF",
+   "org": "cygnal",
+   "downloads": 34224,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "julianmb/Qwen-3.8-27B-ROCmFP4-FAST-GGUF",
+   "org": "julianmb",
+   "downloads": 34103,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "TrevorJS/gemma-4-26B-A4B-it-uncensored-GGUF",
+   "org": "TrevorJS",
+   "downloads": 33915,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "ponpoke/flux2-klein-9b-uncensored-text-encoder",
+   "org": "ponpoke",
+   "downloads": 33885,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "hotdogs/Qwen3.8-27B-abliterated-MTP-GGUF",
+   "org": "hotdogs",
+   "downloads": 33454,
+   "status": "identical"
+  },
+  {
+   "id": "befox/WAN2.2-14B-Rapid-AllInOne-GGUF",
+   "org": "befox",
+   "downloads": 33372,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "hellohazime/Qwen3.8-2.4T-A95B-REAP-256GB-GGUF",
+   "org": "hellohazime",
+   "downloads": 32863,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "gbuzhf/KAT-Coder-V2.5-Dev-MTP-GGUF",
+   "org": "gbuzhf",
+   "downloads": 32253,
+   "status": "identical"
+  },
+  {
+   "id": "xCloudinfo/xGemable-12B-coder-v1.5-GGUF",
+   "org": "xCloudinfo",
+   "downloads": 31910,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "FreedomAISVR/Qwen-Image-Edit-Rapid-AIO-NSFW-v23-NVFP4-GGUF",
+   "org": "FreedomAISVR",
+   "downloads": 31474,
+   "status": "no_base_model"
+  },
+  {
+   "id": "allura-quants/Qwen3.8-27B-Dominatrix-GGUF",
+   "org": "allura-quants",
+   "downloads": 31150,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "mlabonne/Meta-Llama-3.1-8B-Instruct-abliterated-GGUF",
+   "org": "mlabonne",
+   "downloads": 30926,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "soyaakinohara/qwen3.8-27b-abliterated-3.69bpw-12GB-MTP.gguf",
+   "org": "soyaakinohara",
+   "downloads": 30898,
+   "status": "identical"
+  },
+  {
+   "id": "hugging-quants/Llama-3.2-3B-Instruct-Q4_K_M-GGUF",
+   "org": "hugging-quants",
+   "downloads": 30515,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "jica98/qwen3.5-4B-super-coder",
+   "org": "jica98",
+   "downloads": 30054,
+   "status": "identical"
+  },
+  {
+   "id": "antirez/glm-5.3-flash-gguf",
+   "org": "antirez",
+   "downloads": 30009,
+   "status": "no_base_model"
+  },
+  {
+   "id": "KevinJK51/Qwen3.6-12B-IQ-Ultra-Heretic-Uncensored-Thinking-V2-Hightop-GGUF",
+   "org": "KevinJK51",
+   "downloads": 30006,
+   "status": "identical"
+  },
+  {
+   "id": "Phil2Sat/Qwen-Image-Edit-Rapid-AIO-GGUF",
+   "org": "Phil2Sat",
+   "downloads": 29979,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "tencent/Hy-MT2-7B-GGUF",
+   "org": "tencent",
+   "downloads": 29934,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "jrell/Qwen3.8-27B-i1-IQ4_XS-GGUF-Smaller",
+   "org": "jrell",
+   "downloads": 29493,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "thebbg/Ma7ee7-Qwen3.8_4B_Distilled-v2",
+   "org": "thebbg",
+   "downloads": 29481,
+   "status": "no_base_model"
+  },
+  {
+   "id": "macadeliccc/dolphin-2.9.3-mistral-7B-32K-GGUF",
+   "org": "macadeliccc",
+   "downloads": 29270,
+   "status": "identical"
+  },
+  {
+   "id": "TizzyT566/Ornith-1.5-35B-A3B-NVFP4-GGUF",
+   "org": "TizzyT566",
+   "downloads": 29197,
+   "status": "identical"
+  },
+  {
+   "id": "Kutches/Anim4",
+   "org": "Kutches",
+   "downloads": 29091,
+   "status": "no_base_model"
+  },
+  {
+   "id": "logic65/Qwen3.8-Whittle-MoE-27B-A17.8B",
+   "org": "logic65",
+   "downloads": 29024,
+   "status": "missing_template"
+  },
+  {
+   "id": "leliuga/all-MiniLM-L6-v2-GGUF",
+   "org": "leliuga",
+   "downloads": 29014,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Ralriki/multilingual-e5-large-instruct-GGUF",
+   "org": "Ralriki",
+   "downloads": 28992,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "cmeka/SeedVR2-GGUF",
+   "org": "cmeka",
+   "downloads": 28645,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "tooltd/Qwen3.8-27B-IQ4-XS-16GB-VRAM-GGUF",
+   "org": "tooltd",
+   "downloads": 28553,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "apetersson/DeepSeek-V4-Flash-0731-Abliterated-DS4-Quality128",
+   "org": "apetersson",
+   "downloads": 28440,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "zaakirio/gemma-4-12b-it-uncensored-GGUF",
+   "org": "zaakirio",
+   "downloads": 28063,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "AgentAnon/flux-klein-9b-Biglove-Collection",
+   "org": "AgentAnon",
+   "downloads": 27892,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "KBLab/sentence-bert-swedish-cased",
+   "org": "KBLab",
+   "downloads": 27482,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "Undi95/Xwin-MLewd-13B-V0.2-GGUF",
+   "org": "Undi95",
+   "downloads": 27267,
+   "status": "no_base_model"
+  },
+  {
+   "id": "smthem/SenseNova-U1-8B-MoT-Merger-gguf",
+   "org": "smthem",
+   "downloads": 27160,
+   "status": "no_base_model"
+  },
+  {
+   "id": "fiojanea/Esan_testi",
+   "org": "fiojanea",
+   "downloads": 27080,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Kutches/minmax",
+   "org": "Kutches",
+   "downloads": 27020,
+   "status": "no_base_model"
+  },
+  {
+   "id": "raulvidis/Ling-3.0-flash-ROCmFP4-STRIX-MTP-GGUF",
+   "org": "raulvidis",
+   "downloads": 26992,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Arki05/Grok-1-GGUF",
+   "org": "Arki05",
+   "downloads": 26764,
+   "status": "no_base_model"
+  },
+  {
+   "id": "second-state/stable-diffusion-v1-5-GGUF",
+   "org": "second-state",
+   "downloads": 26714,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "NousResearch/Hermes-3-Llama-3.1-8B-GGUF",
+   "org": "NousResearch",
+   "downloads": 26508,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "vcruz305/Ornith-1.0-35B-AEON-Ultimate-Uncensored-GGUF",
+   "org": "vcruz305",
+   "downloads": 26428,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "lemuralabs/Llama-3.2-3B-Uncensored-GGUF",
+   "org": "lemuralabs",
+   "downloads": 26068,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "LocalAI-Community/piper-voices-GGUF",
+   "org": "LocalAI-Community",
+   "downloads": 26064,
+   "status": "no_base_model"
+  },
+  {
+   "id": "kingjones777/Qwen3.8-27B-ROCmFP4-STRIX-MTP-GGUF",
+   "org": "kingjones777",
+   "downloads": 25788,
+   "status": "identical"
+  },
+  {
+   "id": "FunAudioLLM/Fun-ASR-Nano-2512-GGUF",
+   "org": "FunAudioLLM",
+   "downloads": 25452,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "ChrisColeTech/qwen-image-edit-uncensored-GGUF",
+   "org": "ChrisColeTech",
+   "downloads": 25341,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "dealignai/Ornith-1.5-35B-A3B-UNCENSORED-GGUF",
+   "org": "dealignai",
+   "downloads": 25066,
+   "status": "identical"
+  },
+  {
+   "id": "THE203/Wan-2.2-Remix-GGUF",
+   "org": "THE203",
+   "downloads": 24937,
+   "status": "no_base_model"
+  },
+  {
+   "id": "BennyDaBall/Qwen3-4b-Z-Image-Turbo-AbliteratedV1",
+   "org": "BennyDaBall",
+   "downloads": 24389,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "6block/Qwen3-32B-GGUF",
+   "org": "6block",
+   "downloads": 24266,
+   "status": "identical"
+  },
+  {
+   "id": "lemuralabs/Qwen3.6-27B-V2-abliterated-uncensored-8-bit-GGUF",
+   "org": "lemuralabs",
+   "downloads": 24026,
+   "status": "output_differs",
+   "fixtures": [
+    "no_generation_prompt",
+    "tool_roundtrip",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "kyutai/moshiko-candle-q8",
+   "org": "kyutai",
+   "downloads": 23897,
+   "status": "no_base_model"
+  },
+  {
+   "id": "GestaltLabs/Ornstein-Hermes-3.6-27B-GGUF",
+   "org": "GestaltLabs",
+   "downloads": 23806,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "mlasli/Qwen3.8-27B-Heretic-Uncensored-Q5_K_M-GGUF",
+   "org": "mlasli",
+   "downloads": 23723,
+   "status": "identical"
+  },
+  {
+   "id": "microsoft/Phi-3-mini-4k-instruct-gguf",
+   "org": "microsoft",
+   "downloads": 23689,
+   "status": "no_base_model"
+  },
+  {
+   "id": "calcuis/ltxv-gguf",
+   "org": "calcuis",
+   "downloads": 23676,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "ATH-MaaS/Marco-DeepResearch-8B-i1-GGUF",
+   "org": "ATH-MaaS",
+   "downloads": 23616,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "mistralai/Ministral-3-14B-Reasoning-2512-GGUF",
+   "org": "mistralai",
+   "downloads": 23115,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "philbert440/Qwen3.8-27B-Uncensored-Cyber-GGUF",
+   "org": "philbert440",
+   "downloads": 23103,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "gpustack/bge-reranker-v2-m3-GGUF",
+   "org": "gpustack",
+   "downloads": 22856,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "freeguyfroverrrr/Wan-2.2-Remix-GGUF",
+   "org": "freeguyfroverrrr",
+   "downloads": 22781,
+   "status": "no_base_model"
+  },
+  {
+   "id": "gaston-parravicini/LFM2.5-8B-A1B-Uncensored-Gaston-GGUF",
+   "org": "gaston-parravicini",
+   "downloads": 22675,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "otheru/DeepSeek-V4-Flash-Strix-Halo-GGUF",
+   "org": "otheru",
+   "downloads": 22628,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "TeichAI/Qwen3.8-27B-Fable-Distill-GGUF",
+   "org": "TeichAI",
+   "downloads": 22624,
+   "status": "identical"
+  },
+  {
+   "id": "knifeayumu/LLM_Collection",
+   "org": "knifeayumu",
+   "downloads": 22602,
+   "status": "no_base_model"
+  },
+  {
+   "id": "protoLabsAI/Ornith-1.5-9B-MTP-GGUF",
+   "org": "protoLabsAI",
+   "downloads": 22523,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "SC117/Ornith-1.5-35B-A3B-Heretic-MTP-APEX-GGUF",
+   "org": "SC117",
+   "downloads": 22312,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "unslothai/Qwen3-ASR-1.7B-GGUF",
+   "org": "unslothai",
+   "downloads": 22286,
+   "status": "upstream_non_chat_pipeline_tag"
+  },
+  {
+   "id": "mixedbread-ai/mxbai-embed-xsmall-v1",
+   "org": "mixedbread-ai",
+   "downloads": 22166,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "jayn7/WAN2.2-I2V_A14B-DISTILL-LIGHTX2V-4STEP-GGUF",
+   "org": "jayn7",
+   "downloads": 21985,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Ma7ee7/Qwen3.8_1.2B_LFM_Distillation_GGUF",
+   "org": "Ma7ee7",
+   "downloads": 21879,
+   "status": "no_base_model"
+  },
+  {
+   "id": "froggeric/Qwen3.6-27B-MTP-GGUF",
+   "org": "froggeric",
+   "downloads": 21818,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "lmstudio-ai/gemma-2b-it-GGUF",
+   "org": "lmstudio-ai",
+   "downloads": 21652,
+   "status": "no_base_model"
+  },
+  {
+   "id": "joyfox/JoyFox-Qwen3.6-35B-A3B-RP-Aggressive",
+   "org": "joyfox",
+   "downloads": 21005,
+   "status": "identical"
+  },
+  {
+   "id": "cunba-ai/istation",
+   "org": "cunba-ai",
+   "downloads": 21004,
+   "status": "no_base_model"
+  },
+  {
+   "id": "Andycurrent/Gemma-3-1B-it-GLM-4.7-Flash-Heretic-Uncensored-Thinking_GGUF",
+   "org": "Andycurrent",
+   "downloads": 20975,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "Lewdiculous/L3-8B-Stheno-v3.2-GGUF-IQ-Imatrix",
+   "org": "Lewdiculous",
+   "downloads": 20959,
+   "status": "identical"
+  },
+  {
+   "id": "0xKitkat/Ornith-1.5-35B-A3B-Uncensored-GGUF",
+   "org": "0xKitkat",
+   "downloads": 20863,
+   "status": "identical"
+  },
+  {
+   "id": "EryriLabs/Ornith-1.5-35B-A3B-BigBang-MTP-GGUF",
+   "org": "EryriLabs",
+   "downloads": 20844,
+   "status": "identical"
+  },
+  {
+   "id": "ente-ai/embeddinggemma-300m-gguf",
+   "org": "ente-ai",
+   "downloads": 20445,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "Smoffyy/Qwen3.5-9B-Instruct-Pure-GGUF",
+   "org": "Smoffyy",
+   "downloads": 20430,
+   "status": "identical"
+  },
+  {
+   "id": "ClankLabs/Wrench-35B-A3B-Q4_K_M-GGUF",
+   "org": "ClankLabs",
+   "downloads": 20237,
+   "status": "identical"
+  },
+  {
+   "id": "rodrigoramosrs/veriloop-coder-e1-gguf",
+   "org": "rodrigoramosrs",
+   "downloads": 20041,
+   "status": "identical"
+  },
+  {
+   "id": "Isi99999/LTX-Video",
+   "org": "Isi99999",
+   "downloads": 20028,
+   "status": "no_base_model"
+  },
+  {
+   "id": "ThomasBaruzier/Meta-Llama-3.1-405B-Instruct-GGUF",
+   "org": "ThomasBaruzier",
+   "downloads": 19902,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "TheDrummer/Cydonia-24B-v4.3-GGUF",
+   "org": "TheDrummer",
+   "downloads": 19876,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "DevQuasar-10/google.gemma-3-27b-pt-GGUF",
+   "org": "DevQuasar-10",
+   "downloads": 19657,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "DreamFast/gemma-3-12b-it-heretic-v2",
+   "org": "DreamFast",
+   "downloads": 19603,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "qtum/DeepSeek-V4-Flash-0731-GGUF",
+   "org": "qtum",
+   "downloads": 19402,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "CaptainArni/audio.cpp-gguf",
+   "org": "CaptainArni",
+   "downloads": 19203,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "vmlinux/Muse-Glimmer-30B-ROCmFPX-GGUF",
+   "org": "vmlinux",
+   "downloads": 19184,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "DevQuasar-9/prithivMLmods.Viper-Coder-HybridMini-v1.3-GGUF",
+   "org": "DevQuasar-9",
+   "downloads": 19121,
+   "status": "identical"
+  },
+  {
+   "id": "togatogah/jinen-v1-small.gguf",
+   "org": "togatogah",
+   "downloads": 18958,
+   "status": "no_base_model"
+  },
+  {
+   "id": "janhq/Jan-v2-VL-high-gguf",
+   "org": "janhq",
+   "downloads": 18945,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "KridgeDookie/KAT-Coder-V2.5-Dev-35B-A3B-ABLITERATED-UNCENSORED-PHILADELPHIA-CLASS",
+   "org": "KridgeDookie",
+   "downloads": 18795,
+   "status": "cosmetic_only"
+  },
+  {
+   "id": "weareapexcreators/Qwen3.5-0.8B-LocalAI",
+   "org": "weareapexcreators",
+   "downloads": 18746,
+   "status": "no_base_model"
+  },
+  {
+   "id": "nerkyor/Qwen3.6-27B-Uncensored-Heretic-DSV4Pro-GLM52-SFT-GPT55-RL-Coding-VL-MTP-GGUF",
+   "org": "nerkyor",
+   "downloads": 18731,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "neuphonic/neutts-air-q4-gguf",
+   "org": "neuphonic",
+   "downloads": 18730,
+   "status": "non_chat_pipeline_tag"
+  },
+  {
+   "id": "XeyonAI/MN-Helcyon-Saturn-RP-12b-v1.0-GGUF",
+   "org": "XeyonAI",
+   "downloads": 18470,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "sahilchachra/Unlimited-OCR-GGUF",
+   "org": "sahilchachra",
+   "downloads": 18469,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "XeyonAI/MN-Helcyon-Claude-Opus-12b-v1.0-GGUF",
+   "org": "XeyonAI",
+   "downloads": 18439,
+   "status": "output_differs",
+   "fixtures": [
+    "multiturn",
+    "no_generation_prompt",
+    "system_user",
+    "thinking_false",
+    "thinking_true",
+    "thinking_unset",
+    "user_only",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "julianmb/Ornith-1.5-35B-A3B-ROCmFP4-GGUF",
+   "org": "julianmb",
+   "downloads": 18242,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "desirel/WAN2.2-14B-Rapid-AllInOne-GGUF-NSFW-v10",
+   "org": "desirel",
+   "downloads": 18169,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "magnitudedev/Qwen3.8-27B-DSpark-GGUF",
+   "org": "magnitudedev",
+   "downloads": 18154,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "zerodigest/Qwen3.8-27B-YMQ-MTP-GGUF",
+   "org": "zerodigest",
+   "downloads": 18093,
+   "status": "identical"
+  },
+  {
+   "id": "lukey03/Qwen3.5-9B-abliterated-GGUF",
+   "org": "lukey03",
+   "downloads": 18051,
+   "status": "identical"
+  },
+  {
+   "id": "ahmedandaloes/CyberStrike-OffSec-35B-GGUF",
+   "org": "ahmedandaloes",
+   "downloads": 18006,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "rtila-corporation/rtila-assistant-lite-1.5",
+   "org": "rtila-corporation",
+   "downloads": 17974,
+   "status": "no_base_model"
+  },
+  {
+   "id": "dcostenco/smollm2-360m-aac-watch",
+   "org": "dcostenco",
+   "downloads": 17861,
+   "status": "identical"
+  },
+  {
+   "id": "DevQuasar-10/google.gemma-3-12b-pt-GGUF",
+   "org": "DevQuasar-10",
+   "downloads": 17751,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "groxaxo/Huihui-gemma-4-26B-A4B-it-abliterated-GGUF",
+   "org": "groxaxo",
+   "downloads": 17452,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "BenevolenceMessiah/Qwen2.5-Coder-32B-Instruct-abliterated-Q4_K_M-GGUF",
+   "org": "BenevolenceMessiah",
+   "downloads": 17441,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Chun121/Qwen3-4B-RPG-Roleplay-V2",
+   "org": "Chun121",
+   "downloads": 17422,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "Dampfinchen/google-gemma-3-12b-it-qat-q4_0-gguf-small-fix",
+   "org": "Dampfinchen",
+   "downloads": 17371,
+   "status": "no_base_model"
+  },
+  {
+   "id": "deadbydawn101/RavenX-CyberAgent-Qwen3.6-35B-A3B-Opus-4.7-OpenMythos-Pentester-BugHunter-RATH-GGUF",
+   "org": "deadbydawn101",
+   "downloads": 17255,
+   "status": "identical"
+  },
+  {
+   "id": "noctrex/Ling-3.0-tiny-MXFP4_MOE-GGUF",
+   "org": "noctrex",
+   "downloads": 17067,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "DevQuasar-9/huihui-ai.QwQ-32B-abliterated-GGUF",
+   "org": "DevQuasar-9",
+   "downloads": 17038,
+   "status": "identical"
+  },
+  {
+   "id": "LuffyTheFox/Qwen3-Uncensored-TextEncoders-Klein-Z-Image-Anima-GGUF",
+   "org": "LuffyTheFox",
+   "downloads": 16932,
+   "status": "no_base_model"
+  },
+  {
+   "id": "mitkox/antares-1b-Q8_0-GGUF",
+   "org": "mitkox",
+   "downloads": 16874,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "DreamFast/gemma-3-12b-it-heretic",
+   "org": "DreamFast",
+   "downloads": 16770,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "molbal/Minimax-Music3-GGUF",
+   "org": "molbal",
+   "downloads": 16658,
+   "status": "no_base_model"
+  },
+  {
+   "id": "ErenAta00/MorpheusHigh-LLM-14B-Virtual-Reality-Model",
+   "org": "ErenAta00",
+   "downloads": 16635,
+   "status": "no_base_model"
+  },
+  {
+   "id": "lthn/lemer",
+   "org": "lthn",
+   "downloads": 16584,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "n00b001/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M-GGUF",
+   "org": "n00b001",
+   "downloads": 16573,
+   "status": "output_differs",
+   "fixtures": [
+    "tool_roundtrip",
+    "with_tools"
+   ]
+  },
+  {
+   "id": "bleysg/DeepSeek-V4-Flash-DSpark-drafter-GGUF",
+   "org": "bleysg",
+   "downloads": 16378,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "JackFRost0703/R3GE_Quen2.5_7B",
+   "org": "JackFRost0703",
+   "downloads": 16340,
+   "status": "no_base_model"
+  },
+  {
+   "id": "WANG-CC/flux2-klein-9b-uncensored-text-encoder-Q8_0-GGUF",
+   "org": "WANG-CC",
+   "downloads": 16335,
+   "status": "upstream_gated"
+  },
+  {
+   "id": "RunDiffusion/Juggernaut-Z-Image",
+   "org": "RunDiffusion",
+   "downloads": 16302,
+   "status": "upstream_not_found"
+  },
+  {
+   "id": "Bedovyy/smoothMixWan22-I2V-GGUF",
+   "org": "Bedovyy",
+   "downloads": 16295,
+   "status": "no_base_model"
+  },
+  {
+   "id": "el4/GRM-3.2-Sky-ONYX-GGUF",
+   "org": "el4",
+   "downloads": 16289,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "6block/DeepSeek-V4-Pro-0813-GGUF",
+   "org": "6block",
+   "downloads": 16004,
+   "status": "upstream_has_no_template"
+  },
+  {
+   "id": "QQZ2026/Qwen3.8-27B-ZeroRefusal-UD-IQ4_XS-MTP-GGUF",
+   "org": "QQZ2026",
+   "downloads": 15964,
+   "status": "non_chat_architecture"
+  },
+  {
+   "id": "mfielding92/claude-3.7-sonnet-reasoning-gemma3-12B",
+   "org": "mfielding92",
+   "downloads": 15920,
+   "status": "identical"
+  },
+  {
+   "id": "stamsam/maple-preview-gguf",
+   "org": "stamsam",
+   "downloads": 15870,
+   "status": "upstream_has_no_template"
+  }
+ ],
+ "aggregate": {
+  "fixture_corpus_version": "2",
+  "sampled": 400,
+  "per_org": 2,
+  "truncated": false,
+  "comparable": 110,
+  "divergent": 15,
+  "divergent_pct": 13.636363636363637,
+  "download_weighted_pct": 30.891336108275304,
+  "publishers_total": 89,
+  "publishers_affected": 14,
+  "coverage_gaps": {
+   "no_base_model": 71,
+   "non_chat_architecture": 28,
+   "upstream_has_no_template": 93,
+   "upstream_not_found": 59,
+   "upstream_gated": 28,
+   "non_chat_pipeline_tag": 7,
+   "upstream_non_chat_pipeline_tag": 2,
+   "missing_template": 2
+  },
+  "unreliable": false
+ }
+}

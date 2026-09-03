@@ -146,3 +146,16 @@ wrong and one of which is simply a different day's sample:
 - `probe2-throwaway.py` — the throwaway probe, kept for auditability. Superseded by
   `ggufdoctor survey`; it is not maintained and its engine is known to be less faithful.
 - `idea-evaluation.md` — the ideas evaluated and rejected before this one, with reasons.
+
+## 2026-09-03 — corpus 2, with a Hugging Face token (`2026-09-03-survey-corpus2-gated.*`)
+
+Same command as the corpus-2 run, with `HF_TOKEN` set. **15 of 110 comparable
+(13.6%), 30.9% download-weighted, 14 of 89 publishers**, `unreliable: false`.
+
+What the token changed: nothing about the gated repositories. Of the 33 `upstream_gated`
+exclusions in the no-token run, 28 stayed gated (a token only opens repositories whose
+licence the account has accepted) and 5 turned out to be `upstream_not_found` once
+authenticated. No formerly-gated repository became comparable. The one-repository
+difference in the divergent set (`paultimothymooney/Qwen2.5-7B-Instruct-Q4_K_M-GGUF`,
+divergent in the no-token run) is day-to-day movement in the top-400 sample, not an
+effect of the token. Treat 14.4% and 13.6% as the same measurement taken twice.
