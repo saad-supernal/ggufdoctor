@@ -1,5 +1,6 @@
 # GGUF chat-template survey
 
+- Fixture corpus version: **2**
 - Sampled: **400** repos (per-org cap: 2)
 - Comparable chat models: **111**
 - Render-different from upstream: **16** (14.4%)

@@ -2,6 +2,7 @@ import json
 import urllib.error
 
 from ggufdoctor.checks.sanity import NON_CHAT_ARCHITECTURES
+from ggufdoctor.fixtures import CORPUS_VERSION
 from ggufdoctor.hf import HfClient
 from ggufdoctor.survey import sample_repos, survey, to_markdown
 
@@ -57,6 +58,18 @@ def test_markdown_includes_caveats():
     md = to_markdown(survey(FakeClient(), top=10, per_org=2))
     assert "per-org cap" in md
     assert "coverage" in md.lower()
+
+
+def test_figures_are_published_with_their_fixture_corpus_version():
+    # A divergent percentage is a measurement of a fixture set: adding the
+    # three corpus-2 fixtures moved the headline, so a figure published without
+    # its corpus version cannot be compared with the next one (spec amendments
+    # §C, §G). It goes in both the JSON aggregate and the markdown, and is
+    # compared against fixtures.CORPUS_VERSION so it cannot be pinned to a
+    # stale literal here.
+    r = survey(FakeClient(), top=10, per_org=2)
+    assert r["aggregate"]["fixture_corpus_version"] == CORPUS_VERSION
+    assert f"Fixture corpus version: **{CORPUS_VERSION}**" in to_markdown(r)
 
 
 # --- Fix round 1 ---

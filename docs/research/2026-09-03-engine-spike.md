@@ -1,5 +1,16 @@
 # Spike: embedding llama.cpp's template engine in ggufdoctor (2026-09-03)
 
+> **Superseded in two places by what v0.2 actually shipped.** The module is **725,239
+> bytes**, not the 672 KB measured here: the caps probe, the message normaliser and the
+> llama.cpp runtime defaults were all added to `engine/shim.cpp` after this measurement
+> (see `engine/README.md`). And the expression table in §3 describes the **raw**
+> `common/jinja` runtime as this spike drove it — the shipped engine wraps that runtime in
+> those additions, so on a real message list some of those rows no longer describe what
+> `LlamaCppEngine` returns (a null `content` reaches the template as `""`, typed content is
+> joined to text when caps say the template is string-only). The rows are still the truth
+> about the two *runtimes*; `tests/test_engine_semantics.py` pins what the shipped engine
+> does.
+
 **Question.** v0.2 needs a second engine that renders chat templates the way llama.cpp does.
 The spec assumed "minja compiled to WASM, shipped in the wheel". Nobody had verified that a
 WASI build works, that the runtime footprint is acceptable, or that minja is still the thing

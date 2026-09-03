@@ -111,6 +111,13 @@ here" is exactly the sort of real-world defect this corpus should carry.
 | PaddlePaddle/PaddleOCR-VL-1.6-GGUF | paddleocr | `511b09642bb3` | apache-2.0 | 2026-09-03T07:29:49Z | — (no base model declared) |
 | legraphista/glm-4-9b-chat-IMat-GGUF | chatglm | `0c1dbb84faf5` | other | 2026-09-03T07:29:49Z | THUDM/glm-4-9b-chat ✓ |
 
+**On the Licence column.** These values are the Hugging Face `license` card field
+verbatim, and three of them — `other` (three repos) and `gemma` (one) — do not
+name a licence: they are pointers to a licence file or a licence agreement in the
+repo, which nobody has read here. Anyone redistributing these files beyond
+ggufdoctor's own test data must open each such repo's actual licence text first
+and confirm it permits that; the field alone settles nothing.
+
 **On the Revision column.** The original fetch recorded `"revision": null`
 for all sixty repos: `survey --save-templates` reads it from the Hub
 `model_info` response's `sha`, and `HfClient.model_info` was not asking for

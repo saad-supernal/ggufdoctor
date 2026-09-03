@@ -56,8 +56,11 @@ disagree.
   `POST /apply-template` and asserts byte equality with the bundled module over every
   vendored template × fixture pair.
 - **Engine build job in CI** regenerates the module from the pinned sources with the
-  pinned wasi-sdk and runs the suite against the fresh build, so the committed module is
-  provably reproducible.
+  pinned wasi-sdk (verified against a per-host sha256) and runs the suite against the
+  fresh build, so the committed module is one anyone can regenerate. The job compares the
+  fresh module's hash with the committed one and prints the result, but does not require a
+  match: `-Oz` output is not bit-reproducible across toolchain builds, so that comparison
+  is informational and the committed module stays the artifact of record.
 - **A semantics test** pinning both engines' behaviour on the edge cases the spike found
   (`None`, list and dict printing, `+` with `None`, `default` on `None`, `//`), so an
   engine bump that changes any row is visible.
@@ -75,7 +78,8 @@ disagree.
   corpus-1 measurement and stays exactly as it was; the corpus-2 re-run is recorded
   beside it, not in place of it.
 - `schema_version` stays `"1"`: every JSON change is additive (new finding ids, richer
-  `engines` entries, an `extra` dict on findings).
+  `engines` entries, an `extra` dict on `RenderResult` -- findings carry their own
+  `evidence`, which gained the `explained_by`/`defaults` keys).
 
 ## 0.1.0 — 2026-09-02
 

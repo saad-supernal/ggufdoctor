@@ -138,7 +138,8 @@ unavailable engine is exit 2 with the reason. `--runtime` is still v0.3.
 ## F. Versioning and bumps
 
 - ggufdoctor `0.2.0`. `schema_version` stays `"1"` (all JSON changes are additive:
-  new finding ids, richer `engines` entries, `extra` on findings).
+  new finding ids, richer `engines` entries, `extra` on `RenderResult` -- findings carry
+  `evidence`, not `extra`).
 - The engine bumps **by hand, on purpose**, never automatically: a bump is a PR that
   changes the pinned sha, rebuilds the module, re-runs conformance and the semantics
   table, and updates the version string. Cadence: with each ggufdoctor release, or when

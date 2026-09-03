@@ -9,7 +9,7 @@ from typing import Any
 from ggufdoctor.checks.reference import any_fixture_renders_both_sides, run_reference_checks
 from ggufdoctor.checks.sanity import NON_CHAT_ARCHITECTURES
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
-from ggufdoctor.fixtures import load_fixtures
+from ggufdoctor.fixtures import CORPUS_VERSION, load_fixtures
 from ggufdoctor.models import CheckContext, GgufModel
 
 COMPARABLE = {"identical", "cosmetic_only", "output_differs"}
@@ -288,6 +288,11 @@ def survey(client: Any, top: int, per_org: int,
     return {
         "records": records,
         "aggregate": {
+            # Which fixture corpus produced these figures. The divergent
+            # percentage is a measurement *of* a fixture set, so a figure
+            # published without its corpus version cannot be compared with the
+            # next one (spec amendments §C, §G).
+            "fixture_corpus_version": CORPUS_VERSION,
             "sampled": len(records),
             "per_org": per_org,
             "truncated": truncated,
@@ -327,6 +332,7 @@ def to_markdown(result: dict[str, Any]) -> str:
             "do not quote them as representative.")
         lines.append("")
     lines += [
+        f"- Fixture corpus version: **{a['fixture_corpus_version']}**",
         f"- Sampled: **{a['sampled']}** repos (per-org cap: {a['per_org']})",
         f"- Comparable chat models: **{a['comparable']}**",
         f"- Render-different from upstream: **{a['divergent']}** "

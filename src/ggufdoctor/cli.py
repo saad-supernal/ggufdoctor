@@ -46,7 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
                         "requires --compare-upstream")
     p.add_argument("--engines", metavar="NAMES",
                    help="comma-separated engines to run (default: all available; "
-                        "choose from jinja2, llama.cpp). jinja2 is always included.")
+                        "choose from jinja2, llama.cpp). jinja2 is the reference "
+                        "engine and cannot be deselected.")
     return p
 
 

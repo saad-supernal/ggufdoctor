@@ -2518,6 +2518,7 @@
   }
  ],
  "aggregate": {
+  "fixture_corpus_version": "2",
   "sampled": 400,
   "per_org": 2,
   "truncated": false,

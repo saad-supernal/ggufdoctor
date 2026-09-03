@@ -14,9 +14,11 @@ weighted by downloads; **15 of 87** publishers affected. Zero fetch failures, so
 sample is intact and the run is not flagged unreliable.
 
 **This figure is tied to fixture corpus version 1** — the seven fixtures v0.1 shipped
-with. The survey's own output does not record the corpus version, so the tie is
-documentary and it is this paragraph's job to keep it: 14.8% is a corpus-1 measurement
-and must never be restated as a corpus-2 one.
+with. These two artefacts were produced before the survey recorded its corpus version,
+so *their* tie is documentary and it is this paragraph's job to keep it: 14.8% is a
+corpus-1 measurement and must never be restated as a corpus-2 one. Every survey run from
+v0.2 on carries `fixture_corpus_version` in its JSON aggregate and a "Fixture corpus
+version" line in its markdown, so no future figure needs a paragraph to hold it down.
 
 ## The corpus-2 re-run
 
