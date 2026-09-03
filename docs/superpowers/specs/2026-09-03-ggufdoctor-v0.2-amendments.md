@@ -65,8 +65,8 @@ re-specified for that reality:
 
 | id | check | severity |
 |---|---|---|
-| X001 | rendered output differs between jinja2 and llama.cpp (not whitespace-only, not the tools fixture) | error (INFO when explained by the normaliser) |
-| X002 | renders under one engine and fails under the other — **either direction**; a lexer/parser failure under llama.cpp is reported as "will not load in llama.cpp" | error (INFO when explained by the normaliser) |
+| X001 | rendered output differs between jinja2 and llama.cpp (not whitespace-only, not the tools fixture) | error (INFO when explained — see below) |
+| X002 | renders under one engine and fails under the other — **either direction**; a lexer/parser failure under llama.cpp is reported as "will not load in llama.cpp" | error (INFO when explained — see below) |
 | X004 | output differs by whitespace only | warn |
 | X005 | X001 on a tool-calling fixture | error |
 
@@ -78,6 +78,18 @@ Rules that bind every X check:
 - **Collapsed by signature** across fixtures, like the S family; evidence carries
   `fixtures`, `engines`, a unified diff for X001/X004/X005, and `caps`/`normalized` from
   the llama.cpp side when the normaliser changed the input.
+- **A divergence that llama.cpp's own behaviour explains is INFO, for X001 and X002 alike**
+  (rulings R9–R13, 2026-09-03). The check re-renders jinja2 with the rewrite applied and
+  downgrades only when that reproduces llama.cpp's text byte for byte. Three explanation
+  classes, recorded in `evidence["explained_by"]`: `normaliser` (typed content joined to text
+  or wrapped as a part), `runtime_defaults` (llama.cpp defines `enable_thinking=true` and
+  `preserve_reasoning=true` — expanded into `preserve_thinking`, `clear_thinking`,
+  `truncate_history_thinking`, `drop_thinking` — where transformers leaves them undefined;
+  `evidence["defaults"]` names the keys added), and `normaliser+runtime_defaults` when only
+  both together reproduce it. Explained divergences on tool fixtures stay X001 INFO rather
+  than X005 — the cause outranks the fixture. The llama.cpp engine itself mirrors these
+  defaults (spec §A, `common_chat_template_direct_apply_impl` plus `common/arg.cpp`'s
+  `preserve_reasoning` default); the explanation lives in the checks layer.
 - **A divergence that llama.cpp's normaliser explains is INFO.** When the llama.cpp side
   reports `normalized: true` (it joined typed content to text, or wrapped text as a part,
   before rendering), the resulting X001 or X002 is reported at INFO with the rewrite named.
