@@ -2,6 +2,22 @@
 
 All notable changes to `ggufdoctor`. Dates are the day the work landed on `main`.
 
+## 0.2.1 — unreleased
+
+### Fixed
+
+- Upstream template resolution now reads the standalone `chat_template.jinja` first, the
+  file transformers has saved to since 4.55 and prefers on load. Upstreams that carry only
+  that file (Mistral 3, Gemma 4, GLM 5 and others) were being classified as having no
+  chat template, which excluded 73 of the top 400 GGUF repositories from the survey's
+  comparable set. The corrected survey figure is in the README.
+
+### Added
+
+- `HF_TOKEN` in the environment is honoured for Hub requests (gated upstreams, higher
+  rate limit). It is sent only as an `Authorization` header to `huggingface.co`.
+- The `User-Agent` now carries the real package version.
+
 ## 0.2.0 — 2026-09-03
 
 The second engine. v0.1 could only say what transformers-style Jinja2 renders; v0.2 also

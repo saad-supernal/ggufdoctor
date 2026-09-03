@@ -35,19 +35,27 @@ accident. Nothing checks that the edited template still produces the prompt the
 original model was trained on. A survey of the 400 most-downloaded GGUF repositories on
 Hugging Face (two per publisher, so a single prolific quantiser cannot dominate) found:
 
-| | corpus 1 (2026-09-01) | corpus 2 (2026-09-03) |
-|---|---|---|
-| Comparable chat models | 108 of 400 | 111 of 400 |
-| Render a different prompt than upstream | **16 (14.8%)** | **16 (14.4%)** |
-| Weighted by downloads | 31.4% | 31.2% |
-| Publishers affected | 15 of 87 | 15 of 91 |
+| | corpus 1 (2026-09-01) | corpus 2 (2026-09-03) | corpus 2, corrected (2026-09-03) |
+|---|---|---|---|
+| Comparable chat models | 108 of 400 | 111 of 400 | **185 of 400** |
+| Render a different prompt than upstream | 16 (14.8%) | 16 (14.4%) | **26 (14.1%)** |
+| Weighted by downloads | 31.4% | 31.2% | 26.8% |
+| Publishers affected | 15 of 87 | 15 of 91 | 22 of 139 |
 
-The two runs use different fixture corpora (corpus 2 adds a tool round-trip, typed
-content and a no-generation-prompt conversation) and are not comparable to one decimal;
-15 of the 16 divergent repositories are the same in both.
+The corrected column is the one to quote. The first two runs excluded 73 repositories as
+"upstream declares no chat template" because the tool only read `tokenizer_config.json`
+and `chat_template.json`; transformers has saved templates to a standalone
+`chat_template.jinja` since 4.55 and newer upstreams (Mistral 3, Gemma 4, GLM 5) carry
+only that file. Reading it (fixed in 0.2.1) made those repositories comparable: 50 turned
+out identical, 14 differ only cosmetically, 8 render a different prompt. The corrected run
+also used a Hugging Face token, which opened ten previously licence-gated upstreams. The
+rate barely moved; the denominator nearly doubled. The corpora differ (corpus 2 adds a
+tool round-trip, typed content and a no-generation-prompt conversation), so the columns
+are not comparable to one decimal.
 
-Most of the divergence is on the tool-calling path. In corpus 1, five of the sixteen
-divergent repositories differ on nothing but the tools fixture: chat with them and
+Most of the divergence is on the tool-calling path. In the corrected run, 20 of the 26
+divergent repositories differ on a tool-calling fixture and 4 differ on nothing else. In
+corpus 1, five of the sixteen divergent repositories differed on nothing but the tools fixture: chat with them and
 everything looks right, pass a tool schema and the model receives a prompt its upstream
 never would.
 
@@ -61,12 +69,13 @@ never would.
 
 The second row is Qwen's own GGUF release disagreeing with Qwen's own source model.
 
-Only 108 of the 400 repositories could be compared at all. 53 of them declare a base
-model that no longer exists on the Hub, so nobody can check them against anything. 94
-have an upstream that declares no chat template, 72 declare no base model, 34 have a
-licence-gated upstream. Every excluded repository is counted under its reason; none is
-dropped silently. Per-repository records and the reproduction command are in
-[`docs/research/`](docs/research/).
+In the corrected run, 185 of the 400 repositories could be compared. Of the rest,
+59 declare a base model that no longer exists on the Hub, so nobody can check them
+against anything; 71 declare no base model; 21 have an upstream that genuinely
+publishes no chat template; 23 have a licence-gated upstream the surveying account had
+not been granted; 37 are not chat models. Every excluded repository is counted under its
+reason; none is dropped silently. Per-repository records and the reproduction command are
+in [`docs/research/`](docs/research/).
 
 The second engine produced the other headline: on the seven standard fixtures,
 llama.cpp's template engine agreed with transformers-style Jinja2 on 100 of 100 top

@@ -147,15 +147,31 @@ wrong and one of which is simply a different day's sample:
   `ggufdoctor survey`; it is not maintained and its engine is known to be less faithful.
 - `idea-evaluation.md` — the ideas evaluated and rejected before this one, with reasons.
 
-## 2026-09-03 — corpus 2, with a Hugging Face token (`2026-09-03-survey-corpus2-gated.*`)
+## 2026-09-03 — corpus 2, corrected: `chat_template.jinja` + token (`2026-09-03-survey-corpus2-gated.*`)
 
-Same command as the corpus-2 run, with `HF_TOKEN` set. **15 of 110 comparable
-(13.6%), 30.9% download-weighted, 14 of 89 publishers**, `unreliable: false`.
+**26 of 185 comparable (14.1%), 26.8% download-weighted, 22 of 139 publishers**, `unreliable: false`.
+This is the run to quote.
 
-What the token changed: nothing about the gated repositories. Of the 33 `upstream_gated`
-exclusions in the no-token run, 28 stayed gated (a token only opens repositories whose
-licence the account has accepted) and 5 turned out to be `upstream_not_found` once
-authenticated. No formerly-gated repository became comparable. The one-repository
-difference in the divergent set (`paultimothymooney/Qwen2.5-7B-Instruct-Q4_K_M-GGUF`,
-divergent in the no-token run) is day-to-day movement in the top-400 sample, not an
-effect of the token. Treat 14.4% and 13.6% as the same measurement taken twice.
+Two changes from the corpus-2 run of the same day:
+
+1. **The tool now reads `chat_template.jinja`** (ggufdoctor 0.2.1, commit `ffafcb9`). transformers
+   saves templates to that standalone file since 4.55 and gives it priority over
+   `tokenizer_config.json` on load; upstreams published since mid-2025 (Mistral 3, Gemma 4,
+   GLM 5, LFM2.5, Ornith) often carry only that file. Earlier runs classified 93–94 such
+   repositories as `upstream_has_no_template`. Re-run with the fix, 73 of them became
+   comparable: 50 `identical`, 14 `cosmetic_only`, 8 `output_differs`, 1 `missing_template`;
+   21 upstreams genuinely publish no template. Seven repositories also changed
+   classification because their upstream carries *both* files with different contents
+   (ornith-ai/Ornith-1.5-35B-A3B: 7,536 vs 7,764 chars); the `.jinja` file is what
+   transformers uses, so it is the reference now. The earlier 14.8% (corpus 1) and 14.4%
+   (corpus 2) stand as measured, but their denominators were under-counted by this bug.
+2. **`HF_TOKEN` set.** Of the 33 licence-gated upstreams in the no-token run, the token's
+   account had been granted 10 (HyperCLOVAX, Bielik, orcarouter, and others accepted on
+   2026-09-03); 23 remain gated (Meta Llama and Google Gemma 3 approvals pending or not
+   accepted), and 5 turned out to be deleted once authenticated.
+
+Tool-calling remains where the divergence lives: 20 of the 26 divergent repositories differ on
+a tool fixture, 4 on nothing else (`unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF`, `Qwen/Qwen2.5-3B-Instruct-GGUF`, `llmfan46/gemma-4-31B-it-uncensored-heretic-GGUF`, `n00b001/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M-GGUF`).
+
+An intermediate token-only run before the fix (13.3%, 15 of 113) is kept in the session
+notes only; it differs from the no-token run by sampling noise and the ten opened upstreams.
