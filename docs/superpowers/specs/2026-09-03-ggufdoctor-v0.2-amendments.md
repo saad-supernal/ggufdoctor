@@ -65,8 +65,8 @@ re-specified for that reality:
 
 | id | check | severity |
 |---|---|---|
-| X001 | rendered output differs between jinja2 and llama.cpp (not whitespace-only, not the tools fixture) | error |
-| X002 | renders under one engine and fails under the other — **either direction**; a lexer/parser failure under llama.cpp is reported as "will not load in llama.cpp" | error |
+| X001 | rendered output differs between jinja2 and llama.cpp (not whitespace-only, not the tools fixture) | error (INFO when explained by the normaliser) |
+| X002 | renders under one engine and fails under the other — **either direction**; a lexer/parser failure under llama.cpp is reported as "will not load in llama.cpp" | error (INFO when explained by the normaliser) |
 | X004 | output differs by whitespace only | warn |
 | X005 | X001 on a tool-calling fixture | error |
 
@@ -78,6 +78,11 @@ Rules that bind every X check:
 - **Collapsed by signature** across fixtures, like the S family; evidence carries
   `fixtures`, `engines`, a unified diff for X001/X004/X005, and `caps`/`normalized` from
   the llama.cpp side when the normaliser changed the input.
+- **A divergence that llama.cpp's normaliser explains is INFO.** When the llama.cpp side
+  reports `normalized: true` (it joined typed content to text, or wrapped text as a part,
+  before rendering), the resulting X001 or X002 is reported at INFO with the rewrite named.
+  It is a true divergence between the transformers path and llama-server, but one caused
+  by a deliberate compatibility shim, not by the template.
 - **Both engines failing is not an X finding.** S003 already owns that.
 - **The message never calls the template broken.** X002's message names the engine that
   fails, the stage, and the engine's own error text. A template that uses `//` is a valid
