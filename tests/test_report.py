@@ -151,3 +151,31 @@ def test_human_report_prints_agreement_line_only_when_x_ran():
     assert "engines agree: jinja2 and llama.cpp rendered 10 fixtures identically" in text
     cov_no_x = Coverage(upstream="not_requested", families_run=["S"])
     assert "engines agree" not in render_human(model, [], [], cov_no_x, [Jinja2Engine()])
+
+
+# --- Fix round 1 (controller ruling R4): a family missing from
+# families_run is only a genuine coverage gap -- R when the upstream
+# comparison was requested and failed, X when the default engine
+# selection couldn't construct an engine (engines_unavailable non-empty).
+# A user-declined --engines subset leaves engines_unavailable empty, so X
+# must never be reported as "skipped" in that case -- that would conflate
+# a decline with a gap, exactly what ruling R3 already forbids elsewhere
+# in this report (the "unavailable" line, the "partial" headline). ---
+
+def test_family_skipped_note_never_fires_for_a_declined_engine():
+    model = GgufModel(source_id="m", architecture="llama", chat_template="x")
+    # families_run == ["S"]: X never ran (declined via --engines, say) and
+    # the upstream comparison was requested (upstream="gated") and failed
+    # -- so R is a genuine gap, but X, with no engines_unavailable, is not.
+    cov = Coverage(upstream="gated", families_run=["S"])
+    text = render_human(model, [], [], cov, [Jinja2Engine()])
+    assert "R family skipped" in text
+    assert "X family skipped" not in text
+
+
+def test_family_skipped_note_fires_for_x_when_an_engine_is_unavailable():
+    model = GgufModel(source_id="m", architecture="llama", chat_template="x")
+    cov = Coverage(upstream="gated", families_run=["S"],
+                   engines_unavailable={"llama.cpp": "boom"})
+    text = render_human(model, [], [], cov, [Jinja2Engine()])
+    assert "X family skipped" in text

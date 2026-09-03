@@ -74,6 +74,29 @@ def _coverage_caveats(coverage: Coverage) -> list[str]:
     return parts
 
 
+def _skipped_families(coverage: Coverage) -> list[str]:
+    """Families missing from families_run that are a genuine coverage gap.
+
+    Controller ruling R4: a family absent from families_run is reported
+    here only when it's missing for a reason beyond the user's own choice
+    -- R when the upstream comparison was requested and failed (the same
+    gating as the "partial" headline), X when the default engine selection
+    couldn't construct an engine (coverage.engines_unavailable is
+    non-empty). A user who declined X via --engines, or never asked for R
+    via --compare-upstream, sees neither note: that is not a gap. S is
+    never a candidate -- it never skips in this architecture -- so this
+    does not iterate ALL_FAMILIES; each family's own condition is checked
+    directly instead of inferring "missing == skipped" from list membership
+    alone, which conflated a decline with a genuine gap before this fix.
+    """
+    skipped: list[str] = []
+    if coverage.engines_unavailable and "X" not in coverage.families_run:
+        skipped.append("X")
+    if _upstream_gap(coverage.upstream) is not None and "R" not in coverage.families_run:
+        skipped.append("R")
+    return skipped
+
+
 def _engine_label(e: Any) -> str:
     label = f"{e.name} {e.version}"
     details = []
@@ -98,7 +121,6 @@ def render_human(model: GgufModel, findings: list[Finding],
         lines.append(f"  {name} unavailable — {_visible(reason)}")
     lines.append("")
 
-    skipped = [fam for fam in ALL_FAMILIES if fam not in coverage.families_run]
     upstream_gap = _upstream_gap(coverage.upstream)
 
     if not findings:
@@ -143,15 +165,8 @@ def render_human(model: GgufModel, findings: list[Finding],
     lines.append(tail)
     lines.append(f"families run: {', '.join(coverage.families_run) or 'none'}"
                  f"   upstream: {coverage.upstream}")
-    # A family is only ever skipped here because the upstream comparison
-    # didn't happen (family R, always -- family S never skips in this
-    # architecture), so this note would fire on every default run if it
-    # weren't gated the same way the headline is: silent when the user
-    # simply didn't ask (upstream_gap is None for "not_requested"/"ok"),
-    # voiced when the tool tried and failed.
-    if upstream_gap is not None:
-        for fam in skipped:
-            lines.append(f"  note: {fam} family skipped")
+    for fam in _skipped_families(coverage):
+        lines.append(f"  note: {fam} family skipped")
     for check_id in coverage.checks_not_evaluated:
         lines.append(f"  note: {check_id} not evaluated")
     return "\n".join(lines)

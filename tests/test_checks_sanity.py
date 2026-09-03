@@ -28,6 +28,54 @@ CHAT_TPL = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n"
             "{% endif %}<|im_end|>\n{% endfor %}"
             "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}")
 
+# Why every existing CHAT_TPL-driven expectation in this file still holds
+# under the engine-neutral rewrite above, re-derived per finding family
+# rather than re-pasted (every test in this file only ever constructs
+# Jinja2Engine() via ctx(), so this is single-engine, jinja2-only
+# reasoning -- the cross-engine byte-identity claim lives in
+# tests/test_cli.py and task-6-report.md, not here):
+#
+#   - S001/S002: neither looks at content-handling logic at all (S001 only
+#     checks whether a template is present, S002 only whether it compiles),
+#     and this template still compiles under jinja2 -- unaffected.
+#   - S003: the old template's unconditional `{{ m['content'] }}` and the
+#     new if/elif both render every one-of-ten-fixture message without
+#     raising under jinja2 -- verified directly: null content (`content`
+#     is None on tool_roundtrip's assistant turn) now renders as nothing
+#     instead of the old template's literal "None" text, and list content
+#     (typed_content) now renders via `map(attribute='text') | join('\n')`
+#     instead of Python's list `repr()` -- neither is an engine failure
+#     either way, so no fixture newly raises (or newly stops raising) under
+#     jinja2. `test_clean_template_produces_no_findings` was reran after
+#     this rewrite and still returns `[]`.
+#   - S004: scans the template's literal source text via regex
+#     (SPECIAL_TOKEN_RE against `ctx.model.chat_template`), never rendered
+#     output. The literal `<|im_start|>`/`<|im_end|>` text is byte-for-byte
+#     unchanged by this rewrite -- only the Jinja control-flow around
+#     `m['content']` changed -- so every S004 candidate token and every
+#     S004 test outcome is unaffected.
+#   - S005: compares the model's declared eos token string against
+#     `multiturn`'s rendered text. `multiturn` carries only plain string
+#     content on every turn, so it takes the unchanged `is string` branch
+#     under both the old and new template and renders identically either
+#     way; S005's own coverage-gap tests (missing/out-of-range eos id) never
+#     depended on what the template's content-handling branch does at all.
+#   - S006: compares the model's declared bos token string against the
+#     start of `user_only`'s rendered text. `user_only` is also plain
+#     string content, so the same reasoning as S005 applies -- and neither
+#     this template nor any S006 test's own custom template ever emits
+#     `bos_token`, so the double-BOS finding path is untouched regardless.
+#   - S007: compares `user_only` rendered with add_generation_prompt True
+#     vs False. Both are the exact same plain-string-content render on both
+#     sides of the comparison, through the unchanged trailing
+#     `{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}` --
+#     the only fragment S007 actually depends on -- so the two renders
+#     still differ exactly as before.
+#   - S008: checks whether a fixture renders to empty/whitespace-only
+#     output. Every fixture still emits the literal `<|im_start|>{role}\n`
+#     prefix and `<|im_end|>\n` suffix regardless of content handling, so
+#     no render becomes empty (or stops being empty) under the rewrite.
+
 
 def test_s001_chat_arch_without_template():
     assert "S001" in ids(run_sanity_checks(ctx(chat_template=None)))
