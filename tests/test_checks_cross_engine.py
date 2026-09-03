@@ -1,5 +1,5 @@
-from ggufdoctor.checks.cross_engine import (RUNTIME_DEFAULTS, X_IDS,
-                                            run_cross_engine_checks)
+from ggufdoctor.checks.cross_engine import (DIFF_LINE_CHARS, RUNTIME_DEFAULTS,
+                                            X_IDS, run_cross_engine_checks)
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.engines.llamacpp_engine import LlamaCppEngine
 from ggufdoctor.fixtures import load_fixtures
@@ -227,6 +227,48 @@ def test_x002_renders_in_llama_cpp_only_via_normaliser_is_info():
     assert "normalis" in x002.message  # "normaliser" spelled as in the report
 
 
+def test_x002_renders_in_llama_cpp_only_via_normaliser_and_defaults_is_info():
+    # The X002 shape of ruling R10, and what ruling R13 fixed: two causes, and
+    # jinja2 fails outright on the original input rather than limping through
+    # it. Same template shape as the composed X001 test above, but with `'x' +
+    # m.content` in place of `{{ m.content }}` so typed content raises a
+    # TypeError under jinja2 instead of printing a list repr.
+    #
+    # On typed_content llama.cpp renders (its normaliser joined the parts, and
+    # its `enable_thinking` default skips the `<think>`) while jinja2 raises.
+    # Neither cause explains that alone -- pre-flattening leaves jinja2's
+    # `<think>` behind, filling the defaults leaves the `+` looking at a list
+    # and still raising -- so before R13, which tried only the normaliser rung
+    # here, this was an ERROR earned purely by having two causes and by which
+    # engine happened to raise.
+    ctx = _ctx("{% if not enable_thinking %}<think>{% endif %}"
+               "{% for m in messages %}<|{{ m.role }}|>"
+               "{{ 'x' + m.content if m.content is not none else '' }}{% endfor %}")
+    found = run_cross_engine_checks(ctx)
+    assert _set(found) == {
+        # The single-cause fixtures: jinja2 emits the `<think>` llama.cpp's
+        # default suppresses, and nothing else differs.
+        ("X001", Severity.INFO,
+         tuple(f for f in NO_THINKING if f not in ("typed_content", "tool_roundtrip"))),
+        ("X002", Severity.INFO, ("typed_content",)),
+        # tool_roundtrip has a third cause on top: the engine materialises the
+        # assistant's null `content` as "" (as every llama.cpp path does), so
+        # the `is not none` guard passes there and fails under jinja2 -- "x"
+        # against nothing, which no default or flatten reproduces.
+        ("X005", Severity.ERROR, ("tool_roundtrip",)),
+    }
+    x002 = next(f for f in found if f.id == "X002")
+    assert x002.evidence["failing_engine"] == "jinja2"
+    assert x002.evidence["explained_by"] == "normaliser+runtime_defaults"
+    assert x002.evidence["normalized"] is True
+    assert x002.evidence["defaults"] == list(RUNTIME_DEFAULTS)
+    assert "normalis" in x002.message and "runtime defaults" in x002.message
+    # The one-sided half of the fact is still stated: jinja2 does not merely
+    # differ here, it refuses the original input.
+    assert "fails on the original" in x002.message
+    assert ctx.stats["engines_agreed_fixtures"] == 2  # thinking_true, thinking_false
+
+
 def test_x002_renders_in_llama_cpp_only_without_normaliser_is_error():
     # `'x' + none` is a plain engine difference (jinja2 TypeError, llama.cpp "x")
     # on tool_roundtrip (assistant content is null). No normalisation involved.
@@ -250,6 +292,22 @@ def test_author_decline_on_one_side_only_is_x002():
     found = run_cross_engine_checks(ctx)
     assert _set(found) == {("X002", Severity.ERROR, ALL)}
     assert "raise_exception" in found[0].message and "no system role" in found[0].message
+
+
+def test_diff_evidence_is_bounded_per_line_not_just_per_line_count():
+    # A minified template renders everything on one line, so the 40-line cap
+    # bounds nothing: without a per-line budget a single diff line would carry
+    # both engines' entire output -- unbounded text from a stranger's repo --
+    # into the JSON report.
+    j2 = FakeEngine("jinja2", lambda c: "a" * 100_000)
+    llama = FakeEngine("llama.cpp", lambda c: "b" * 100_000)
+    ctx = _ctx("irrelevant", engines=[j2, llama])
+    found = run_cross_engine_checks(ctx)
+    assert _set(found) == {("X001", Severity.ERROR, NON_TOOL), ("X005", Severity.ERROR, TOOL)}
+    for f in found:
+        for line in f.evidence["diff"].splitlines():
+            assert len(line) <= DIFF_LINE_CHARS + 1, len(line)  # +1 for the "…" marker
+    assert "…" in found[0].evidence["diff"]
 
 
 def test_x004_whitespace_only_is_warn():

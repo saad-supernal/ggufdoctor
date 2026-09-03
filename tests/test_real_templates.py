@@ -80,8 +80,9 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #
 #   * `typed_content` (extended tier) supplies content as a list of text parts.
 #     A template that concatenates `message['content']` into a string raises
-#     under jinja2 -- S003 INFO, plus a one-sided X002 INFO because llama.cpp's
-#     normaliser had already joined the parts. A template that walks the list
+#     under jinja2 -- S003 INFO, plus a one-sided X002 INFO where llama.cpp's
+#     normaliser (alone, or composed with its runtime defaults) accounts for
+#     the whole of what llama.cpp rendered. A template that walks the list
 #     itself renders under both engines but joins the parts with no separator
 #     ("Hellothere") where llama.cpp's normaliser joined them with "\n"
 #     ("Hello\nthere") -- X001 INFO. That INFO (rather than X004 WARN) is
@@ -93,7 +94,10 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     llama.cpp's normaliser does, and only downgrades to INFO if that
 #     reproduces llama.cpp's output byte for byte
 #     (cross_engine._explained_by_normaliser). A bare "normalized" flag is not
-#     enough.
+#     enough. X001 and X002 walk the identical ladder --
+#     cross_engine._explain, normaliser then runtime defaults then both -- so
+#     a divergence is graded by its cause and not by whether jinja2 limped
+#     through the un-normalised input or raised on it (ruling R13).
 #   * THE `enable_thinking` FORK, which three of these ten entries are dominated
 #     by. common_chat_template_direct_apply_impl (common/chat.cpp) writes
 #     `{"enable_thinking", inputs.enable_thinking}` into the render context
@@ -115,8 +119,8 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     the normaliser INFO it is confirmed, not assumed -- the check re-renders
 #     under jinja2 with `enable_thinking=True` and downgrades only if that
 #     reproduces llama.cpp byte for byte (cross_engine.
-#     _explained_by_thinking_default) -- and its evidence carries
-#     `"explained_by": "enable_thinking_default"`, against `"normaliser"` for
+#     _explained_by_runtime_defaults) -- and its evidence carries
+#     `"explained_by": "runtime_defaults"`, against `"normaliser"` for
 #     the other class. Tool fixtures it explains stay in this X001 bucket
 #     because the cause outranks the fixture. `thinking_true` and
 #     `thinking_false` pin both runtimes to the same value and agree everywhere,
@@ -347,8 +351,12 @@ EXPECTED = {
             # turn, exactly the class documented on the HyperCLOVAX entry below
             # -- so ERROR is right: one runtime refuses the conversation and the
             # other serves a misleading prompt. Evidence carries
-            # "normalized": false; the typed-content pre-flatten is not the
-            # explanation here, so no INFO downgrade applies.
+            # "normalized": false and no "explained_by": the whole ladder was
+            # walked and none of its three rungs reproduces llama.cpp's text --
+            # there is no typed content to pre-flatten on this fixture, and
+            # filling in llama.cpp's runtime defaults leaves the `for content
+            # in message["content"]` loop iterating None exactly as before --
+            # so no INFO downgrade applies.
             ("X002", Severity.ERROR, ("tool_roundtrip",)),
             # X001 ERROR on no_generation_prompt: direct_apply_impl writes the
             # key only when the flag is on (`if (inputs.add_generation_prompt)
@@ -380,14 +388,30 @@ EXPECTED = {
             # (not "list") to str". Extended tier, so INFO. tool_roundtrip does
             # NOT fail: the same `or ''` idiom does neutralise `content: null`.
             ("S003", Severity.INFO, ("typed_content",)),
-            # X002 on typed_content: one-sided, because only llama.cpp produced
-            # output at all -- its normaliser joined the parts to "Hello\nthere"
-            # first, so the same `+` saw a string. ERROR rather than the INFO it
-            # was, and for the same reason as the Gemma-4 entry: llama.cpp's
-            # output now also carries the enable_thinking `<think>`, so the
-            # pre-flattened jinja2 re-render no longer reproduces it byte for
-            # byte and the normaliser is no longer the *whole* explanation.
-            ("X002", Severity.ERROR, ("typed_content",)),
+            # X002 INFO on typed_content: one-sided, because only llama.cpp
+            # produced output at all -- its normaliser joined the parts to
+            # "Hello\nthere" first, so the same `+` saw a string.
+            #
+            # Two causes, exactly like the Gemma-4 and mudler X001 entries: the
+            # normaliser's join is not the whole explanation, because
+            # llama.cpp's output also carries the enable_thinking `<think>`
+            # described below. Pre-flattening alone leaves jinja2 emitting
+            # `</think>`; filling the runtime defaults alone leaves the `+`
+            # looking at a list and still raising "TypeError: can only
+            # concatenate str (not "list") to str". Composed in one re-render
+            # they reproduce llama.cpp byte for byte, so INFO with
+            # explained_by "normaliser+runtime_defaults" and all six
+            # RUNTIME_DEFAULTS keys under `defaults`.
+            #
+            # This entry is why ruling R13 exists. _x002 used to try only the
+            # normaliser rung, so this landed at ERROR while the structurally
+            # identical two-cause divergences on Gemma-4 and mudler -- where
+            # jinja2 happened to *limp through* the un-normalised input instead
+            # of raising on it -- were INFO. Same template defect (none), same
+            # two runtime causes, graded by which engine raised. The one-sided
+            # fact is still in the message: jinja2 does not merely differ here,
+            # it refuses the original input.
+            ("X002", Severity.INFO, ("typed_content",)),
             # The enable_thinking fork, X001 INFO per ruling R9, in its sharpest
             # form. Lines 4-9 read
             #   {%- if not thinking is defined -%}
@@ -507,8 +531,9 @@ EXPECTED = {
             # No S003: `content is string else ""` plus the `{%- if content -%}`
             # guard mean `content: null` and list content both render rather
             # than raise -- the same defensiveness that costs it the X001 above.
-            # No S004 possible: its tokens are the fullwidth `〈|EOS|〉`
-            # (U+2329/U+232A angle brackets) and plain XML-ish tags
+            # No S004 possible: its tokens are the CJK-bracketed `〈|EOS|〉`
+            # (U+3008 LEFT ANGLE BRACKET / U+3009 RIGHT ANGLE BRACKET -- not
+            # the mathematical U+2329/U+232A they resemble) and plain XML-ish tags
             # (`<system>`, `<user>`, `<assistant>`), none matching the ASCII
             # `<|...|>` shape.
         },
@@ -565,10 +590,12 @@ EXPECTED = {
             # concatenating form -- because this template concatenates rather
             # than prints, jinja2 raises instead of printing "None", which
             # turns what would be a two-sided X001/X005 into a one-sided X002.
-            # Evidence carries "normalized": False -- pre-flattening typed
-            # content does NOT make jinja2 reproduce llama.cpp's text here, so
-            # the normaliser is demonstrably not the explanation and no INFO
-            # downgrade applies.
+            # Evidence carries "normalized": False and no "explained_by" --
+            # none of the ladder's three rungs makes jinja2 reproduce
+            # llama.cpp's text here: this fixture has no typed content to
+            # pre-flatten, and llama.cpp's runtime defaults leave the `+
+            # message['content']` looking at the same null. So neither cause is
+            # the explanation and no INFO downgrade applies.
             ("X002", Severity.ERROR, ("tool_roundtrip",)),
             # X002 INFO on typed_content: same one-sided shape, but here the
             # normaliser IS the whole explanation -- it joined the text parts to

@@ -26,6 +26,7 @@ X_IDS = ["X001", "X002", "X004", "X005"]
 JINJA2 = "jinja2"
 LLAMACPP = "llama.cpp"
 DIFF_LINES = 40
+DIFF_LINE_CHARS = 400
 UNAVAILABLE_PREFIX = "engine:unavailable:"
 
 
@@ -221,10 +222,53 @@ def _explained_by_normaliser_and_runtime_defaults(j2: Any, tpl: str, context: di
     return _explained_by_runtime_defaults(j2, tpl, flattened, llama_text)
 
 
+def _explain(j2: Any, tpl: str, context: dict[str, Any],
+             ok_result: RenderResult) -> tuple[str | None, list[str]]:
+    """The explanation ladder, in one place so every caller walks the same one.
+
+    Returns (explained_by, defaults added) -- ("normaliser", []),
+    ("runtime_defaults", keys), ("normaliser+runtime_defaults", keys) or
+    (None, []) when nothing llama.cpp did on its own accounts for the
+    divergence. `ok_result` is llama.cpp's successful render; each rung is
+    confirmed by re-rendering under jinja2 and demanding byte equality with
+    it, never inferred from a flag.
+
+    Rung order is the classification order: the composition is tried last, so
+    a divergence one cause explains on its own is never attributed to two
+    (ruling R10). The `normalized` flag only gates the two rungs that involve
+    the normaliser -- it says the rewrite ran, not that it explains anything
+    (see _explained_by_normaliser).
+
+    Both the both-engines-rendered path and _x002's llama.cpp-renders /
+    jinja2-fails path call this: a divergence that becomes a one-sided failure
+    only because jinja2 choked on the un-normalised input has exactly the same
+    causes as one where both engines limped through, and reporting the first at
+    ERROR while the second is INFO would grade the same fact by which engine
+    happened to raise (ruling R13).
+    """
+    normalized_flag = bool(ok_result.extra.get("normalized"))
+    if normalized_flag and _explained_by_normaliser(j2, tpl, context, ok_result.text):
+        return "normaliser", []
+    added = _explained_by_runtime_defaults(j2, tpl, context, ok_result.text)
+    if added:
+        return "runtime_defaults", added
+    if normalized_flag:
+        combined = _explained_by_normaliser_and_runtime_defaults(
+            j2, tpl, context, ok_result.text)
+        if combined:
+            return "normaliser+runtime_defaults", combined
+    return None, []
+
+
 def _diff(a: str, b: str) -> str:
     lines = difflib.unified_diff(a.splitlines(), b.splitlines(),
                                  fromfile=JINJA2, tofile=LLAMACPP, lineterm="", n=1)
-    out = list(lines)
+    # Per-line budget as well as a line count: a template that renders
+    # everything on one line (minified templates do) would otherwise put both
+    # engines' entire output -- unbounded, attacker-influenced text from a
+    # stranger's repo -- into a JSON report as a single diff line.
+    out = [ln if len(ln) <= DIFF_LINE_CHARS else ln[:DIFF_LINE_CHARS] + "…"
+           for ln in lines]
     if len(out) > DIFF_LINES:
         out = out[:DIFF_LINES] + [f"... ({len(out) - DIFF_LINES} more diff lines)"]
     return "\n".join(out)
@@ -242,19 +286,13 @@ def _failure_text(r: RenderResult) -> tuple[str, str]:
     return "render", rest
 
 
-def _x002(fx: Fixture, ok_engine: str, failing: RenderResult, ok_result: RenderResult,
+def _x002(ok_engine: str, failing: RenderResult, ok_result: RenderResult,
           failing_engine: str, *, j2: Any, tpl: str,
           context: dict[str, Any]) -> tuple[Severity, str, dict[str, Any]]:
     stage, msg = _failure_text(failing)
-    normalized = False
-    if ok_engine == LLAMACPP and ok_result.extra.get("normalized"):
-        # Confirm the normaliser is actually why jinja2 failed and llama.cpp
-        # didn't, rather than trusting the bare flag -- see
-        # _explained_by_normaliser.
-        normalized = _explained_by_normaliser(j2, tpl, context, ok_result.text)
     evidence: dict[str, Any] = {
         "engines": [JINJA2, LLAMACPP], "failing_engine": failing_engine,
-        "stage": stage, "error": msg, "normalized": normalized,
+        "stage": stage, "error": msg, "normalized": False,
     }
     if ok_engine == LLAMACPP and ok_result.extra.get("caps"):
         evidence["llamacpp_caps"] = ok_result.extra["caps"]
@@ -266,10 +304,38 @@ def _x002(fx: Fixture, ok_engine: str, failing: RenderResult, ok_result: RenderR
         return Severity.ERROR, f"template will not load in llama.cpp ({stage}: {msg})", evidence
     if failing_engine == LLAMACPP:
         return Severity.ERROR, f"renders under jinja2 but fails under llama.cpp ({stage}: {msg})", evidence
-    if normalized:
+
+    # llama.cpp rendered and jinja2 (the transformers path) did not. Walk the
+    # full explanation ladder, exactly as the both-engines-rendered path does
+    # (ruling R13): the causes of a one-sided failure are the same causes, and
+    # before this only the normaliser rung was tried here -- so a divergence
+    # that needed the runtime defaults, or both together, was reported at ERROR
+    # solely because jinja2 raised on the un-normalised input instead of
+    # limping through it.
+    explained_by, defaults = _explain(j2, tpl, context, ok_result)
+    if explained_by:
+        evidence["explained_by"] = explained_by
+        evidence["normalized"] = "normaliser" in explained_by
+    if defaults:
+        evidence["defaults"] = defaults
+    if explained_by == "normaliser":
         return (Severity.INFO,
                 "renders under llama.cpp only after its message normaliser rewrote the "
                 f"input; jinja2 (transformers path) fails on the original ({msg})", evidence)
+    if explained_by == "runtime_defaults":
+        return (Severity.INFO,
+                "renders under llama.cpp only because it supplies runtime defaults the "
+                f"transformers path leaves undefined ({', '.join(defaults)}); jinja2 "
+                f"(transformers path) fails on the original ({msg}); pass them explicitly "
+                "to make the runtimes agree", evidence)
+    if explained_by == "normaliser+runtime_defaults":
+        return (Severity.INFO,
+                "renders under llama.cpp only after its message normaliser rewrote the "
+                "input (typed content joined to text) and because it supplies runtime "
+                f"defaults the transformers path leaves undefined ({', '.join(defaults)}); "
+                f"jinja2 (transformers path) fails on the original ({msg}); pre-join typed "
+                "content and pass those defaults explicitly to make the runtimes agree",
+                evidence)
     return (Severity.ERROR,
             f"renders under llama.cpp but fails under jinja2 (transformers path) ({stage}: {msg})", evidence)
 
@@ -312,13 +378,7 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
                 agreed += 1
                 continue
             evidence: dict[str, Any] = {"engines": [JINJA2, LLAMACPP], "diff": _diff(a.text, b.text)}
-            normalized_flag = bool(b.extra.get("normalized"))
-            explained_flag = normalized_flag and _explained_by_normaliser(
-                j2, tpl, context, b.text)
-            if explained_flag:
-                evidence["normalized"] = True
-                evidence["explained_by"] = "normaliser"
-                evidence["llamacpp_caps"] = b.extra.get("caps", {})
+            explained_by, defaults = _explain(j2, tpl, context, b)
             sig = _signature(a.text, b.text)
             # The normaliser test comes FIRST, before the whitespace-only test:
             # the *cause* of a divergence outranks its magnitude. A divergence
@@ -338,26 +398,23 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
             # implicit defaults fully explain is those defaults, not a
             # tool-calling disagreement, so it does not become X005 (R9). The
             # composition is tried last of the three, so a divergence one cause
-            # explains on its own is never attributed to two (R10).
-            added: list[str] = []
-            combined: list[str] = []
-            if not explained_flag:
-                added = _explained_by_runtime_defaults(j2, tpl, context, b.text)
-                if not added and normalized_flag:
-                    combined = _explained_by_normaliser_and_runtime_defaults(
-                        j2, tpl, context, b.text)
-            if explained_flag:
+            # explains on its own is never attributed to two (R10). All three
+            # rungs live in _explain, which _x002 walks too.
+            if explained_by == "normaliser":
+                evidence["normalized"] = True
+                evidence["explained_by"] = explained_by
+                evidence["llamacpp_caps"] = b.extra.get("caps", {})
                 explained.append((fx.name, sig, evidence))
-            elif added:
-                evidence["explained_by"] = "runtime_defaults"
-                evidence["defaults"] = added
-                defaults_only.setdefault(tuple(added), []).append((fx.name, sig, evidence))
-            elif combined:
-                evidence["explained_by"] = "normaliser+runtime_defaults"
-                evidence["defaults"] = combined
+            elif explained_by == "runtime_defaults":
+                evidence["explained_by"] = explained_by
+                evidence["defaults"] = defaults
+                defaults_only.setdefault(tuple(defaults), []).append((fx.name, sig, evidence))
+            elif explained_by == "normaliser+runtime_defaults":
+                evidence["explained_by"] = explained_by
+                evidence["defaults"] = defaults
                 evidence["normalized"] = True
                 evidence["llamacpp_caps"] = b.extra.get("caps", {})
-                both.setdefault(tuple(combined), []).append((fx.name, sig, evidence))
+                both.setdefault(tuple(defaults), []).append((fx.name, sig, evidence))
             elif _whitespace_only(a.text, b.text):
                 whitespace.append((fx.name, sig, evidence))
             elif is_tool_fixture(fx):
@@ -368,11 +425,11 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
         if not a.ok and not b.ok:
             continue  # S003 owns "fails everywhere"
         if a.ok:
-            severity, message, evidence = _x002(fx, JINJA2, b, a, LLAMACPP,
-                                                 j2=j2, tpl=tpl, context=context)
+            severity, message, evidence = _x002(JINJA2, b, a, LLAMACPP,
+                                                j2=j2, tpl=tpl, context=context)
         else:
-            severity, message, evidence = _x002(fx, LLAMACPP, a, b, JINJA2,
-                                                 j2=j2, tpl=tpl, context=context)
+            severity, message, evidence = _x002(LLAMACPP, a, b, JINJA2,
+                                                j2=j2, tpl=tpl, context=context)
         one_side.setdefault((severity, message), []).append(
             (fx.name, (evidence["failing_engine"], evidence["stage"], evidence["error"]), evidence))
 
