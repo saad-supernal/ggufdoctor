@@ -5,6 +5,7 @@ and a 1 MB model on first run. Run with:
     .venv/bin/python -m pytest -m conformance tests/conformance -v
 """
 import pathlib
+import urllib.error
 
 import pytest
 
@@ -83,8 +84,18 @@ def test_bundled_engine_matches_real_llama_server(engine, template_path):
             ours = _ours(engine, template, fx)
             try:
                 theirs = server.apply_template(_body(fx))
-            except Exception as e:  # the server refuses shapes the template declines
-                agree, why, detail = not ours.ok, "server error while we rendered", str(e)[:200]
+            except urllib.error.HTTPError as e:
+                # 4xx is the server *declining the request* -- /apply-template
+                # answers 400 when the template raises or refuses the message
+                # shape -- which is the oracle's way of saying "this input does
+                # not render", and comparable with our own failure. Anything
+                # else (a 5xx, a dropped connection, a timeout, a URLError) is
+                # a broken harness, not an answer: it must fail the pair loudly
+                # rather than be scored as agreement because we happened to
+                # fail too.
+                if not 400 <= e.code < 500:
+                    raise
+                agree, why, detail = not ours.ok, "server declined the request", f"HTTP {e.code}: {e.reason}"
             else:
                 if not ours.ok:
                     agree, why, detail = False, "we failed while server rendered", ours.error

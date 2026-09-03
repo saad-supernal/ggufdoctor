@@ -64,8 +64,18 @@ engine/build.sh
 This fetches the pinned llama.cpp sources into `engine/build/llamacpp` (if not already
 present), downloads wasi-sdk 34 into `engine/build/` (if `WASI_SDK` is not set to a
 pre-installed SDK), compiles the module with `wasi-sdk`'s `clang++`, and writes both
-`src/ggufdoctor/engine_data/llamacpp-jinja.wasm` and its manifest,
+`src/ggufdoctor/engine_data/llamacpp-jinja.wasm` (mode 0644 — it is data loaded by
+`wasmtime`, never executed) and its manifest,
 `src/ggufdoctor/engine_data/llamacpp-jinja.json`.
+
+The downloaded SDK tarball is verified against a pinned sha256 before it is unpacked, per
+host, in `build.sh`'s `wasi_sdk_sha256`. This script downloads an archive and then runs
+the compiler out of it, so the toolchain is pinned by content and not only by URL; a host
+with no pinned digest prints `UNVERIFIED` and the script refuses to download for it rather
+than compiling with an unchecked toolchain (install it yourself and point `WASI_SDK` at
+it). Likewise `tests/conformance/llama_server.py` verifies the `llama-server` release
+asset and the tiny GGUF model it downloads against its own `SHA256` table, and pins the
+model repo by commit (`MODEL_REVISION`) rather than `main`.
 
 `engine/build/` is git-ignored; it is scratch space for fetched sources and the downloaded
 SDK, not something to commit.
@@ -77,10 +87,32 @@ SDK, not something to commit.
    `engine/llamacpp-sources.sha256` (this is what every later `fetch-llamacpp.sh` run without
    `--write-sums` verifies against).
 3. Run `engine/build.sh` to rebuild the module and manifest.
-4. Run the semantics test and the conformance suite
+4. Refresh the pinned download digests — they are keyed by the tag, so a bump invalidates
+   every one of them:
+   * `tests/conformance/llama_server.py`'s `SHA256`, for each of the three release assets
+     the helper can select. For every `<asset>` in
+     `llama-<tag>-bin-{ubuntu-x64.tar.gz,macos-arm64.tar.gz,win-cpu-x64.zip}`:
+
+     ```sh
+     curl -sSL -O "https://github.com/ggml-org/llama.cpp/releases/download/<tag>/<asset>"
+     shasum -a 256 <asset>
+     ```
+
+     The model entry only changes when `MODEL_REVISION` does; re-pin that to the current
+     commit of `ggml-org/models`
+     (`curl -sSL "https://huggingface.co/api/models/ggml-org/models?expand[]=sha"`) and
+     re-hash `stories260K.gguf` from the `resolve/<sha>/` URL.
+   * `engine/build.sh`'s `wasi_sdk_sha256`, if `WASI_SDK_TAG` moved: download
+     `wasi-sdk-<n>.0-<host>.tar.gz` for each of `arm64-macos`, `x86_64-macos`,
+     `x86_64-linux`, `arm64-linux` and `shasum -a 256` each. A host left out gets
+     `UNVERIFIED` and stops being auto-downloadable, so fill in all four if you can.
+
+   A stale digest fails closed: the download is deleted and the run raises, rather than
+   unpacking and executing whatever arrived.
+5. Run the semantics test and the conformance suite
    (`python -m pytest -m conformance tests/conformance -v`, which fetches the matching
    `llama-server` release for the new tag) to confirm nothing regressed.
-5. Re-check `normalize_messages` and `render_job`'s context handling in `shim.cpp` against
+6. Re-check `normalize_messages` and `render_job`'s context handling in `shim.cpp` against
    the current `messages_inp_normalizer` and `common_chat_template_direct_apply_impl` in
    upstream `common/chat.cpp` — port any behavior change.
-6. Update `SOURCES` in the bump PR.
+7. Update `SOURCES` in the bump PR.

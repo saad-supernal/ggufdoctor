@@ -7,10 +7,12 @@ imported by the default test run -- the whole package is deselected by the
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import pathlib
 import platform
+import shutil
 import socket
 import subprocess
 import sys
@@ -22,7 +24,35 @@ import zipfile
 BUILD_TAG = "b10775"
 CACHE = pathlib.Path(os.environ.get("GGUFDOCTOR_CONFORMANCE_CACHE",
                                     pathlib.Path.home() / ".cache" / "ggufdoctor-conformance")) / BUILD_TAG
-MODEL_URL = "https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories260K.gguf"
+
+# The model repo is pinned by commit, not by `main`: a moving ref means the
+# oracle's vocabulary -- and therefore the bos/eos every rendered prompt
+# carries -- can change under a test that asserts byte equality, with nothing
+# in the repo recording which bytes it was pinned to.
+MODEL_REVISION = "499bc8821c6b12b4e53c5bffcb21ec206f212d81"
+MODEL_URL = (f"https://huggingface.co/ggml-org/models/resolve/{MODEL_REVISION}"
+             "/tinyllamas/stories260K.gguf")
+
+# sha256 of every file this helper downloads, keyed by the name it is cached
+# under. This suite fetches an archive from the public internet, unpacks it and
+# *executes* the binary inside it, so the download is pinned by content and not
+# only by URL: a replaced release asset, a hijacked CDN response or a poisoned
+# cache directory is refused instead of run.
+#
+# Computed on 2026-09-03 by downloading each asset once from the canonical URL
+# below (`shasum -a 256`). To refresh after a BUILD_TAG or MODEL_REVISION bump,
+# see "Bumping the pin" in engine/README.md.
+SHA256 = {
+    "llama-b10775-bin-ubuntu-x64.tar.gz":
+        "faac52e16e5749713d33531ab7e4161fd0f09e7f2dccb4ed7527162d4c3bd103",
+    "llama-b10775-bin-macos-arm64.tar.gz":
+        "cd91a87f6e00dddeab16469cf5fc3bf09ee535705a0d09e8cd2e8ef7da4d2cac",
+    "llama-b10775-bin-win-cpu-x64.zip":
+        "1da037557b6bb588fc48a8d371b948ed6c4334831f23af8a0b084319e7e81a9b",
+    "stories260K.gguf":
+        "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+}
+
 # The tiny model's own special tokens; llama-server passes these to the template.
 MODEL_BOS, MODEL_EOS = "<s>", "</s>"
 
@@ -38,29 +68,80 @@ def _release_asset() -> str:
     raise RuntimeError(f"no llama.cpp release asset for {sysname}/{machine}; set GGUFDOCTOR_LLAMA_SERVER")
 
 
+def _sha256(path: pathlib.Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def _download(url: str, dest: pathlib.Path) -> pathlib.Path:
+    """Fetch `url` to `dest` if absent, then verify it against SHA256.
+
+    The digest is checked on every call, not only after a fresh download: CI
+    restores this directory from a cache key, so a cached file has to earn the
+    same trust a new one does. A mismatch deletes the file -- leaving it in
+    place would mean the next run reuses a copy that just failed -- and raises,
+    before anything is unpacked or executed. An asset with no entry in SHA256
+    raises KeyError rather than being fetched unverified.
+    """
+    expected = SHA256[dest.name]
     if not dest.exists():
         dest.parent.mkdir(parents=True, exist_ok=True)
         tmp = dest.with_suffix(dest.suffix + ".part")
         urllib.request.urlretrieve(url, tmp)
         tmp.replace(dest)
+    actual = _sha256(dest)
+    if actual != expected:
+        dest.unlink()
+        raise RuntimeError(f"{dest.name}: sha256 {actual} does not match the pinned "
+                           f"{expected} — refusing to use it (deleted; re-run to re-fetch)")
     return dest
+
+
+def _extract_zip(archive: pathlib.Path, target: pathlib.Path) -> None:
+    """zipfile has no `filter="data"`, so do that filter's job by hand: reject
+    any member whose resolved destination would land outside `target` (an
+    absolute path, a `..` segment, a Windows drive letter) instead of trusting
+    the archive's own member names. Checked for every member before a single
+    one is written, so a hostile archive cannot half-extract.
+    """
+    root = target.resolve()
+    with zipfile.ZipFile(archive) as zf:
+        for member in zf.infolist():
+            dest = (root / member.filename).resolve()
+            if dest != root and root not in dest.parents:
+                raise RuntimeError(f"{archive.name}: member {member.filename!r} "
+                                   f"resolves outside {target}")
+        zf.extractall(target)
 
 
 def server_binary() -> pathlib.Path:
     override = os.environ.get("GGUFDOCTOR_LLAMA_SERVER")
     if override:
+        # A path the user handed us: their own build, their own trust decision.
+        # Nothing is downloaded, so there is no pinned digest to check.
         return pathlib.Path(override)
     asset = _release_asset()
     archive = _download(f"https://github.com/ggml-org/llama.cpp/releases/download/{BUILD_TAG}/{asset}",
                         CACHE / asset)
     extracted = CACHE / "bin"
     if not extracted.exists():
-        extracted.mkdir(parents=True)
+        # Unpack into a staging directory and rename: a run interrupted
+        # mid-extraction must not leave a half-populated `bin` that the next
+        # one treats as complete.
+        staging = CACHE / "bin.part"
+        shutil.rmtree(staging, ignore_errors=True)
+        staging.mkdir(parents=True)
         if asset.endswith(".zip"):
-            zipfile.ZipFile(archive).extractall(extracted)
+            _extract_zip(archive, staging)
         else:
-            tarfile.open(archive).extractall(extracted)
+            # filter="data" refuses absolute/traversing paths, device nodes,
+            # links pointing outside the tree and setuid bits.
+            with tarfile.open(archive) as tf:
+                tf.extractall(staging, filter="data")
+        staging.replace(extracted)
     name = "llama-server.exe" if sys.platform == "win32" else "llama-server"
     found = next(extracted.rglob(name), None)
     if found is None:
@@ -72,7 +153,7 @@ def server_binary() -> pathlib.Path:
 def model_path() -> pathlib.Path:
     override = os.environ.get("GGUFDOCTOR_CONFORMANCE_MODEL")
     if override:
-        return pathlib.Path(override)
+        return pathlib.Path(override)   # user-supplied, like GGUFDOCTOR_LLAMA_SERVER
     return _download(MODEL_URL, CACHE / "stories260K.gguf")
 
 

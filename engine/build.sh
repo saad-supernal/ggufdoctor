@@ -14,6 +14,38 @@ SRC="$HERE/build/llamacpp"
 [ -f "$SRC/jinja/runtime.cpp" ] || "$HERE/fetch-llamacpp.sh"
 
 WASI_SDK_TAG=wasi-sdk-34
+
+# sha256 of each wasi-sdk host tarball. The toolchain that compiles the
+# committed module is pinned by content, not just by URL: this script downloads
+# an archive over the network, unpacks it and then *executes* the compiler
+# inside it. All four were computed on 2026-09-03 by downloading the official
+# release assets (`shasum -a 256`); a host with no entry prints UNVERIFIED and
+# the script refuses to auto-download for it. Refresh per engine/README.md when
+# WASI_SDK_TAG changes.
+wasi_sdk_sha256() {
+  case "$1" in
+    arm64-macos)  echo 9c59398106b417f8f14913380fdf0097a8cc0ff4af9eb3ce0065a859e88d49e9 ;;
+    x86_64-macos) echo 87d27fa8adc68dee59bfbf2e22a6d34ef717c34d6bf1d8af2a56fc929d9ce0eb ;;
+    x86_64-linux) echo b761e3a0721dbae9c09a0059e5fdb2bf917d1b4a8a7b430fb3b5aafb0984b2c4 ;;
+    arm64-linux)  echo f7e243dff54d60bcc576e94d6166b69f410f2500ae4a9ceef34315be10e77971 ;;
+    *) echo UNVERIFIED ;;
+  esac
+}
+
+# `shasum -a 256 -c` where it exists (macOS, and any host with perl), falling
+# back to coreutils sha256sum. No hashing tool at all is a hard failure, never
+# a skipped check.
+sha256_check() {  # $1 = expected hex, $2 = file
+  if command -v shasum >/dev/null 2>&1; then
+    echo "$1  $2" | shasum -a 256 -c - >/dev/null
+  elif command -v sha256sum >/dev/null 2>&1; then
+    echo "$1  $2" | sha256sum -c - >/dev/null
+  else
+    echo "neither shasum nor sha256sum is available to verify $2" >&2
+    return 1
+  fi
+}
+
 if [ -z "${WASI_SDK:-}" ]; then
   case "$(uname -s)-$(uname -m)" in
     Darwin-arm64)  HOST=arm64-macos ;;
@@ -24,9 +56,25 @@ if [ -z "${WASI_SDK:-}" ]; then
   esac
   WASI_SDK="$HERE/build/${WASI_SDK_TAG}.0-$HOST"
   if [ ! -x "$WASI_SDK/bin/clang++" ]; then
+    SUM=$(wasi_sdk_sha256 "$HOST")
+    if [ "$SUM" = UNVERIFIED ]; then
+      echo "no pinned sha256 for wasi-sdk ${WASI_SDK_TAG}.0-$HOST; install it yourself and set WASI_SDK" >&2
+      exit 2
+    fi
     mkdir -p "$HERE/build"
-    curl -sfL "https://github.com/WebAssembly/wasi-sdk/releases/download/${WASI_SDK_TAG}/${WASI_SDK_TAG}.0-${HOST}.tar.gz" \
-      | tar xz -C "$HERE/build"
+    TARBALL="$HERE/build/${WASI_SDK_TAG}.0-${HOST}.tar.gz"
+    # Downloaded to a file, verified, only then extracted -- the previous
+    # `curl | tar xz` could neither check the bytes nor notice a truncated
+    # transfer (a pipeline whose head fails still leaves tar's status 0).
+    curl -sfL -o "$TARBALL.part" \
+      "https://github.com/WebAssembly/wasi-sdk/releases/download/${WASI_SDK_TAG}/${WASI_SDK_TAG}.0-${HOST}.tar.gz"
+    mv "$TARBALL.part" "$TARBALL"
+    if ! sha256_check "$SUM" "$TARBALL"; then
+      rm -f "$TARBALL"
+      echo "wasi-sdk ${WASI_SDK_TAG}.0-$HOST failed its sha256 check; refusing to extract or run it" >&2
+      exit 2
+    fi
+    tar xzf "$TARBALL" -C "$HERE/build"
   fi
 fi
 SYSROOT="$WASI_SDK/share/wasi-sysroot"

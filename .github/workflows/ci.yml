@@ -98,8 +98,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e ".[dev]"
+      - name: read the pinned asset digests
+        id: pins
+        # The cache key carries a digest of what the cache is supposed to hold,
+        # read from the same SHA256 table the download verifies against. Bump a
+        # pin and the key changes, so a stale entry is never restored and then
+        # rejected by the checksum check on every run.
+        run: |
+          python - >> "$GITHUB_OUTPUT" <<'PY'
+          from tests.conformance.llama_server import MODEL_REVISION, SHA256
+          asset = SHA256["llama-b10775-bin-ubuntu-x64.tar.gz"][:12]
+          print(f"assets={asset}-{MODEL_REVISION[:12]}")
+          PY
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ggufdoctor-conformance
-          key: conformance-b10775-${{ runner.os }}
+          key: conformance-b10775-${{ runner.os }}-${{ steps.pins.outputs.assets }}
       - run: python -m pytest -m conformance tests/conformance -v
