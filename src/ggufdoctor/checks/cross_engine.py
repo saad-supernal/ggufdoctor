@@ -13,6 +13,11 @@ _explained_by_runtime_defaults, with the keys under "defaults"); and both at
 once ("normaliser+runtime_defaults",
 _explained_by_normaliser_and_runtime_defaults). Evidence records which under
 "explained_by".
+
+The three are tried in that order by _explain, and both the
+both-engines-rendered path and the one-sided X002 path call it, so a
+divergence is graded by its cause and never by which engine happened to
+raise (ruling R13).
 """
 from __future__ import annotations
 

@@ -28,20 +28,23 @@ MANIFEST_NAME = "llamacpp-jinja.json"
 ENV_MODULE_PATH = "GGUFDOCTOR_ENGINE_WASM"
 
 # Every render runs in a bounded store, because the template text comes from
-# strangers' repos and `{% for i in range(200000000) %}{% endfor %}` is a
-# perfectly valid Jinja template. Once Python has called into the module there
-# is no way back out: a Ctrl-C sets a flag that is only checked between Python
-# bytecodes, and we are inside one native call for the whole render, so an
-# unbounded loop in there hangs the process until it is killed. Fuel makes the
-# runtime itself stop, and the resulting trap surfaces through the same
-# `render:wasm: ...` path as any other engine failure -- a reported render
-# error, never a hang and never a traceback.
+# strangers' repos and `{% for i in range(10000) %}{% for j in range(10000) %}
+# {% endfor %}{% endfor %}` is a perfectly valid Jinja template. Once Python
+# has called into the module there is no way back out: a Ctrl-C sets a flag
+# that is only checked between Python bytecodes, and we are inside one native
+# call for the whole render, so an unbounded loop in there hangs the process
+# until it is killed. Fuel makes the runtime itself stop, and the resulting
+# trap surfaces through the same `render:wasm: ...` path as any other engine
+# failure -- a reported render error, never a hang and never a traceback. The
+# memory cap catches the other shape (a single vast `range`, which asks for the
+# whole list at once): `memory.grow` returns -1, the module's own allocator
+# throws, and its C++ catch reports that as an ordinary `render:` error.
 #
-# Both limits are far above what a real chat template needs. The whole
-# vendored corpus renders inside a few million fuel units and a couple of
-# megabytes of linear memory, so these are ~1000x and ~100x headroom
-# respectively: a template that trips either one is not a template ggufdoctor
-# can usefully report on anyway. Raising them is cheap if that is ever wrong;
+# Both limits sit far above what a real chat template needs. Measured over all
+# ten vendored templates x all ten fixtures, the worst render costs 60.5M fuel
+# units and peaks at 0.4 MiB of linear memory -- so this is ~80x and ~1300x
+# headroom, and anything that trips either one is not a template ggufdoctor
+# could usefully report on anyway. Raising them is cheap if that is ever wrong;
 # the point is that the ceiling exists.
 FUEL_BUDGET = 5_000_000_000
 MEMORY_LIMIT_BYTES = 512 * 1024 * 1024

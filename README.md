@@ -137,7 +137,7 @@ template rendering. The suite runs in CI and locally with `pytest -m conformance
 | | | |
 |---|---|---|
 | `X001` | rendered output differs between the two engines | ERROR — **INFO when llama.cpp's own message normaliser or its runtime defaults explain it** |
-| `X002` | renders under one engine and fails under the other, either direction; a parse failure under llama.cpp reads "template will not load in llama.cpp" | ERROR — **INFO when the normaliser explains it** |
+| `X002` | renders under one engine and fails under the other, either direction; a parse failure under llama.cpp reads "template will not load in llama.cpp" | ERROR — **INFO when the normaliser or the runtime defaults explain it**, the same ladder as `X001` |
 | `X004` | the difference is whitespace only | WARN |
 | `X005` | `X001` on a tool-calling fixture | ERROR |
 

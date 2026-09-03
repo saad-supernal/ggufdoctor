@@ -26,11 +26,13 @@ disagree.
   llama.cpp"); `X004` the difference is whitespace only (warn); `X005` `X001` on a
   tool-calling fixture. Both engines are handed the identical context, including the
   model's real BOS/EOS, and neither side strips BOS.
-- **The INFO rule for explained divergence.** A divergence that llama.cpp's own message
-  normaliser or its runtime defaults (`enable_thinking`, `preserve_reasoning` and the
-  four variables it expands into) fully account for is reported at INFO with the cause
-  named, not at ERROR. Every such downgrade is *confirmed* by re-rendering under Jinja2
-  with the same rewrite applied — a bare "the normaliser ran" flag is never enough.
+- **The INFO rule for explained divergence.** `X001` and `X002` walk one shared ladder,
+  so a divergence is graded by its cause and not by which engine happened to raise. A
+  divergence that llama.cpp's own message normaliser or its runtime defaults
+  (`enable_thinking`, `preserve_reasoning` and the four variables it expands into) fully
+  account for is reported at INFO with the cause named, not at ERROR. Every such
+  downgrade is *confirmed* by re-rendering under Jinja2 with the same rewrite applied —
+  a bare "the normaliser ran" flag is never enough.
   Evidence carries `explained_by` (`normaliser`, `runtime_defaults` or
   `normaliser+runtime_defaults`) and, for the defaults, the keys.
 - **"Engines agree" is a result.** When family X ran and found nothing, the report says
@@ -41,7 +43,8 @@ disagree.
   arguments and null content, then a `tool` reply), `typed_content` (content as
   `{"type": "text"}` parts), `no_generation_prompt`. `S003` on an extended fixture is
   reported at INFO, because older templates predate these message shapes.
-  JSON reports carry `fixture_corpus_version`.
+  JSON reports and survey aggregates carry `fixture_corpus_version`, and the survey's
+  markdown prints it.
 - **`--engines jinja2,llama.cpp`** subsets the engines. `jinja2` is the reference engine
   and cannot be deselected. Requesting an unavailable engine is exit 2 with the reason.
 - **`survey --save-templates DIR`** writes each fetched template as
