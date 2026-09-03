@@ -46,5 +46,8 @@ packages = ["src/ggufdoctor"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["network: hits the real Hugging Face API (deselected by default)"]
-addopts = "-m 'not network'"
+markers = [
+  "network: hits the real Hugging Face API (deselected by default)",
+  "conformance: downloads and runs a pinned llama-server binary (deselected by default)",
+]
+addopts = "-m 'not network and not conformance'"

@@ -13,10 +13,35 @@ Python can pass JSON in and get JSON back through linear memory.
 
 `shim.cpp`'s `normalize_messages` is a port of `messages_inp_normalizer` from llama.cpp's
 `common/chat.cpp`: it converts message content between the string and typed-parts shapes
-depending on what the compiled template's `caps` say it supports. This normaliser is not
-generated — it is hand-copied logic that **must be re-checked against upstream `chat.cpp` on
-every engine bump**, since a behavior change there would silently make the WASM module stop
-matching what `llama-server` sends to the model.
+depending on what the compiled template's `caps` say it supports. It also materialises a
+null or absent `content` as `""`, because every llama.cpp path round-trips messages through
+`common_chat_msg` (whose `content` is a `std::string`) and back out through
+`common_chat_msg::to_json_oaicompat`, so a template never sees a null there.
+
+Beyond the messages, `render_job` reproduces the rest of
+`common_chat_template_direct_apply_impl`'s own context handling: `enable_thinking` is always
+defined and defaults to `true`; `add_generation_prompt` is present only when the flag is on
+(llama.cpp writes the key only in that case, so a template testing
+`add_generation_prompt is defined` sees a missing key, never a false one); and a
+`preserve_reasoning` or `reasoning_effort` key in the context is expanded through
+`jinja::caps_apply_preserve_reasoning` / `jinja::caps_apply_reasoning_effort`.
+
+None of this is generated — it is hand-copied logic that **must be re-checked against
+upstream `chat.cpp` on every engine bump**, since a behavior change there would silently
+make the WASM module stop matching what `llama-server` sends to the model. That is what
+`tests/conformance` exists to catch: it drives the real `llama-server` release binary at the
+pinned build tag and asserts byte equality over every vendored template × fixture pair.
+
+What the shim deliberately does **not** reproduce, because it lives above
+`direct_apply_impl` in llama.cpp:
+
+- the ~10 per-family message rewrites `common_chat_try_specialized_template` selects by
+  sniffing the template source (Gemma4 `tool_responses` collapsing, DeepSeek-V4 tool-result
+  sorting, gpt-oss/LFM2 reasoning copying, StepFun content trimming, …);
+- `llama-server`'s request policies — assistant prefill (`--no-prefill-assistant`), the
+  `preserve_reasoning` CLI default, the rest of the `common_chat_msg` round-trip;
+- `common_chat_extra_context()`'s `datetime` / `date_string`, which llama.cpp fills from the
+  wall clock and this module renders at a pinned one by design.
 
 ## Rebuilding the module
 
@@ -40,7 +65,10 @@ SDK, not something to commit.
    `engine/llamacpp-sources.sha256` (this is what every later `fetch-llamacpp.sh` run without
    `--write-sums` verifies against).
 3. Run `engine/build.sh` to rebuild the module and manifest.
-4. Run the semantics test and the conformance suite to confirm nothing regressed.
-5. Re-check `normalize_messages` in `shim.cpp` against the current
-   `messages_inp_normalizer` in upstream `common/chat.cpp` — port any behavior change.
+4. Run the semantics test and the conformance suite
+   (`python -m pytest -m conformance tests/conformance -v`, which fetches the matching
+   `llama-server` release for the new tag) to confirm nothing regressed.
+5. Re-check `normalize_messages` and `render_job`'s context handling in `shim.cpp` against
+   the current `messages_inp_normalizer` and `common_chat_template_direct_apply_impl` in
+   upstream `common/chat.cpp` — port any behavior change.
 6. Update `SOURCES` in the bump PR.

@@ -50,3 +50,19 @@ jobs:
         run: |
           python -m pip install dist/*.whl
           cd /tmp && ggufdoctor --help
+
+  conformance:
+    # Real llama-server at the pinned build vs the bundled WASM engine.
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ggufdoctor-conformance
+          key: conformance-b10775-${{ runner.os }}
+      - run: python -m pytest -m conformance tests/conformance -v

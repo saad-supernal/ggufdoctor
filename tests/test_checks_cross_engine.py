@@ -90,10 +90,19 @@ def test_x002_renders_in_llama_cpp_only_via_normaliser_is_info():
     # joins the parts first because caps say the template is string-only.
     ctx = _ctx("{% for m in messages %}<|{{ m.role }}|>{{ 'x' + m.content if m.content is not none else '' }}{% endfor %}")
     found = run_cross_engine_checks(ctx)
-    assert _set(found) == {("X002", Severity.INFO, ("typed_content",))}
-    assert found[0].evidence["failing_engine"] == "jinja2"
-    assert found[0].evidence["normalized"] is True
-    assert "normalis" in found[0].message  # "normaliser" spelled as in the report
+    # The X005 comes free with this template's `is not none` guard: the engine
+    # mirrors llama.cpp in materialising a null `content` as "" (every llama.cpp
+    # path round-trips messages through common_chat_msg, whose content is a
+    # std::string), so on tool_roundtrip the guard passes there and fails under
+    # jinja2 -- "x" against nothing. A real divergence for this template, kept
+    # here rather than engineered away, so the fixture that exercises the null
+    # keeps saying what the two engines do with it.
+    assert _set(found) == {("X002", Severity.INFO, ("typed_content",)),
+                           ("X005", Severity.ERROR, ("tool_roundtrip",))}
+    x002 = next(f for f in found if f.id == "X002")
+    assert x002.evidence["failing_engine"] == "jinja2"
+    assert x002.evidence["normalized"] is True
+    assert "normalis" in x002.message  # "normaliser" spelled as in the report
 
 
 def test_x002_renders_in_llama_cpp_only_without_normaliser_is_error():

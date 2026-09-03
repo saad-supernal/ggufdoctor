@@ -2,8 +2,13 @@
 
 The module is built by engine/build.sh from a pinned llama.cpp commit; see
 engine/README.md. It mirrors common_chat_template_direct_apply_impl in
-common/chat.cpp (caps probe, message normaliser, pinned clock) but does not
-strip a leading BOS -- see the v0.2 spec amendments, section A.
+common/chat.cpp (caps probe, message normaliser, that function's own context
+handling -- an always-defined `enable_thinking` defaulting to true, an
+`add_generation_prompt` key present only when the flag is on, and the
+caps_apply_preserve_reasoning / caps_apply_reasoning_effort expansions --
+pinned clock) but does not strip a leading BOS -- see the v0.2 spec
+amendments, section A. The conformance suite (tests/conformance) holds it to
+byte equality with the real llama-server at the same build tag.
 """
 from __future__ import annotations
 

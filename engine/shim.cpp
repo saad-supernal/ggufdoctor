@@ -1,6 +1,8 @@
 // engine/shim.cpp — reactor-style WASM entry points around llama.cpp's common/jinja engine.
 // Mirrors common_chat_template_direct_apply_impl (common/chat.cpp) minus the BOS strip:
-//   lex -> parse -> caps_get -> normalise messages -> render at a pinned clock.
+//   lex -> parse -> caps_get -> normalise messages -> apply that function's own
+//   context handling (enable_thinking, add_generation_prompt, the two caps_apply_*
+//   expansions) -> render at a pinned clock.
 // JSON in, JSON out, through linear memory. Never lets a C++ exception escape.
 #include "jinja/caps.h"
 #include "jinja/lexer.h"
@@ -23,6 +25,19 @@ static const char * RAISE_MARKER = "Jinja Exception: ";
 static std::string g_out;
 
 // ---- port of messages_inp_normalizer from common/chat.cpp (keep in sync on every engine bump) ----
+//
+// Every path from a request to a rendered prompt in llama.cpp lowers each message
+// into a common_chat_msg (common_chat_msgs_parse_oaicompat, common/chat.cpp), whose
+// `content` is a std::string, and then serialises it back with
+// common_chat_msg::to_json_oaicompat -- which emits `"content": ""` whenever there is
+// neither content nor content_parts. So a null (or absent) `content` never reaches a
+// template through llama.cpp: it always arrives as an empty string. Templates that
+// branch on `message["content"] is string` before iterating it (PaddleOCR-VL does)
+// render fine there and die here without this. We port only this one field of the
+// round-trip: the rest of it (dropping unknown keys, dropping empty reasoning_content
+// / name / tool_call_id, stringifying tool_calls[].function.arguments) is request
+// *shaping*, would silently rewrite the caller's context, and showed no divergence
+// against the real llama-server over the conformance corpus.
 
 static std::string concat_content_parts(const njson & parts) {
     std::string text;
@@ -49,15 +64,24 @@ static std::string concat_content_parts(const njson & parts) {
 
 static njson normalize_messages(const njson & messages, const jinja::caps & caps, bool & changed) {
     changed = false;
-    const bool only_string = caps.supports_string_content && !caps.supports_typed_content;
-    const bool only_typed  = !caps.supports_string_content && caps.supports_typed_content;
-    if ((!only_string && !only_typed) || !messages.is_array()) {
+    if (!messages.is_array()) {
         return messages;
     }
+    const bool only_string = caps.supports_string_content && !caps.supports_typed_content;
+    const bool only_typed  = !caps.supports_string_content && caps.supports_typed_content;
     njson out = njson::array();
     for (const auto & msg : messages) {
         njson copy = msg;
-        if (copy.contains("content")) {
+        if (!copy.is_object()) {  // a malformed context is the caller's business, not ours
+            out.push_back(std::move(copy));
+            continue;
+        }
+        // common_chat_msg::to_json_oaicompat: no content and no content_parts -> ""
+        if (!copy.contains("content") || copy.at("content").is_null()) {
+            copy["content"] = "";
+            changed = true;
+        }
+        if (only_string || only_typed) {
             njson & it = copy.at("content");
             if (only_typed && it.is_string()) {
                 it = njson::array({ njson{{"type", "text"}, {"text", it.get<std::string>()}} });
@@ -114,6 +138,44 @@ static njson render_job(const std::string & job_text) {
 
         jinja::context ctx(lexed.source);
         ctx.current_time = PINNED_NOW;
+        if (normalize) {
+            // The rest of common_chat_template_direct_apply_impl's own context
+            // handling. These are not defaults ggufdoctor invents: they are what
+            // that function does to every context on its way to the runtime, so a
+            // template can never see anything else when llama.cpp renders it.
+
+            // `{"enable_thinking", inputs.enable_thinking}` is set unconditionally,
+            // from a generation param that defaults to true (autoparser::
+            // generation_params, common/chat.h). There is no llama.cpp path that
+            // leaves it undefined; --reasoning-budget 0 makes it false, not absent.
+            if (!context.contains("enable_thinking")) {
+                context["enable_thinking"] = true;
+            }
+            // `if (inputs.add_generation_prompt) inp["add_generation_prompt"] = true;`
+            // -- so llama.cpp defines the key only when it is on. A template asking
+            // `add_generation_prompt is defined` (PaddleOCR-VL does, to default it to
+            // true) sees a *missing* key there, never a false one.
+            if (context.contains("add_generation_prompt")) {
+                if (context.at("add_generation_prompt").is_boolean()
+                        ? context.at("add_generation_prompt").get<bool>()
+                        : !context.at("add_generation_prompt").is_null()) {
+                    context["add_generation_prompt"] = true;
+                } else {
+                    context.erase("add_generation_prompt");
+                }
+            }
+            // The two caps-driven context expansions, applied to the jinja context
+            // before global_from_json. llama.cpp does not invent either key -- the
+            // CLI layer does (common_params_parse defaults preserve_reasoning to
+            // "true" in common/arg.cpp) -- so we react to it and do not add it.
+            if (context.contains("preserve_reasoning") && context.at("preserve_reasoning").is_boolean()) {
+                jinja::caps_apply_preserve_reasoning(ctx, context.at("preserve_reasoning").get<bool>());
+            }
+            if (context.contains("reasoning_effort") && context.at("reasoning_effort").is_string()
+                    && !context.at("reasoning_effort").get<std::string>().empty()) {
+                jinja::caps_apply_reasoning_effort(ctx, context.at("reasoning_effort").get<std::string>());
+            }
+        }
         common_json inp = common_json::parse(context.dump());
         jinja::global_from_json(ctx, inp, false);
 
