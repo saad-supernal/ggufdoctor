@@ -26,6 +26,17 @@ defined and defaults to `true`; `add_generation_prompt` is present only when the
 `preserve_reasoning` or `reasoning_effort` key in the context is expanded through
 `jinja::caps_apply_preserve_reasoning` / `jinja::caps_apply_reasoning_effort`.
 
+`preserve_reasoning` is also *defaulted* here, which is the one place the module reaches
+above `direct_apply_impl` on purpose: `common_params_parse` sets it to `"true"` for every
+llama.cpp CLI tool unless `--no-reasoning-preserve` is given (`common/arg.cpp:963-966`), and
+`llama-server` treats it as in force for a template whose caps report
+`supports_preserve_reasoning` (`server-context.cpp:1493-1497`). So when the caller supplies
+no `preserve_reasoning` and the caps say the template can use it, the module supplies `true`
+— otherwise a render would match a bare library embedding rather than the `llama-server` and
+`llama-cli` everyone actually runs. Note that the transformers path has no such expansion at
+all, so a template reading the expanded variables genuinely diverges between the two
+runtimes; that is a finding, not a bug in this module.
+
 None of this is generated — it is hand-copied logic that **must be re-checked against
 upstream `chat.cpp` on every engine bump**, since a behavior change there would silently
 make the WASM module stop matching what `llama-server` sends to the model. That is what
@@ -38,8 +49,8 @@ What the shim deliberately does **not** reproduce, because it lives above
 - the ~10 per-family message rewrites `common_chat_try_specialized_template` selects by
   sniffing the template source (Gemma4 `tool_responses` collapsing, DeepSeek-V4 tool-result
   sorting, gpt-oss/LFM2 reasoning copying, StepFun content trimming, …);
-- `llama-server`'s request policies — assistant prefill (`--no-prefill-assistant`), the
-  `preserve_reasoning` CLI default, the rest of the `common_chat_msg` round-trip;
+- `llama-server`'s request policies — assistant prefill (`--no-prefill-assistant`) and the
+  rest of the `common_chat_msg` round-trip;
 - `common_chat_extra_context()`'s `datetime` / `date_string`, which llama.cpp fills from the
   wall clock and this module renders at a pinned one by design.
 

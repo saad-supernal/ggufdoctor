@@ -110,6 +110,18 @@ static njson caps_to_json(const jinja::caps & caps) {
     return out;
 }
 
+// jinja truthiness, as jinja::value applies it: false, null, 0, "", [] and {} are
+// falsy, everything else is truthy. Used where llama.cpp lowers a context value
+// into a C++ bool generation param.
+static bool json_truthy(const njson & v) {
+    if (v.is_boolean()) { return v.get<bool>(); }
+    if (v.is_null()) { return false; }
+    if (v.is_number()) { return v.get<double>() != 0.0; }
+    if (v.is_string()) { return !v.get<std::string>().empty(); }
+    if (v.is_array() || v.is_object()) { return !v.empty(); }
+    return true;
+}
+
 static njson render_job(const std::string & job_text) {
     njson out;
     njson caps_json = njson::object();
@@ -156,22 +168,30 @@ static njson render_job(const std::string & job_text) {
                 context["enable_thinking"] = true;
             }
             // `if (inputs.add_generation_prompt) inp["add_generation_prompt"] = true;`
-            // -- so llama.cpp defines the key only when it is on. A template asking
-            // `add_generation_prompt is defined` (PaddleOCR-VL does, to default it to
-            // true) sees a *missing* key there, never a false one.
-            if (context.contains("add_generation_prompt")) {
-                if (context.at("add_generation_prompt").is_boolean()
-                        ? context.at("add_generation_prompt").get<bool>()
-                        : !context.at("add_generation_prompt").is_null()) {
-                    context["add_generation_prompt"] = true;
-                } else {
-                    context.erase("add_generation_prompt");
-                }
+            // -- so llama.cpp defines the key only when it is on, and a template
+            // asking `add_generation_prompt is defined` (PaddleOCR-VL does, to
+            // default it to true) sees a *missing* key there, never a false one.
+            // Absent means on, not off: the generation param it comes from is
+            // `add_generation_prompt = true` (common/chat.h). The value is lowered
+            // into that C++ bool, so a non-boolean goes through jinja truthiness.
+            if (!context.contains("add_generation_prompt")
+                    || json_truthy(context.at("add_generation_prompt"))) {
+                context["add_generation_prompt"] = true;
+            } else {
+                context.erase("add_generation_prompt");
+            }
+            // `preserve_reasoning` is not invented by direct_apply_impl -- it arrives
+            // in extra_context from the CLI layer, where common_params_parse defaults
+            // it to "true" whenever it was not given (common/arg.cpp:963-966), and
+            // llama-server reports it as in force only for a template whose caps say
+            // supports_preserve_reasoning (server-context.cpp:1493-1497). Mirror both:
+            // supply the default here when the caller said nothing and the template
+            // can use it, so a render matches a default `llama-server` run.
+            if (!context.contains("preserve_reasoning") && caps.supports_preserve_reasoning) {
+                context["preserve_reasoning"] = true;
             }
             // The two caps-driven context expansions, applied to the jinja context
-            // before global_from_json. llama.cpp does not invent either key -- the
-            // CLI layer does (common_params_parse defaults preserve_reasoning to
-            // "true" in common/arg.cpp) -- so we react to it and do not add it.
+            // before global_from_json.
             if (context.contains("preserve_reasoning") && context.at("preserve_reasoning").is_boolean()) {
                 jinja::caps_apply_preserve_reasoning(ctx, context.at("preserve_reasoning").get<bool>());
             }

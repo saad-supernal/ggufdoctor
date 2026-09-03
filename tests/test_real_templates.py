@@ -122,11 +122,27 @@ def test_every_vendored_template_has_a_sidecar_and_an_expectation():
 #     `thinking_false` pin both runtimes to the same value and agree everywhere,
 #     which is what keeps `engines_agreed_fixtures` non-zero on these three.
 #
-#     Two `typed_content` entries below are still X001/X002 ERROR *despite*
-#     being partly this fork: their diff mixes it with the normaliser's join, so
-#     neither single explanation reproduces llama.cpp on its own and neither
-#     downgrade fires. Composing the two explanations is not something either
-#     ruling asks for, so the ERROR stands and is recorded at each entry.
+#     Ruling R12 generalised that explanation to every value llama.cpp supplies
+#     on its own -- `enable_thinking` and `preserve_reasoning` -- so the bucket
+#     is `explained_by: "runtime_defaults"` with the keys it had to add under
+#     `defaults`, and ruling R10 added the composition: where a divergence has
+#     both this cause *and* the normaliser's join, one re-render with the typed
+#     content pre-flattened AND the defaults filled in confirms it, and the
+#     finding is `explained_by: "normaliser+runtime_defaults"` rather than an
+#     ERROR earned only by having two causes.
+#
+#   * `preserve_reasoning`, the other runtime default, is a *switch* rather than
+#     a value: common_params_parse defaults it to "true" (common/arg.cpp:963-966)
+#     and jinja::caps_apply_preserve_reasoning expands it into preserve_thinking
+#     / clear_thinking / truncate_history_thinking / drop_thinking before
+#     rendering. The engine supplies that default when the template's caps say
+#     supports_preserve_reasoning (ruling R11), so it renders what a default
+#     `llama-server` renders -- and the transformers path has no such expansion
+#     at all, so a template that reads the *expanded* variables diverges in a
+#     way the runtime-defaults re-render cannot reproduce (adding the switch to
+#     a jinja2 context is inert). LuffyTheFox below is that case, and it stays a
+#     reported ERROR, which is right in outcome: the two runtimes really do
+#     disagree, and no explanation available to the checks layer covers it.
 EXPECTED = {
     "HauhauCS__Gemma-4-E4B-Uncensored-HauhauCS-Aggressive": (
         {
@@ -148,16 +164,24 @@ EXPECTED = {
             # the template's `{{ bos_token }}` on line 155 -- not Gemma's <bos>,
             # which this corpus has no vocab to supply.)
             #
-            # ERROR, not the INFO it was before the engine gained llama.cpp's
-            # `enable_thinking` default, and one of the two mixed-cause entries
-            # the header warns about: the diff is no longer *only* the
-            # normaliser's join, it also carries the `<|think|>` system turn
-            # below. So neither downgrade fires -- pre-flattening typed content
-            # does not reproduce llama.cpp (the think turn is still missing) and
-            # adding `enable_thinking=True` does not either (the parts are still
-            # joined with no separator). Both explanations together would; that
-            # composition is deliberately not implemented (ruling R9).
-            ("X001", Severity.ERROR, ("typed_content",)),
+            # A two-cause divergence, and the reason ruling R10 exists. The diff
+            # is the normaliser's join *and* the `<|think|>` system turn below:
+            #     --- jinja2
+            #     +++ llama.cpp
+            #     -<s><|turn>user
+            #     -Hellothere<turn|>
+            #     +<s><|turn>system
+            #     +<|think|><turn|>
+            #     +<|turn>user
+            #     +Hello
+            #     +there<turn|>
+            # Neither explanation reproduces that alone -- pre-flattening leaves
+            # the think turn missing, filling the defaults leaves the parts
+            # joined with no separator -- so before R10 it was reported at ERROR
+            # purely for having two causes. Composing them in one re-render
+            # reproduces llama.cpp byte for byte, so INFO with
+            # explained_by "normaliser+runtime_defaults".
+            ("X001", Severity.INFO, ("typed_content",)),
             # The enable_thinking fork, X001 INFO per ruling R9. Line 157 opens
             # a system turn for `(enable_thinking is defined and
             # enable_thinking) or tools or messages[0]['role'] in ['system',
@@ -207,6 +231,18 @@ EXPECTED = {
             #     +Hello
             #     +there<|im_end|>
             ("X001", Severity.INFO, ("typed_content",)),
+            # No `preserve_reasoning` finding, unlike LuffyTheFox below, and the
+            # reason is a corpus gap rather than a property of the template.
+            # Line 2 is `{%- set preserve_thinking = preserve_thinking |
+            # default(false) -%}` and line 87
+            #   {%- set keep_thinking = preserve_thinking or loop.index0 > ns.last_user_index -%}
+            # so the fork is present -- but line 90 guards the block with
+            #   {%- if thinking and keep_thinking -%}
+            # where `thinking` comes from `message.thinking or message.reasoning
+            # or message.reasoning_content`. No fixture in this corpus carries
+            # reasoning content on an assistant message, so the block is skipped
+            # on both engines whatever `keep_thinking` says. A fixture with an
+            # assistant `reasoning_content` would expose it here too.
             # No S003: parse_content handles string, mapping and iterable
             # content, and the `{%- if message.get("content") -%}` guards keep
             # tool_roundtrip's null away from it entirely.
@@ -220,6 +256,43 @@ EXPECTED = {
             # with no separator -- "Hellothere" against llama.cpp's
             # "Hello\nthere".
             ("X001", Severity.INFO, ("typed_content",)),
+            # X001 ERROR on multiturn: the `preserve_reasoning` fork (see the
+            # header), and the one finding in this corpus that ruling R11
+            # uncovered -- before it, the conformance harness handed the default
+            # to *both* sides, so the two engines appeared to agree here and
+            # this template reported nothing but the typed_content INFO above.
+            # Line 100 gates the reasoning block on
+            #   {%- if (preserve_thinking is defined and preserve_thinking is true)
+            #          or (loop.index0 > ns.last_query_index) %}
+            #     {{- '<|im_start|>' + message.role + '\n<think>\n'
+            #         + reasoning_content + '\n</think>\n\n' + content }}
+            # and `preserve_thinking` is one of the four variables
+            # jinja::caps_apply_preserve_reasoning sets from the
+            # `preserve_reasoning` kwarg that common_params_parse defaults to
+            # "true". So a default `llama-server` emits an empty reasoning block
+            # for the *historical* assistant turn and transformers does not:
+            #     --- jinja2
+            #     +++ llama.cpp
+            #      <|im_start|>assistant
+            #     +<think>
+            #     +
+            #     +</think>
+            #     +
+            #      Hey!<|im_end|>
+            # ERROR, not INFO, and not for want of trying: the runtime-defaults
+            # re-render adds `preserve_reasoning` to the jinja2 context, but
+            # jinja2 has no caps_apply_preserve_reasoning to expand it into
+            # `preserve_thinking`, so the re-render cannot reproduce llama.cpp
+            # and no explanation applies. The divergence is real either way --
+            # the same GGUF, the same caller code, a reasoning block in one
+            # runtime's history and not the other's.
+            #
+            # Only `multiturn` reports it: it is the only fixture with a
+            # historical assistant turn that reaches line 100 with content to
+            # render. `no_generation_prompt` has one too, but it is the *last*
+            # message, so `loop.index0 > ns.last_query_index` already holds and
+            # both engines take the reasoning branch.
+            ("X001", Severity.ERROR, ("multiturn",)),
             # No S003: `render_content` covers `content is string`, the
             # iterable branch, and `{%- elif content is none or content is
             # undefined %}{{- '' }}` for tool_roundtrip's null, so its
@@ -386,16 +459,20 @@ EXPECTED = {
             #     +<user>Hello
             #     +there</user>
             #      <assistant></think>
-            # This is not whitespace-only (jinja2 emits no content whatsoever),
-            # so it reached the X001 bucket even before ruling R7. It is ERROR
-            # rather than the INFO it was, and is the second mixed-cause entry
-            # the header warns about: the diff now also carries the
-            # enable_thinking `<think>` (below), so pre-flattening typed content
-            # no longer reproduces llama.cpp on its own and adding
-            # `enable_thinking=True` does not either (jinja2 still drops the
-            # list content entirely). Neither downgrade fires; both together
-            # would, and that composition is deliberately not implemented (R9).
-            ("X001", Severity.ERROR, ("typed_content",)),
+            # The second two-cause divergence (ruling R10). Not whitespace-only
+            # -- jinja2 emits no content whatsoever -- and the diff carries the
+            # enable_thinking `<think>` (below) on top of the dropped content:
+            #     -<user></user>
+            #     -<assistant></think>
+            #     +<user>Hello
+            #     +there</user>
+            #     +<assistant><think>
+            # Pre-flattening alone leaves the `</think>`; filling the defaults
+            # alone leaves jinja2 still dropping the list content via
+            # `message.content if message.content is string else ""`. Composed
+            # in one re-render they reproduce llama.cpp exactly, so INFO with
+            # explained_by "normaliser+runtime_defaults".
+            ("X001", Severity.INFO, ("typed_content",)),
             # The enable_thinking fork, X001 INFO per ruling R9. Line 4 is
             #   {%- set enable_thinking = enable_thinking | default(false) -%}
             # -- an explicit template-side default of *off*, which llama.cpp's
@@ -537,6 +614,7 @@ def test_complete_finding_set(slug):
     # (see the EXPECTED header) took the three thinking templates down to 2, 2
     # and 3 agreeing fixtures out of 10, and the two that sit at 2 agree only on
     # `thinking_true` and `thinking_false`, the fixtures that pin the variable
-    # on both sides. Ruling R9 changed how that divergence is *reported*, not
-    # whether the engines agree, so this number is unaffected by it.
+    # on both sides. Rulings R9, R10 and R12 changed how those divergences are
+    # *reported*, not whether the engines agree, so they leave this number
+    # alone; ruling R11 does move it, taking LuffyTheFox from 9 to 8.
     assert stats["engines_agreed_fixtures"] >= 1, "both engines must agree on at least one fixture"

@@ -2,7 +2,7 @@ from ggufdoctor.checks.cross_engine import X_IDS, run_cross_engine_checks
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.engines.llamacpp_engine import LlamaCppEngine
 from ggufdoctor.fixtures import load_fixtures
-from ggufdoctor.models import CheckContext, GgufModel, RenderResult, Severity
+from ggufdoctor.models import CheckContext, Fixture, GgufModel, RenderResult, Severity
 
 
 def _ctx(template, engines=None, fixtures=None):
@@ -81,13 +81,13 @@ NO_THINKING = ("user_only", "system_user", "multiturn", "with_tools", "thinking_
                "tool_roundtrip", "typed_content", "no_generation_prompt")
 
 
-def test_x001_explained_by_llama_cpps_enable_thinking_default_is_info():
+def test_x001_explained_by_llama_cpps_runtime_defaults_is_info():
     # common_chat_template_direct_apply_impl always defines `enable_thinking`
     # and defaults it to true; transformers defines nothing. So this template's
     # `{% if not enable_thinking %}` branch is taken under jinja2 and skipped
     # under llama.cpp on every fixture that does not pin the variable -- a real
     # divergence, but a runtime default rather than a template defect, so INFO
-    # with the fix in the message (ruling R9).
+    # with the fix in the message (rulings R9, R12).
     ctx = _ctx("{% if not enable_thinking %}<think>\n\n</think>\n\n{% endif %}"
                "{% for m in messages %}{{ m.role }}{% endfor %}")
     found = run_cross_engine_checks(ctx)
@@ -96,17 +96,65 @@ def test_x001_explained_by_llama_cpps_enable_thinking_default_is_info():
     # with_tools and tool_roundtrip are in it rather than in an X005 -- the
     # cause outranks the fixture.
     assert _set(found) == {("X001", Severity.INFO, NO_THINKING)}
-    assert found[0].evidence["explained_by"] == "enable_thinking_default"
-    assert "pass enable_thinking explicitly" in found[0].message
+    assert found[0].evidence["explained_by"] == "runtime_defaults"
+    # Both defaults are reported because the fixture context supplies neither;
+    # `defaults` says what the confirming re-render had to add, not which key
+    # the template happened to read.
+    assert found[0].evidence["defaults"] == ["enable_thinking", "preserve_reasoning"]
+    assert "pass them explicitly" in found[0].message
+    assert "enable_thinking, preserve_reasoning" in found[0].message
     # thinking_true and thinking_false hand both engines the same value, so
     # they agree and are the only fixtures that do.
     assert ctx.stats["engines_agreed_fixtures"] == 2
 
 
-def test_enable_thinking_default_is_not_the_explanation_when_the_caller_pinned_it():
-    # Same shape, but the divergence is `{{ none }}`, not the thinking branch:
-    # adding enable_thinking=True to the jinja2 re-render cannot reproduce
-    # llama.cpp's output, so the INFO downgrade must not apply.
+def test_runtime_defaults_reports_only_the_keys_it_had_to_add():
+    # A context that already pins `preserve_reasoning` leaves only
+    # `enable_thinking` for the re-render to supply, and `defaults` says so.
+    fx = [Fixture(name="pinned_preserve", tier="core",
+                  context={"messages": [{"role": "user", "content": "Hi"}],
+                           "add_generation_prompt": True, "preserve_reasoning": True})]
+    ctx = _ctx("{% if not enable_thinking %}<think>{% endif %}"
+               "{% for m in messages %}{{ m.role }}{% endfor %}", fixtures=fx)
+    found = run_cross_engine_checks(ctx)
+    assert _set(found) == {("X001", Severity.INFO, ("pinned_preserve",))}
+    assert found[0].evidence["defaults"] == ["enable_thinking"]
+    assert "(enable_thinking)" in found[0].message
+
+
+def test_x001_explained_by_the_normaliser_and_runtime_defaults_together_is_info():
+    # typed_content needs BOTH explanations: jinja2 prints the content list's
+    # repr *and* takes the thinking branch, so pre-flattening alone still
+    # leaves the `<think>` behind and filling the defaults alone still leaves
+    # the parts unjoined. Composing them in one re-render reproduces llama.cpp,
+    # so it is INFO rather than an ERROR earned only by having two causes
+    # (ruling R10). Every other fixture has just the one cause and lands in the
+    # plain runtime_defaults bucket, which is what keeps the two apart here.
+    ctx = _ctx("{% if not enable_thinking %}<think>{% endif %}"
+               "{% for m in messages %}<|{{ m.role }}|>{{ m.content }}{% endfor %}")
+    found = run_cross_engine_checks(ctx)
+    assert _set(found) == {
+        # typed_content needs both causes and tool_roundtrip has a third, so the
+        # plain runtime_defaults bucket is the rest.
+        ("X001", Severity.INFO,
+         tuple(f for f in NO_THINKING if f not in ("typed_content", "tool_roundtrip"))),
+        ("X001", Severity.INFO, ("typed_content",)),
+        # Unrelated to either explanation: `{{ m.content }}` on tool_roundtrip's
+        # `content: null` prints "None" under jinja2 and "" under llama.cpp,
+        # which no amount of defaults or flattening reproduces.
+        ("X005", Severity.ERROR, ("tool_roundtrip",)),
+    }
+    composed = next(f for f in found
+                    if f.evidence.get("explained_by") == "normaliser+runtime_defaults")
+    assert tuple(f for f in composed.evidence["fixtures"]) == ("typed_content",)
+    assert composed.evidence["defaults"] == ["enable_thinking", "preserve_reasoning"]
+    assert composed.evidence["normalized"] is True
+    assert "normaliser" in composed.message and "runtime defaults" in composed.message
+
+
+def test_runtime_defaults_are_not_the_explanation_for_an_unrelated_divergence():
+    # `{{ none }}` differs for reasons no default touches: filling them in
+    # cannot reproduce llama.cpp's output, so no INFO downgrade may apply.
     ctx = _ctx("{{ none }}{% for m in messages %}{{ m.role }}{% endfor %}")
     found = run_cross_engine_checks(ctx)
     assert all(f.severity is Severity.ERROR for f in found), _set(found)

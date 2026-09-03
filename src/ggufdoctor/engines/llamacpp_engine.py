@@ -7,8 +7,11 @@ handling -- an always-defined `enable_thinking` defaulting to true, an
 `add_generation_prompt` key present only when the flag is on, and the
 caps_apply_preserve_reasoning / caps_apply_reasoning_effort expansions --
 pinned clock) but does not strip a leading BOS -- see the v0.2 spec
-amendments, section A. The conformance suite (tests/conformance) holds it to
-byte equality with the real llama-server at the same build tag.
+amendments, section A. It also supplies the one default llama.cpp's CLI layer
+adds above that function, `preserve_reasoning` (common/arg.cpp), so a render
+matches a default `llama-server` run rather than a bare library embedding.
+The conformance suite (tests/conformance) holds it to byte equality with the
+real llama-server at the same build tag.
 """
 from __future__ import annotations
 

@@ -5,12 +5,14 @@ the model's real bos/eos tokens -- and the raw rendered text is compared.
 Neither side strips BOS (spec amendments §A). A fixture both engines fail on
 belongs to S003, not here.
 
-Two explanation classes downgrade a divergence to INFO, each confirmed by a
+Three explanation classes downgrade a divergence to INFO, each confirmed by a
 re-render rather than assumed: llama.cpp's message normaliser rewrote the input
-("normaliser", _explained_by_normaliser), and llama.cpp defines
-enable_thinking=true by default where the transformers path leaves it undefined
-("enable_thinking_default", _explained_by_thinking_default). Evidence records
-which one under "explained_by".
+("normaliser", _explained_by_normaliser); llama.cpp supplies runtime defaults
+the transformers path leaves undefined ("runtime_defaults",
+_explained_by_runtime_defaults, with the keys under "defaults"); and both at
+once ("normaliser+runtime_defaults",
+_explained_by_normaliser_and_runtime_defaults). Evidence records which under
+"explained_by".
 """
 from __future__ import annotations
 
@@ -122,30 +124,77 @@ def _explained_by_normaliser(j2: Any, tpl: str, context: dict[str, Any], llama_t
     return retried.ok and retried.text == llama_text
 
 
-def _explained_by_thinking_default(j2: Any, tpl: str, context: dict[str, Any],
-                                   llama_text: str) -> bool:
-    """True only if re-rendering under jinja2 with `enable_thinking=True` added
-    reproduces llama.cpp's own output -- i.e. llama.cpp's implicit default, and
-    not some unrelated engine difference, is what explains this divergence.
+# Every context value llama.cpp supplies on its own and the transformers path
+# does not. `enable_thinking` comes from a generation param that
+# common_chat_template_direct_apply_impl writes unconditionally (common/chat.cpp);
+# `preserve_reasoning` from common_params_parse, which defaults it to "true"
+# whenever the CLI did not say otherwise (common/arg.cpp). Insertion order fixes
+# the order of the reported "defaults" list.
+RUNTIME_DEFAULTS: dict[str, Any] = {"enable_thinking": True, "preserve_reasoning": True}
 
-    common_chat_template_direct_apply_impl (llama.cpp common/chat.cpp) writes
-    `enable_thinking` into every render context unconditionally, from a
-    generation param that defaults to true; there is no path through llama.cpp
-    that leaves the variable undefined (`--reasoning-budget 0` makes it false,
-    not absent). transformers injects nothing, so a caller who does not pass
-    `enable_thinking` gets the thinking form of a template under llama.cpp and
-    the non-thinking form under transformers. That is a runtime default, not a
-    template defect -- the template author cannot remove it -- so it is
-    reported, and reported as INFO with the fix in the message (ruling R9).
 
-    Only applies where the caller said nothing: if the context already carries
-    `enable_thinking`, both engines saw the same value and this is not the
-    explanation for anything.
+def _with_runtime_defaults(context: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """(context plus every runtime default it lacks, the keys added)."""
+    added = [k for k in RUNTIME_DEFAULTS if k not in context]
+    if not added:
+        return context, []
+    return {**context, **{k: RUNTIME_DEFAULTS[k] for k in added}}, added
+
+
+def _explained_by_runtime_defaults(j2: Any, tpl: str, context: dict[str, Any],
+                                   llama_text: str) -> list[str]:
+    """The runtime defaults that explain this divergence, or [] if they do not.
+
+    llama.cpp hands a template values the caller never passed: `enable_thinking`,
+    written into every render context from a param that defaults to true, and
+    `preserve_reasoning`, defaulted to "true" by the CLI layer. There is no
+    llama.cpp path that leaves `enable_thinking` undefined (`--reasoning-budget 0`
+    makes it false, not absent), and none that drops the preserve_reasoning kwarg
+    unless `--no-reasoning-preserve` is given. transformers injects nothing, which
+    is why model cards tell callers to pass these. So a caller who says nothing
+    gets a different prompt from each runtime for the same GGUF: a runtime
+    default, not a template defect -- the author cannot remove it -- so it is
+    reported, and reported as INFO with the fix in the message (rulings R9, R12).
+
+    Confirmed, never assumed: jinja2 is re-rendered with the missing defaults
+    filled in and the result must equal llama.cpp's byte for byte. Where the
+    caller already supplied every default, there is nothing to explain and this
+    returns [].
+
+    Note the asymmetry this cannot cross: `preserve_reasoning` is a *switch* in
+    llama.cpp, expanded into preserve_thinking / clear_thinking /
+    truncate_history_thinking / drop_thinking by jinja::caps_apply_preserve_reasoning
+    before rendering. Jinja2Engine has no such expansion (neither does
+    transformers), so adding the switch to a jinja2 context is inert unless the
+    template reads that exact name. A template that reads the *expanded*
+    variables therefore stays a reported ERROR rather than being downgraded here
+    -- which is correct in outcome, since the two runtimes really do disagree,
+    but it does mean this function explains the `enable_thinking` fork and not
+    the `preserve_reasoning` one.
     """
-    if "enable_thinking" in context:
-        return False
-    retried = j2.render(tpl, {**context, "enable_thinking": True})
-    return retried.ok and retried.text == llama_text
+    filled, added = _with_runtime_defaults(context)
+    if not added:
+        return []
+    retried = j2.render(tpl, filled)
+    return added if (retried.ok and retried.text == llama_text) else []
+
+
+def _explained_by_normaliser_and_runtime_defaults(j2: Any, tpl: str, context: dict[str, Any],
+                                                  llama_text: str) -> list[str]:
+    """Both explanations at once: pre-flatten typed content the way llama.cpp's
+    normaliser does *and* fill in the runtime defaults, in one re-render.
+
+    Neither cause alone reproduces llama.cpp when a divergence has both -- the
+    flatten leaves the thinking block missing, the defaults leave the content
+    parts unjoined -- so without this a fixture that hits both is reported at
+    ERROR purely because two explanations applied instead of one (ruling R10).
+    Returns the defaults added, or [] if the composition does not explain it
+    either.
+    """
+    flattened = _flatten_typed_content(context)
+    if flattened is context:
+        return []
+    return _explained_by_runtime_defaults(j2, tpl, flattened, llama_text)
 
 
 def _diff(a: str, b: str) -> str:
@@ -214,7 +263,10 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
     differs: list[tuple[str, Any, dict[str, Any]]] = []
     differs_tools: list[tuple[str, Any, dict[str, Any]]] = []
     explained: list[tuple[str, Any, dict[str, Any]]] = []   # llama.cpp rewrote the input first
-    thinking: list[tuple[str, Any, dict[str, Any]]] = []    # llama.cpp's implicit enable_thinking
+    # keyed by the tuple of runtime-default keys that explained the divergence,
+    # so each bucket's message can name exactly the ones its fixtures needed
+    defaults_only: dict[tuple[str, ...], list[tuple[str, Any, dict[str, Any]]]] = {}
+    both: dict[tuple[str, ...], list[tuple[str, Any, dict[str, Any]]]] = {}
     whitespace: list[tuple[str, Any, dict[str, Any]]] = []
     one_side: dict[tuple[Severity, str], list[tuple[str, Any, dict[str, Any]]]] = {}
     agreed = 0
@@ -236,7 +288,8 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
                 agreed += 1
                 continue
             evidence: dict[str, Any] = {"engines": [JINJA2, LLAMACPP], "diff": _diff(a.text, b.text)}
-            explained_flag = bool(b.extra.get("normalized")) and _explained_by_normaliser(
+            normalized_flag = bool(b.extra.get("normalized"))
+            explained_flag = normalized_flag and _explained_by_normaliser(
                 j2, tpl, context, b.text)
             if explained_flag:
                 evidence["normalized"] = True
@@ -254,17 +307,33 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
             # parts with no separator, where llama.cpp joined them with "\n" --
             # into X004 WARN, which made the INFO downgrade unreachable for
             # exactly the overlap it was written for (ruling R7).
-            # The enable_thinking explanation sits between them, for the same
-            # reason and by the same rule: it is a *cause*, so it outranks the
-            # whitespace-only magnitude test, and it outranks the tool-fixture
+            # The runtime-default explanations sit between them, for the same
+            # reason and by the same rule: they are *causes*, so they outrank the
+            # whitespace-only magnitude test, and they outrank the tool-fixture
             # split below too -- a `with_tools` divergence that llama.cpp's
-            # implicit default fully explains is that default, not a
-            # tool-calling disagreement, so it does not become X005 (R9).
+            # implicit defaults fully explain is those defaults, not a
+            # tool-calling disagreement, so it does not become X005 (R9). The
+            # composition is tried last of the three, so a divergence one cause
+            # explains on its own is never attributed to two (R10).
+            added: list[str] = []
+            combined: list[str] = []
+            if not explained_flag:
+                added = _explained_by_runtime_defaults(j2, tpl, context, b.text)
+                if not added and normalized_flag:
+                    combined = _explained_by_normaliser_and_runtime_defaults(
+                        j2, tpl, context, b.text)
             if explained_flag:
                 explained.append((fx.name, sig, evidence))
-            elif _explained_by_thinking_default(j2, tpl, context, b.text):
-                evidence["explained_by"] = "enable_thinking_default"
-                thinking.append((fx.name, sig, evidence))
+            elif added:
+                evidence["explained_by"] = "runtime_defaults"
+                evidence["defaults"] = added
+                defaults_only.setdefault(tuple(added), []).append((fx.name, sig, evidence))
+            elif combined:
+                evidence["explained_by"] = "normaliser+runtime_defaults"
+                evidence["defaults"] = combined
+                evidence["normalized"] = True
+                evidence["llamacpp_caps"] = b.extra.get("caps", {})
+                both.setdefault(tuple(combined), []).append((fx.name, sig, evidence))
             elif _whitespace_only(a.text, b.text):
                 whitespace.append((fx.name, sig, evidence))
             elif is_tool_fixture(fx):
@@ -295,11 +364,20 @@ def run_cross_engine_checks(ctx: CheckContext) -> list[Finding]:
         "rendered output differs only because llama.cpp's message normaliser rewrote the "
         "input before rendering (typed content joined to text); jinja2 (transformers path) "
         "rendered the original", explained)
-    findings += collapse_by_signature(
-        "X001", Severity.INFO,
-        "rendered output differs only because llama.cpp defines enable_thinking=true by "
-        "default while jinja2 (transformers path) leaves it undefined; pass enable_thinking "
-        "explicitly to make the runtimes agree", thinking)
+    for keys, results in defaults_only.items():
+        findings += collapse_by_signature(
+            "X001", Severity.INFO,
+            "rendered output differs only because llama.cpp supplies runtime defaults the "
+            f"transformers path leaves undefined ({', '.join(keys)}); pass them explicitly "
+            "to make the runtimes agree", results)
+    for keys, results in both.items():
+        findings += collapse_by_signature(
+            "X001", Severity.INFO,
+            "rendered output differs only because llama.cpp's message normaliser rewrote the "
+            "input before rendering (typed content joined to text) and it supplies runtime "
+            f"defaults the transformers path leaves undefined ({', '.join(keys)}); pre-join "
+            "typed content and pass those defaults explicitly to make the runtimes agree",
+            results)
     findings += collapse_by_signature(
         "X004", Severity.WARN, "rendered output differs between jinja2 and llama.cpp by whitespace only",
         whitespace)

@@ -3,7 +3,7 @@
  "build_tag": "b10775",
  "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
  "wasi_sdk": "wasi-sdk-34",
- "sha256": "2014019410ed53ff901cb118510be8818066091c415ff37478504792dc300567",
- "size": 724955,
- "built_at": "2026-09-03T08:27:01Z"
+ "sha256": "3445df6504a6d4abf01f00b280e4b57cef4daf54cfd22437042e9c181156fc83",
+ "size": 725251,
+ "built_at": "2026-09-03T08:42:45Z"
 }

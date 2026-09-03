@@ -38,26 +38,19 @@ SKIP: dict[tuple[str, str], str] = {
 }
 
 
-# common_params_parse (common/arg.cpp) puts preserve_reasoning="true" into every
-# llama.cpp CLI tool's default_template_kwargs unless --no-reasoning-preserve is
-# given, and direct_apply_impl then expands it into preserve_thinking /
-# clear_thinking / truncate_history_thinking / drop_thinking via
-# jinja::caps_apply_preserve_reasoning. That default belongs to the CLI layer,
-# not to the engine, so the engine reacts to the key but never invents it --
-# which means the harness has to hand both sides the same one, exactly as it
-# does with bos/eos below. True is what a default llama-server run uses.
-PRESERVE_REASONING = True
-
-
+# Both sides are built from the fixture context and nothing else. Neither
+# function may add a key of its own beyond the tiny model's real bos/eos, which
+# llama-server takes from the loaded vocabulary and we therefore have to state:
+# a harness that supplies a llama.cpp default to *both* engines cannot see that
+# default diverge, which is how the preserve_reasoning fork stayed invisible
+# until ruling R11 moved that default into the engine where it belongs.
 def _body(fixture):
     body = {"messages": fixture.context["messages"],
             "add_generation_prompt": fixture.context.get("add_generation_prompt", True)}
     if "tools" in fixture.context:
         body["tools"] = fixture.context["tools"]
-    kwargs = {"preserve_reasoning": PRESERVE_REASONING}
     if "enable_thinking" in fixture.context:
-        kwargs["enable_thinking"] = fixture.context["enable_thinking"]
-    body["chat_template_kwargs"] = kwargs
+        body["chat_template_kwargs"] = {"enable_thinking": fixture.context["enable_thinking"]}
     return body
 
 
@@ -65,7 +58,6 @@ def _ours(engine, template, fixture):
     ctx = dict(BASE_CONTEXT)
     ctx.update(fixture.context)
     ctx["bos_token"], ctx["eos_token"] = MODEL_BOS, MODEL_EOS
-    ctx.setdefault("preserve_reasoning", PRESERVE_REASONING)
     return engine.render(template, ctx)
 
 
@@ -83,28 +75,33 @@ def test_bundled_engine_matches_real_llama_server(engine, template_path):
     with LlamaServer(template_path) as server:
         for fx in load_fixtures():
             skipped = (template_path.stem, fx.name) in SKIP
+            # `agree` is decided in every branch, so a skipped pair is judged the
+            # same way an unskipped one is: SKIP records a pair that provably
+            # *disagrees*, and a skipped pair that has come to agree -- whether by
+            # matching text or by both sides now failing together -- is a stale
+            # entry the test reports rather than an exemption it keeps honouring.
             ours = _ours(engine, template, fx)
             try:
                 theirs = server.apply_template(_body(fx))
             except Exception as e:  # the server refuses shapes the template declines
-                if not ours.ok or skipped:
-                    continue  # both sides fail: agreement
-                mismatches.append((fx.name, "server error while we rendered", str(e)[:200]))
-                continue
-            if not ours.ok:
-                if not skipped:
-                    mismatches.append((fx.name, "we failed while server rendered", ours.error))
-                continue
-            expect = ours.text
-            # llama-server strips the leading BOS when the vocab has add_bos (the tiny
-            # model does); our engine deliberately does not (spec amendments §A).
-            if expect.startswith(MODEL_BOS) and not theirs.startswith(MODEL_BOS):
-                expect = expect[len(MODEL_BOS):]
+                agree, why, detail = not ours.ok, "server error while we rendered", str(e)[:200]
+            else:
+                if not ours.ok:
+                    agree, why, detail = False, "we failed while server rendered", ours.error
+                else:
+                    expect = ours.text
+                    # llama-server strips the leading BOS when the vocab has add_bos
+                    # (the tiny model does); our engine deliberately does not (spec
+                    # amendments §A).
+                    if expect.startswith(MODEL_BOS) and not theirs.startswith(MODEL_BOS):
+                        expect = expect[len(MODEL_BOS):]
+                    agree = expect == theirs
+                    why = "text differs"
+                    detail = f"ours={expect[:300]!r}\ntheirs={theirs[:300]!r}"
             if skipped:
-                if expect == theirs:
-                    mismatches.append((fx.name, "stale SKIP entry: this pair now matches",
+                if agree:
+                    mismatches.append((fx.name, "stale SKIP entry: this pair now agrees",
                                        "delete it from SKIP"))
-                continue
-            if expect != theirs:
-                mismatches.append((fx.name, "text differs", f"ours={expect[:300]!r}\ntheirs={theirs[:300]!r}"))
+            elif not agree:
+                mismatches.append((fx.name, why, detail))
     assert not mismatches, "\n".join(f"{n}: {why}\n{detail}" for n, why, detail in mismatches)
