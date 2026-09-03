@@ -94,8 +94,8 @@ class LlamaCppEngine:
             return RenderResult(None, f"engine:unavailable: {self.unavailable_reason}")
         ctx = dict(BASE_CONTEXT)
         ctx.update(context)
-        payload = json.dumps({"template": template, "context": ctx, "normalize": True}).encode("utf-8")
         try:
+            payload = json.dumps({"template": template, "context": ctx, "normalize": True}).encode("utf-8")
             self._ensure_compiled()
             import wasmtime
             store = wasmtime.Store(self._engine)
@@ -110,12 +110,15 @@ class LlamaCppEngine:
             raw = bytes(memory.read(store, out_ptr, out_ptr + out_len))
             exports["gd_free"](store, in_ptr)
             result = json.loads(raw)
-        except Exception as e:  # wasmtime trap, compile failure, corrupt module
+        except Exception as e:  # wasmtime trap, compile failure, corrupt module, context serialization
             return RenderResult(None, f"render:wasm: {type(e).__name__}: {_first_line(str(e))}")
 
         extra = {"caps": result.get("caps", {}), "normalized": bool(result.get("normalized", False))}
         if result.get("ok"):
-            return RenderResult(result["text"], None, extra=extra)
+            text = result.get("text")
+            if not isinstance(text, str):
+                return RenderResult(None, f"render:wasm: module returned ok without valid text", extra=extra)
+            return RenderResult(text, None, extra=extra)
         stage = result.get("stage", "render")
         err = result.get("error", "")
         if stage in ("lexer", "parser"):

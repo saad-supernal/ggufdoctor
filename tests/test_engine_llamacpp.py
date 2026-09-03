@@ -1,7 +1,5 @@
 import sys
 
-import pytest
-
 from ggufdoctor.engines.jinja2_engine import BASE_CONTEXT, Jinja2Engine
 from ggufdoctor.engines.llamacpp_engine import ENV_MODULE_PATH, LlamaCppEngine
 
@@ -100,3 +98,9 @@ def test_wasmtime_import_failure_makes_engine_unavailable(monkeypatch):
     e = LlamaCppEngine()
     assert e.available is False
     assert "wasmtime" in e.unavailable_reason
+
+
+def test_non_serializable_context_is_a_render_error_not_an_exception():
+    r = LlamaCppEngine().render("test", {"messages": [], "junk": {1, 2}})
+    assert not r.ok
+    assert r.error.startswith("render:")
