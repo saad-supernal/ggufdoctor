@@ -56,10 +56,18 @@ class Coverage:
     checks_not_evaluated: list[str] = field(default_factory=list)
 
 
+FIXTURE_TIERS = ("core", "extended")
+
+
 @dataclass(frozen=True)
 class Fixture:
     name: str
     context: dict[str, Any]
+    # "core": a conversation every chat template is expected to handle.
+    # "extended": a shape (typed content, tool-call round trip, no generation
+    # prompt) that older templates legitimately predate. Checks downgrade
+    # render failures on extended fixtures to INFO -- see checks/sanity.py S003.
+    tier: str = "core"
 
 
 @dataclass

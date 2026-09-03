@@ -1,4 +1,4 @@
-from ggufdoctor.checks.sanity import run_sanity_checks
+from ggufdoctor.checks.sanity import run_sanity_checks, s003_render_error
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.fixtures import load_fixtures
 from ggufdoctor.models import CheckContext, GgufModel, Severity
@@ -159,6 +159,22 @@ def test_mistral_v02_full_suite_matches_documented_real_world_footguns():
     #   - S003 INFO: the template's OWN alternation guard (identical to
     #     transformers) rejects the "system_user" fixture -- the author's
     #     deliberate, documented behaviour, quoted verbatim, not an error.
+    #     Task 4 (corpus v2): the same alternation guard also rejects
+    #     "tool_roundtrip" (system, user, assistant, tool -- four turns, so
+    #     the guard's even/odd check falls out of sync exactly like a
+    #     five-message conversation would) via the identical raise_exception
+    #     call, so it collapses into this same finding rather than adding a
+    #     new one. "typed_content" (single user turn, list content) does not
+    #     trip the alternation guard but does fail differently -- see below.
+    #   - S003 INFO on `typed_content`: the template does
+    #     `message['content']` concatenated with `+` (`message['content'] +
+    #     eos_token` for the assistant branch, `'[INST] ' + message['content']
+    #     + ' [/INST]'` for the user branch) -- string concatenation, which
+    #     raises `TypeError: can only concatenate str (not "list") to str`
+    #     for typed_content's list content. `typed_content` is extended
+    #     tier, so this reports at INFO, never ERROR, per this task's rule.
+    #     `no_generation_prompt` renders cleanly (plain string content,
+    #     alternates correctly) and adds nothing.
     #   - S006 INFO: add_bos_token=true (real) + the template's own
     #     `{{ bos_token }}` (real) is the double-BOS combination -- but
     #     current mainline llama.cpp's own chat-template application
@@ -198,11 +214,22 @@ def test_llama2_chat_full_suite_matches_documented_real_world_footguns():
     # still fires; the rendered output still ends in "[/INST]", so INFO.
     # S006 is INFO here for the same reason as Mistral above: llama.cpp's
     # own chat-template application strips this exact leading duplicate.
+    #   - S003 INFO on `tool_roundtrip` and `typed_content` (two distinct
+    #     findings, same severity): the template always does
+    #     `content.strip()` on a non-first-turn message's content, and here
+    #     `content = message['content']` unchanged -- `None` (tool_roundtrip's
+    #     assistant turn) and a `list` (typed_content's single turn) both
+    #     lack `.strip()`, so Jinja2 raises `UndefinedError` on the attribute
+    #     access. Both fixtures are extended tier, so both report at INFO,
+    #     never ERROR, per this task's tier rule. `no_generation_prompt` is
+    #     also extended but has plain string content throughout, so it
+    #     renders cleanly and adds nothing here.
     f = run_sanity_checks(ctx(chat_template=LLAMA2_CHAT_TPL,
                               tokens=["<unk>", "<s>", "</s>"],
                               bos_token_id=1, eos_token_id=2,
                               add_bos_token=True))
     assert _severities(f) == {
+        ("S003", Severity.INFO),
         ("S006", Severity.INFO),
         ("S007", Severity.INFO),
     }
@@ -231,7 +258,15 @@ def test_gemma2_full_suite_matches_documented_real_world_quirks():
                               bos_token_id=2, eos_token_id=1,
                               add_bos_token=True))
     assert _severities(f) == {
-        ("S003", Severity.INFO),   # declines a leading system role, by design
+        # S003 INFO: declines a leading system role, by design ("system_user").
+        # Task 4 (corpus v2): "tool_roundtrip" also opens with a system
+        # message, so it hits the identical `raise_exception('System role
+        # not supported')` call and collapses into the same finding.
+        # "typed_content" and "no_generation_prompt" both render cleanly --
+        # the template's `| trim` filter stringifies non-string content
+        # instead of raising, and no_generation_prompt's messages are plain
+        # strings that alternate correctly -- so neither adds a finding.
+        ("S003", Severity.INFO),
         ("S005", Severity.WARN),   # template only ever emits <end_of_turn>, never <eos>
         ("S006", Severity.INFO),   # add_bos_token=True + template's own {{ bos_token }}
     }
@@ -257,6 +292,13 @@ def test_llama3_tool_calling_full_suite_matches_documented_real_world_quirk():
     # leading duplicate before tokenizing). Everything else about this
     # template -- including the "with_tools" fixture's real
     # `| tojson(indent=4)` tool-schema rendering -- is clean.
+    #
+    # Task 4 (corpus v2): this template is exactly the shape the three new
+    # extended fixtures model (it explicitly branches on `'tool_calls' in
+    # message`, on `message.role == 'tool'`, and stringifies non-mapping
+    # content via `| tojson`/plain emission), so it renders all three --
+    # "tool_roundtrip", "typed_content", "no_generation_prompt" -- cleanly
+    # with no new findings. No assertion change needed; verified directly.
     tokens = ["<unk>"] * 128011
     tokens[128000] = "<|begin_of_text|>"
     tokens[128001] = "<|end_of_text|>"
@@ -468,11 +510,24 @@ def test_s003_author_decline_is_info_not_error_and_quotes_the_message():
 
 def test_s003_genuine_render_failure_stays_error():
     # An undefined-variable access is a real engine failure, not an author
-    # decline, and must keep S003's original ERROR severity.
+    # decline, and must keep S003's original ERROR severity -- for the core
+    # fixtures. Task 4 (corpus v2): this template's failure only ever
+    # touches `messages[0]['role']`, present and identical in shape on every
+    # one of the ten fixtures, so the *signature* is the same everywhere --
+    # but S003 buckets render failures by tier before collapsing by
+    # signature, so the seven core fixtures still produce one ERROR finding
+    # and the three extended fixtures still produce their own separate INFO
+    # finding, even though the underlying error text is identical.
     f = run_sanity_checks(ctx(chat_template="{{ messages[0]['role'].nonexistent.deeper }}"))
     s003 = [x for x in f if x.id == "S003"]
-    assert len(s003) == 1
-    assert s003[0].severity == Severity.ERROR
+    assert len(s003) == 2
+    core = next(x for x in s003 if x.severity == Severity.ERROR)
+    extended = next(x for x in s003 if x.severity == Severity.INFO)
+    assert set(core.evidence["fixtures"]) == {
+        "user_only", "system_user", "multiturn", "with_tools",
+        "thinking_unset", "thinking_true", "thinking_false"}
+    assert set(extended.evidence["fixtures"]) == {
+        "tool_roundtrip", "typed_content", "no_generation_prompt"}
 
 
 def test_s007_info_when_output_already_opens_assistant_turn():
@@ -522,3 +577,36 @@ def test_template_declining_every_fixture_is_not_reported_as_clean():
     # single S003 INFO, and the report reads as a clean pass with an empty
     # checks_not_evaluated -- the exact silence this project keeps fighting.
     assert set(c.checks_not_evaluated) == {"S004", "S005", "S006", "S007"}
+
+
+# --- Task 4: corpus v2 extended-tier fixtures downgrade S003 to INFO ---
+
+def _model_with(template, **kw):
+    return GgufModel(source_id="t", architecture="llama", chat_template=template,
+                     tokens=["<s>", "</s>"], bos_token_id=0, eos_token_id=1,
+                     add_bos_token=False, **kw)
+
+
+def test_s003_on_extended_fixture_is_info_not_error():
+    # `'x' + None` raises TypeError under Jinja2 only on tool_roundtrip
+    # (assistant content is null there). That is the fixture asking a shape
+    # the template predates -- reported, but never as an error.
+    # Core fixtures all have string content, so only the two extended
+    # fixtures fail -- with two different TypeErrors (NoneType vs list), so
+    # they collapse into two findings, not one.
+    tpl = "{% for m in messages %}<|{{ m.role }}|>{{ 'x' + m.content }}{% endfor %}"
+    ctx = CheckContext(model=_model_with(tpl), engines=[Jinja2Engine()], fixtures=load_fixtures())
+    findings = s003_render_error(ctx)
+    found = {(f.id, f.severity, tuple(f.evidence.get("fixtures", ()))) for f in findings}
+    assert found == {("S003", Severity.INFO, ("tool_roundtrip",)),
+                     ("S003", Severity.INFO, ("typed_content",))}
+    for f in findings:
+        assert "extended" in f.message and "broken" not in f.message
+
+
+def test_s003_on_core_fixture_stays_error():
+    tpl = "{{ messages[0].content + none }}"
+    ctx = CheckContext(model=_model_with(tpl), engines=[Jinja2Engine()], fixtures=load_fixtures())
+    severities = {f.severity for f in s003_render_error(ctx)
+                  if "user_only" in f.evidence.get("fixtures", ())}
+    assert severities == {Severity.ERROR}

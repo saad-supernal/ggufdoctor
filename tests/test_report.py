@@ -25,7 +25,11 @@ def test_json_has_stable_schema_fields():
     assert d["coverage"]["upstream"] == "gated"
     assert d["summary"] == {"error": 1, "warn": 0, "info": 0}
     assert d["engines"][0]["name"] == "jinja2"
-    assert d["fixture_corpus_version"] == "1"
+    # Task 4 (corpus v2): fixture_corpus_version mirrors
+    # ggufdoctor.fixtures.CORPUS_VERSION, bumped to "2" for the new
+    # extended-tier fixtures (tool_roundtrip, typed_content,
+    # no_generation_prompt).
+    assert d["fixture_corpus_version"] == "2"
 
 
 def test_human_output_states_coverage_explicitly():

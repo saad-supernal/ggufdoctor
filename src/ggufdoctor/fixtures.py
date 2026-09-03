@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 from importlib import resources
 
-from ggufdoctor.models import Fixture
+from ggufdoctor.models import FIXTURE_TIERS, Fixture
 
-CORPUS_VERSION = "1"
+CORPUS_VERSION = "2"
 
 
 def load_fixtures(path: str | None = None) -> list[Fixture]:
@@ -16,5 +16,12 @@ def load_fixtures(path: str | None = None) -> list[Fixture]:
     else:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
-    return [Fixture(name=item["name"], context=item["context"])
-            for item in data["fixtures"]]
+    out = []
+    for item in data["fixtures"]:
+        tier = item.get("tier", "core")
+        if tier not in FIXTURE_TIERS:
+            raise ValueError(
+                f"fixture {item.get('name')!r} has unknown tier {tier!r} "
+                f"(expected one of {', '.join(FIXTURE_TIERS)})")
+        out.append(Fixture(name=item["name"], context=item["context"], tier=tier))
+    return out

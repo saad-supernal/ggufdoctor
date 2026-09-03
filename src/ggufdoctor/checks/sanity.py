@@ -125,13 +125,20 @@ def s003_render_error(ctx: CheckContext) -> list[Finding]:
     if not tpl:
         return []
     failures: list[tuple[str, Any, dict[str, Any]]] = []
+    extended_failures: list[tuple[str, Any, dict[str, Any]]] = []
     declines: list[tuple[str, Any, dict[str, Any]]] = []
     for fx in ctx.fixtures:
         r = _render_fixture(ctx, fx)
         if not r.error:
             continue
         if r.error.startswith("render:"):
-            failures.append((fx.name, r.error, {"error": r.error}))
+            # A render failure on an "extended" fixture (typed content,
+            # tool-call round trip, no generation prompt) is not the
+            # template being broken -- the spike found 10 of 100 real
+            # templates raise here because they predate these shapes.
+            # That's a fact worth reporting, but never as an error.
+            bucket = extended_failures if fx.tier == "extended" else failures
+            bucket.append((fx.name, r.error, {"error": r.error}))
         elif r.error.startswith("raise:"):
             # The template itself called raise_exception(...) -- this is the
             # author deliberately declining this conversation shape (e.g.
@@ -145,6 +152,15 @@ def s003_render_error(ctx: CheckContext) -> list[Finding]:
         "template raises while rendering a standard conversation",
         failures,
     )
+    findings.extend(_collapse_by_signature(
+        "S003", Severity.INFO,
+        lambda evidence: (
+            "template does not handle an extended conversation shape "
+            f"({', '.join(evidence['fixtures'])}); older templates predate these "
+            f"inputs — {evidence['error']}"
+        ),
+        extended_failures,
+    ))
     findings.extend(_collapse_by_signature(
         "S003", Severity.INFO,
         lambda evidence: (
@@ -341,6 +357,8 @@ def s007_generation_prompt_noop(ctx: CheckContext) -> list[Finding]:
     tpl = ctx.model.chat_template
     if not tpl:
         return []
+    # Always renders "user_only", which is a core fixture -- no tier
+    # handling needed here, unlike S003.
     fx = next((f for f in ctx.fixtures if f.name == "user_only"), None)
     if fx is None:
         # A custom --fixtures corpus that doesn't include "user_only" gives
