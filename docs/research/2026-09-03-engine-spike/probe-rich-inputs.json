@@ -1,0 +1,2528 @@
+{
+ "per_fixture": {
+  "tool_roundtrip_dictargs": {
+   "same": 98,
+   "both_fail": 2
+  },
+  "tool_roundtrip_strargs": {
+   "both_fail": 67,
+   "same": 30,
+   "llama_ok_j2_fails": 1,
+   "diff": 2
+  },
+  "typed_content": {
+   "llama_ok_j2_fails": 10,
+   "same": 86,
+   "diff": 2,
+   "both_fail": 2
+  },
+  "reasoning_history": {
+   "same": 100
+  },
+  "no_gen_prompt": {
+   "same": 100
+  }
+ },
+ "records": [
+  {
+   "id": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "unsloth/Qwen3.8-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ornith-ai/Ornith-1.0-9B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ornith-ai/Ornith-1.0-35B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "lmstudio-community/Qwen3.8-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "antirez/deepseek-v4-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "huihui-ai/Huihui-Qwen3.8-27B-abliterated-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "mudler/Laguna-XS-2.1-APEX-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ggml-org/Qwen3.8-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "datalab-to/surya-ocr-2-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "rippertnt/HyperCLOVAX-SEED-Text-Instruct-1.5B-Q4_K_M-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"NoneType\") to str"
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "LiquidAI/LFM2.5-2.6B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "DavidAU/Qwen3.5-9B-The-Defiant-Fable-Uncensored-Heretic-NEO-IMATRIX-MAX-MTP-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "OBLITERATUS/Qwen3.8-27B-OBLITERATED",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "diff",
+     "detail": "@@ -3 +3 @@\n-None<|im_end|><|im_start|>assistant<think>\n+<|im_end|><|im_start|>assistant<think>"
+    },
+    "typed_content": {
+     "v": "diff",
+     "detail": "@@ -2 +2 @@\n-[{'type': 'text', 'text': 'Hello'}, {'type': 'text', 'text': 'there'}]<|im_end|><|im_start|>assistant<think>\n+<|im_end|><|im_start|>assistant<think>"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "google/gemma-4-12B-it-qat-q4_0-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "bartowski/endless-frontier_BigBang-v1-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "mradermacher/Qwen3-VL-8B-Instruct-abliterated-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "legraphista/glm-4-9b-chat-IMat-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "lmstudio-community/gemma-4-E4B-it-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "prism-ml/Ternary-Bonsai-27B-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "FINAL-Bench/POCKET-35B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "huihui-ai/Huihui-DeepSeek-V4-Flash-0731-abliterated-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "bartowski/XYZAILab_XYZ-Aquila-mini-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "poolside/Laguna-S-2.1-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "google/gemma-4-E4B-it-qat-q4_0-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "yuxinlu1/gemma-4-12B-agentic-fable5-composer2.5-v2-3.5x-tau2-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "empero-ai/Qwythos-9B-v2-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "prism-ml/Bonsai-27B-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "empero-ai/Qwythos-9B-Claude-Mythos-5-1M-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "meta-models/Muse-Glimmer-30B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ProCreations/grug-27b-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "AnkitAI/Parable-Qwen3-4B-Claude-Fable-5-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "deepgrove/maple-preview-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "AnkitAI/Parable-Qwen3-8B-Claude-Fable-5-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Qwen/Qwen3-30B-A3B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Jackrong/Qwen3.5-9B-DeepSeek-V4-Flash-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "michaelw9999/Qwen3.6-35B-A3B-NVFP4-MTP-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ReadyArt/Melody1437-26B-A4B-v2.0-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "tvall43/Qwen3.6-14B-A3B-FableVibes-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ReadyArt/Dark-Scarlett-v0.3-26B-A4B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Jiunsong/supergemma4-26b-uncensored-gguf-v2",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "mradermacher/Q3.5-BlueStar-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "DevQuasar/amd.Instella-MoE-16B-A3B-Think-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "GnLOLot/MiniCPM5-1B-Claude-Opus-Fable5-Thinking-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "AngelSlim/Hy3-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "flywheel-ai/automotive",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Blackfrost-AI/Qwen3.8-27B-ABLITERATED-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "michaelw9999/Qwopus3.6-27B-v2-MTP-NVFP4-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "joeygambino/MiniMax-H3-encoder-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "NorwAI/NorwAI-Magistral-24B-reasoning",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "bytkim/Qwen3.6-27B-MTP-pi-tune-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "culturerevolt/gemma-4-12b-heretic-abliterated-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "hesamation/Qwen3.6-35B-A3B-Claude-4.6-Opus-Reasoning-Distilled-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "kai-os/Carnice-V2-27b-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "KyleHessling1/Qwopus-GLM-18B-Merged-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "z-lab/Qwen3.8-27B-DFlash2-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "AtomicChat/Qwen3.8-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "lmg-anon/vntl-llama3-8b-v2-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "MaziyarPanahi/Qwen3-4B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "MaziyarPanahi/Qwen3-0.6B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "janhq/Jan-v3.5-4B-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "migtissera/Tess-4-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "webAI-Official/TwIL-LM3",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "orcarouter/Qwen3.8-27B-Uncensored-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "AtomicChat/Ling-3.0-flash-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Agnuxo/CAJAL-4B",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "KyleHessling1/Qwopus3.6-27B-Fusion-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "tencent/Hy-MT2-1.8B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "diff",
+     "detail": "@@ -1 +1 @@\n-<\uff5chy_begin\u2581of\u2581sentence\uff5c><\uff5chy_User\uff5c>Weather in Paris?<\uff5chy_Assistant\uff5c>None<\uff5chy_place\u2581holder\u2581no\u25812\uff5c><\uff5chy_Assistant\uff5c>\n+<\uff5chy_begin\u2581of\u2581sentence\uff5c><\uff5chy_User\uff5c>Weather in Paris?<\uff5chy_Assistant\uff5c><\uff5chy_place\u2581holder\u2581no\u25812\uff5c><\uff5chy_Assistant\uff5c>"
+    },
+    "typed_content": {
+     "v": "diff",
+     "detail": "@@ -1 +1 @@\n-<\uff5chy_begin\u2581of\u2581sentence\uff5c><\uff5chy_User\uff5c>[{'type': 'text', 'text': 'Hello'}, {'type': 'text', 'text': 'there'}]<\uff5chy_Assistant\uff5c>\n+<\uff5chy_begin\u2581of\u2581sentence\uff5c><\uff5chy_User\uff5c><\uff5chy_Assistant\uff5c>"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "poolside/Laguna-XS-2.1-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Ma7ee7/Qwen3.8_4B_Distilled_GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "SulphurAI/Sulphur-2-base",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "paperscarecrow/Gemma-4-31B-it-abliterated",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "InternScience/Agents-A1-4B-Q8_0-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "JetBrains/Mellum2-12B-A2.5B-Instruct-GGUF-Q8_0",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Hcompany/Holo-3.1-35B-A3B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "chimingw/Qwen3.8-27B-Uncensored-OrcaRouter-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "InternScience/Agents-A1-4B-Q4_K_M-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "ProCreations/grug-27b-mtp-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "DevQuasar/Qwen.Qwen3-VL-Embedding-2B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "batiai/Qwen3.6-27B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "VesNFF/Qwen3-VL-Embedding-8B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "owao/Nanbeige4.2-3B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "zerodigest/Qwen3.8-27B-Uncensored-YMQ-MTP-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "bloomer010/Ling-3.0-tiny-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "rahul7star/gemma-gguf",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "sugoitoolkit/Sugoi-32B-Ultra-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "llama_ok_j2_fails",
+     "detail": "render:TypeError: can only concatenate str (not \"list\") to str"
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "williamliao/gemma-4-26B-A4B-it-speculator.eagle3-F16-GGUF",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "same",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "Arki05/Qwen3.8-27B-GGUF-shards",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  },
+  {
+   "id": "badtheorylabs/BTL-4-Compact",
+   "fixtures": {
+    "tool_roundtrip_dictargs": {
+     "v": "same",
+     "detail": null
+    },
+    "tool_roundtrip_strargs": {
+     "v": "both_fail",
+     "detail": null
+    },
+    "typed_content": {
+     "v": "same",
+     "detail": null
+    },
+    "reasoning_history": {
+     "v": "same",
+     "detail": null
+    },
+    "no_gen_prompt": {
+     "v": "same",
+     "detail": null
+    }
+   }
+  }
+ ]
+}
