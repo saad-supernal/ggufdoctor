@@ -31,57 +31,37 @@ families run: S, X   upstream: not_requested
 
 Quantised GGUFs are published by third parties, and the chat template inside them is
 often edited on the way: to work around an engine bug, to add tool calling, or by
-accident. Nothing checks that the edited template still produces the prompt the
-original model was trained on. A survey of the 400 most-downloaded GGUF repositories on
-Hugging Face (two per publisher, so a single prolific quantiser cannot dominate) found:
+accident. Nothing checks that the edited template still produces the prompt the original
+model was trained on.
 
-| | corpus 1 (2026-09-01) | corpus 2 (2026-09-03) | corpus 2, corrected (2026-09-03) |
-|---|---|---|---|
-| Comparable chat models | 108 of 400 | 111 of 400 | **185 of 400** |
-| Render a different prompt than upstream | 16 (14.8%) | 16 (14.4%) | **26 (14.1%)** |
-| Weighted by downloads | 31.4% | 31.2% | 26.8% |
-| Publishers affected | 15 of 87 | 15 of 91 | 22 of 139 |
+A survey of the 400 most-downloaded GGUF repositories on Hugging Face (two per publisher,
+run 2026-09-03):
 
-The corrected column is the one to quote. The first two runs excluded 73 repositories as
-"upstream declares no chat template" because the tool only read `tokenizer_config.json`
-and `chat_template.json`; transformers has saved templates to a standalone
-`chat_template.jinja` since 4.55 and newer upstreams (Mistral 3, Gemma 4, GLM 5) carry
-only that file. Reading it (fixed in 0.2.1) made those repositories comparable: 50 turned
-out identical, 14 differ only cosmetically, 8 render a different prompt. The corrected run
-also used a Hugging Face token, which opened ten previously licence-gated upstreams. The
-rate barely moved; the denominator nearly doubled. The corpora differ (corpus 2 adds a
-tool round-trip, typed content and a no-generation-prompt conversation), so the columns
-are not comparable to one decimal.
+| | |
+|---|---|
+| Repositories whose upstream could be compared | 185 of 400 |
+| Render a different prompt than their upstream | **26 (14.1%)** |
+| Weighted by downloads | 26.8% |
+| Publishers affected | 22 of 139 |
 
-Most of the divergence is on the tool-calling path. In the corrected run, 20 of the 26
-divergent repositories differ on a tool-calling fixture and 4 differ on nothing else. In
-corpus 1, five of the sixteen divergent repositories differed on nothing but the tools fixture: chat with them and
-everything looks right, pass a tool schema and the model receives a prompt its upstream
-never would.
+Most of the divergence is on the tool-calling path: 20 of the 26 differ on a tool-calling
+fixture, and 4 differ on nothing else. Chat with those models and everything looks right;
+pass a tool schema and the model receives a prompt its upstream never would. Two of the
+four are Qwen3-Coder quants and one is Qwen's own Qwen2.5-3B GGUF release, which disagrees
+with Qwen's own source model.
 
-| Repository | Downloads | Diverges on |
-|---|---|---|
-| `unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF` | 12.7M | tools only |
-| `Qwen/Qwen2.5-3B-Instruct-GGUF` | 430k | tools only |
-| `poolside/Laguna-S-2.1-GGUF` | 563k | 5 of 7 fixtures |
-| `legraphista/glm-4-9b-chat-IMat-GGUF` | 498k | all 7 fixtures |
-| `TheBloke/Mistral-7B-Instruct-v0.2-GGUF` | 51k | 6 of 7 fixtures |
+The 215 repositories that could not be compared are the other finding: 59 declare a base
+model that no longer exists on the Hub, 71 declare none, 23 have a licence-gated upstream,
+21 have an upstream that publishes no template, and the rest are not chat models. Every
+excluded repository is counted under its reason. The per-repository records, the exact
+command, and the history of earlier runs and their corrections are in
+[`docs/research/`](docs/research/).
 
-The second row is Qwen's own GGUF release disagreeing with Qwen's own source model.
-
-In the corrected run, 185 of the 400 repositories could be compared. Of the rest,
-59 declare a base model that no longer exists on the Hub, so nobody can check them
-against anything; 71 declare no base model; 21 have an upstream that genuinely
-publishes no chat template; 23 have a licence-gated upstream the surveying account had
-not been granted; 37 are not chat models. Every excluded repository is counted under its
-reason; none is dropped silently. Per-repository records and the reproduction command are
-in [`docs/research/`](docs/research/).
-
-The second engine produced the other headline: on the seven standard fixtures,
-llama.cpp's template engine agreed with transformers-style Jinja2 on 100 of 100 top
-templates. The disagreements that exist are on typed content, `None` content, `//`
-(which llama.cpp will not parse) and runtime defaults llama.cpp supplies that
-transformers leaves undefined. ggufdoctor reports those and says which side caused them.
+The second engine produced the other headline: on the seven standard fixtures, llama.cpp's
+template engine agreed with transformers-style Jinja2 on 100 of 100 top templates. The
+disagreements that exist are on typed content, `None` content, `//` (which llama.cpp will
+not parse) and runtime defaults llama.cpp supplies that transformers leaves undefined.
+ggufdoctor reports those and says which side caused them.
 
 ## Install
 
@@ -242,19 +222,12 @@ produce a different prompt. `--save-templates` also writes every fetched templat
 provenance sidecar (repository, revision, licence, tokens), which is how the test
 suite's vendored templates were collected.
 
-Three choices keep the number honest, and each one moved it during development:
-
-- **Rendered output is compared, never template source.** Diffing source reports every
-  cosmetic or engine-compatibility rewrite. Source diffing put the rate at 46.7%.
-- **Two repositories per publisher.** Download rankings are dominated by a handful of
-  quantisers, at least one of whom patches templates deliberately. Without the cap you
-  measure that publisher.
-- **Every excluded repository is classified.** Gated, deleted, no base model, no
-  template, not a chat model, fetch error: each has its own bucket in the output, and
-  the percentage's denominator is stated next to it. A run with too many fetch errors
-  marks itself unreliable instead of printing a number.
-
-Every survey output carries the fixture corpus version it was measured with.
+Method: rendered output is compared, never template source (source diffing counts
+every cosmetic rewrite); at most two repositories per publisher, so one prolific quantiser
+cannot dominate; every excluded repository is classified by reason and the denominator is
+stated next to the percentage. A run with too many fetch errors marks itself unreliable
+instead of printing a number. Set `HF_TOKEN` to include licence-gated upstreams your
+account has access to. Output carries the fixture corpus version it was measured with.
 
 ## Double BOS
 
@@ -282,11 +255,8 @@ harnesses. That is what the finding says.
   GGUF-versus-upstream question rendered through Jinja2 on both sides. Cross-engine
   divergence is not counted in the survey; the 100 of 100 result above is the
   cross-engine statement.
-- Gated upstreams are excluded unless `HF_TOKEN` is set *and* the token's account has
-  accepted each repository's licence. A run with a token that had accepted none of them
-  left all 28 still-existing gated upstreams excluded and changed the figure only by
-  sampling noise (13.6% versus 14.4%; see `docs/research/`). The published figures were
-  measured without a token.
+- Gated upstreams are excluded unless `HF_TOKEN` is set and the token's account has been
+  granted access to each one.
 - `S004`, `S005` and `S006` need the file's vocabulary and token ids. When a GGUF (or a
   Hub repository's metadata) does not carry them, they are recorded as not evaluated.
 
