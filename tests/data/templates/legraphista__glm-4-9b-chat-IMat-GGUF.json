@@ -1,0 +1,12 @@
+{
+ "repo": "legraphista/glm-4-9b-chat-IMat-GGUF",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:49Z",
+ "license": "other",
+ "gated": null,
+ "architecture": "chatglm",
+ "bos_token": "<|endoftext|>",
+ "eos_token": "<|endoftext|>",
+ "base_model": "THUDM/glm-4-9b-chat",
+ "upstream_saved": true
+}

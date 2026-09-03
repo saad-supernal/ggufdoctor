@@ -1,0 +1,12 @@
+{
+ "repo": "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:38Z",
+ "license": "apache-2.0",
+ "gated": null,
+ "architecture": "qwen3moe",
+ "bos_token": null,
+ "eos_token": "<|im_end|>",
+ "base_model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+ "upstream_saved": true
+}

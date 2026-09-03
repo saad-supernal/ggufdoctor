@@ -1,0 +1,12 @@
+{
+ "repo": "mudler/Laguna-XS-2.1-APEX-GGUF",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:43Z",
+ "license": "openmdw-1.1",
+ "gated": null,
+ "architecture": "laguna",
+ "bos_token": "\u3008|EOS|\u3009",
+ "eos_token": "\u3008|EOS|\u3009",
+ "base_model": "poolside/Laguna-XS-2.1",
+ "upstream_saved": true
+}

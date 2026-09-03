@@ -1,0 +1,12 @@
+{
+ "repo": "ornith-ai/Ornith-1.0-9B-GGUF",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:38Z",
+ "license": "mit",
+ "gated": null,
+ "architecture": "qwen35",
+ "bos_token": null,
+ "eos_token": "<|im_end|>",
+ "base_model": null,
+ "upstream_saved": false
+}

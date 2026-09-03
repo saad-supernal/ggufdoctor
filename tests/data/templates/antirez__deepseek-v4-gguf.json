@@ -1,0 +1,12 @@
+{
+ "repo": "antirez/deepseek-v4-gguf",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:41Z",
+ "license": "mit",
+ "gated": null,
+ "architecture": "deepseek4",
+ "bos_token": "<\uff5cbegin\u2581of\u2581sentence\uff5c>",
+ "eos_token": "<\uff5cend\u2581of\u2581sentence\uff5c>",
+ "base_model": "deepseek-ai/DeepSeek-V4-Flash",
+ "upstream_saved": false
+}

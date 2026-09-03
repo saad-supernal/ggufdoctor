@@ -1,0 +1,12 @@
+{
+ "repo": "HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:39Z",
+ "license": "gemma",
+ "gated": null,
+ "architecture": "gemma4",
+ "bos_token": "<bos>",
+ "eos_token": "<eos>",
+ "base_model": "google/gemma-4-e4b-it",
+ "upstream_saved": false
+}

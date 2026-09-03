@@ -1,0 +1,12 @@
+{
+ "repo": "PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
+ "revision": null,
+ "fetched_at": "2026-09-03T07:29:49Z",
+ "license": "apache-2.0",
+ "gated": null,
+ "architecture": "paddleocr",
+ "bos_token": "<s>",
+ "eos_token": "</s>",
+ "base_model": null,
+ "upstream_saved": false
+}
