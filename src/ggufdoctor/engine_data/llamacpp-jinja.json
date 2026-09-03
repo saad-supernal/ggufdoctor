@@ -1,0 +1,9 @@
+{
+ "engine": "llama.cpp",
+ "build_tag": "b10775",
+ "commit": "67a17c17caa95742186f8b1ecadd1b5abd6d5ebb",
+ "wasi_sdk": "wasi-sdk-34",
+ "sha256": "dca9d673968be24856afe222d2a7af1ac3e033963914f4034451ba36671d65b0",
+ "size": 721494,
+ "built_at": "2026-09-03T05:57:14Z"
+}
