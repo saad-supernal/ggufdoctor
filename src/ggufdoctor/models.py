@@ -82,3 +82,7 @@ class CheckContext:
     # metadata. Distinct from "found nothing wrong": this says the check
     # never got to look. Feeds Coverage.checks_not_evaluated downstream.
     checks_not_evaluated: list[str] = field(default_factory=list)
+    # Facts a check family wants the report to carry that are not findings
+    # (e.g. cross_engine: "engines_agreed_fixtures"). Never used to decide
+    # exit codes.
+    stats: dict[str, Any] = field(default_factory=dict)
