@@ -21,8 +21,10 @@ class FakeClient:
         tpl = "{% for m in messages %}{{ m['content'] }}{% endfor %}"
         if repo_id == "orgA/one":
             tpl += "DIVERGES"
-        return {"gguf": {"architecture": "llama", "chat_template": tpl},
-                "cardData": {"base_model": "up/stream"}}
+        return {"gguf": {"architecture": "llama", "chat_template": tpl,
+                         "bos_token": "<s>", "eos_token": "</s>"},
+                "cardData": {"base_model": "up/stream", "license": "apache-2.0"},
+                "sha": "abc123", "gated": False}
 
     def base_model_of(self, info):
         return (info.get("cardData") or {}).get("base_model")
@@ -498,3 +500,29 @@ def test_survey_completes_despite_transient_rate_limiting(monkeypatch):
     assert result["aggregate"]["coverage_gaps"].get("examine_error", 0) == 0
     assert result["aggregate"]["unreliable"] is False
     assert "unreliable" not in to_markdown(result).lower()
+
+
+# --- Task 7: --save-templates writes fetched templates with provenance ---
+
+def test_save_templates_writes_template_sidecar_and_upstream(tmp_path):
+    client = FakeClient()
+    result = survey(client, top=10, per_org=2, save_templates=str(tmp_path))
+    saved = sorted(p.name for p in tmp_path.iterdir())
+    # every repo with a GGUF-side template is saved, whatever its final status
+    with_tpl = [r for r in result["records"] if r["status"] not in ("missing_template", "non_chat_architecture", "non_chat_pipeline_tag", "examine_error")]
+    assert with_tpl, "fake client must include at least one repo with a template"
+    first = with_tpl[0]["id"].replace("/", "__")
+    assert f"{first}.jinja" in saved and f"{first}.json" in saved
+    side = json.loads((tmp_path / f"{first}.json").read_text())
+    assert side["repo"] == with_tpl[0]["id"]
+    for key in ("revision", "fetched_at", "license", "gated", "architecture",
+                "bos_token", "eos_token", "base_model", "upstream_saved"):
+        assert key in side
+    if side["upstream_saved"]:
+        assert f"{first}.upstream.jinja" in saved
+
+
+def test_survey_without_save_dir_writes_nothing(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    survey(FakeClient(), top=10, per_org=2)
+    assert list(tmp_path.iterdir()) == []

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import datetime
+import json
+import os
 from collections import Counter, defaultdict
 from typing import Any
 
@@ -116,8 +119,49 @@ def sample_repos(client: Any, top: int, per_org: int) -> list[dict[str, Any]]:
     return picked
 
 
+def _slug(repo_id: str) -> str:
+    return repo_id.replace("/", "__")
+
+
+def _save_template(save_dir: str, repo_id: str, info: dict[str, Any], tpl: str,
+                   base: str | None) -> None:
+    os.makedirs(save_dir, exist_ok=True)
+    slug = _slug(repo_id)
+    gg = (info or {}).get("gguf") or {}
+    with open(os.path.join(save_dir, f"{slug}.jinja"), "w", encoding="utf-8") as f:
+        f.write(tpl)
+    sidecar = {
+        "repo": repo_id,
+        "revision": (info or {}).get("sha"),
+        "fetched_at": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "license": ((info or {}).get("cardData") or {}).get("license"),
+        "gated": (info or {}).get("gated"),
+        "architecture": gg.get("architecture"),
+        "bos_token": gg.get("bos_token"),
+        "eos_token": gg.get("eos_token"),
+        "base_model": base,
+        "upstream_saved": False,
+    }
+    with open(os.path.join(save_dir, f"{slug}.json"), "w", encoding="utf-8") as f:
+        json.dump(sidecar, f, indent=1)
+        f.write("\n")
+
+
+def _save_upstream(save_dir: str, repo_id: str, upstream: str) -> None:
+    slug = _slug(repo_id)
+    with open(os.path.join(save_dir, f"{slug}.upstream.jinja"), "w", encoding="utf-8") as f:
+        f.write(upstream)
+    path = os.path.join(save_dir, f"{slug}.json")
+    with open(path, encoding="utf-8") as f:
+        sidecar = json.load(f)
+    sidecar["upstream_saved"] = True
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(sidecar, f, indent=1)
+        f.write("\n")
+
+
 def _examine(client: Any, repo: dict[str, Any], engine: Any,
-             fixtures: list[Any]) -> dict[str, Any]:
+             fixtures: list[Any], save_dir: str | None = None) -> dict[str, Any]:
     rec = {"id": repo["id"], "org": repo["id"].split("/")[0],
            "downloads": repo["downloads"], "status": None}
     try:
@@ -138,6 +182,8 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
             rec["status"] = "non_chat_pipeline_tag"
             return rec
         base = client.base_model_of(info)
+        if save_dir and tpl:
+            _save_template(save_dir, repo["id"], info, tpl, base)
         if not base or base.lower() == repo["id"].lower():
             # A repo can't be its own upstream: comparing a template against
             # itself always scores "identical" and would silently inflate
@@ -148,6 +194,8 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
         if why != "ok":
             rec["status"] = UPSTREAM_REASON_TO_GAP.get(why, "upstream_fetch_error")
             return rec
+        if save_dir and tpl:
+            _save_upstream(save_dir, repo["id"], upstream)
         if not tpl:
             rec["status"] = "missing_template"
             return rec
@@ -217,11 +265,12 @@ def _examine(client: Any, repo: dict[str, Any], engine: Any,
         return rec
 
 
-def survey(client: Any, top: int, per_org: int) -> dict[str, Any]:
+def survey(client: Any, top: int, per_org: int,
+           save_templates: str | None = None) -> dict[str, Any]:
     engine = Jinja2Engine()
     fixtures = load_fixtures()
     repos, truncated = _sample_repos(client, top, per_org)
-    records = [_examine(client, r, engine, fixtures) for r in repos]
+    records = [_examine(client, r, engine, fixtures, save_templates) for r in repos]
 
     comparable = [r for r in records if r["status"] in COMPARABLE]
     divergent = [r for r in comparable if r["status"] == "output_differs"]

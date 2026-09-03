@@ -67,6 +67,10 @@ def _build_survey_parser() -> argparse.ArgumentParser:
     p.add_argument("--markdown", metavar="PATH",
                    help="write the markdown report to PATH (it is also "
                         "always printed to stdout)")
+    p.add_argument("--save-templates", metavar="DIR",
+                   help="also write every fetched chat template (and its upstream, "
+                        "when resolved) to DIR as <org>__<repo>.jinja with a .json "
+                        "sidecar recording repo, revision, licence and tokens")
     return p
 
 
@@ -169,7 +173,8 @@ def _survey_main(argv: list[str]) -> int:
     args = _build_survey_parser().parse_args(argv)
 
     try:
-        result = survey(HfClient(), top=args.top, per_org=args.per_org)
+        result = survey(HfClient(), top=args.top, per_org=args.per_org,
+                        save_templates=args.save_templates)
     except Exception as e:
         print(f"ggufdoctor survey: {e}", file=sys.stderr)
         return 2
