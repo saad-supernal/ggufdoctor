@@ -340,7 +340,8 @@ src/ggufdoctor/
   engines/         jinja2_engine.py, llamacpp_engine.py, registry.py
   engine_data/     llamacpp-jinja.wasm + manifest (built by engine/)
   checks/          sanity.py (S), cross_engine.py (X), reference.py (R),
-                   ollama_registry.py (O, X003)
+                   ollama_registry.py (O, X003); common.py holds the shared
+                   diff/collapse helpers used by the X and O checks
   ollama.py        Ollama's template registry, reproduced as data (selection)
   runtime_ollama.py  family RT — asks a real `ollama` binary what it renders
   ollama_data/     vendored registry, curated templates and goldens
