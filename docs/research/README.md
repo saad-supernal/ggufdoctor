@@ -92,6 +92,16 @@ in the v0.2 ledger (the maintainer's working notes (not in the repo)):
   vendored template × fixture pairs byte-identical, one skipped with a stated reason (a
   Gemma-4 `tool_responses` rewrite llama.cpp performs above the templating entry point).
 
+## The Ollama study
+
+`2026-09-03-ollama-spike.md` — the measurement behind v0.3's design. It establishes that
+Ollama has no Jinja-to-Go template converter: `ollama create` matches a GGUF's template
+against a small registry by Levenshtein distance and substitutes a curated Go template on
+a hit, rendering everything else with llama.cpp's engine (the one already bundled here).
+That finding is what v0.3's `O001`/`X003` registry check and `--runtime` family are built
+around; see the [Ollama](../../README.md#ollama) section of the project README for what
+shipped.
+
 ## The earlier probe, and why its number differed
 
 `2026-08-31-survey-raw.json` — raw per-repo records from the throwaway probe that

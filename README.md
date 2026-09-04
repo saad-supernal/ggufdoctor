@@ -102,6 +102,7 @@ resolved automatically.
 | `--compare-upstream REPO` | also run the R family against `REPO`'s template |
 | `--require-upstream` | exit 1 if the requested upstream could not be resolved |
 | `--engines jinja2,llama.cpp` | subset the engines; `jinja2` cannot be dropped |
+| `--runtime OLLAMA` | path to a real `ollama` binary; renders every fixture through it and reports where it differs from the prediction (`RT001`). Needs a running Ollama server and a local `.gguf` target |
 | `--fixtures PATH` | use your own conversation corpus (JSON, same shape as the bundled one) |
 | `--json PATH` | write the machine-readable report |
 | `--ignore-file PATH` | suppression list, default `.ggufdoctorignore` |
@@ -130,7 +131,8 @@ A rule may name a fixture to suppress only that case.
 
 `--json` writes a versioned report (`schema_version` `1`): tool version, fixture corpus
 version, the engines used with their versions, a coverage block (which families ran,
-which checks could not be evaluated and why, whether the upstream resolved), every
+which checks could not be evaluated and why, whether the upstream resolved,
+`coverage.ollama` and `coverage.runtime`, both null when that family did not run), every
 finding with its evidence (diffs, missing tokens, the cause of a downgrade), suppressed
 findings, and a summary by severity. All fields added since 0.1 are additive.
 
@@ -177,6 +179,14 @@ tool-call round trip, typed content parts, and a conversation with no generation
 The last three are marked "extended" because many templates predate those message
 shapes; a render failure on them is reported at info.
 
+Against Ollama's template registry, offline:
+
+| | | |
+|---|---|---|
+| `O001` | Ollama's registry recognises this template and would substitute a curated Go template for it; names the template and the distance, and says whether that template ignores tools | info |
+| `X003` | the curated Go template Ollama would substitute renders differently from the GGUF's own template on a fixture; one-sided failures are reported with the direction named | error |
+| `RT001` | with `--runtime`, a real Ollama rendered differently from the prediction | warn; info when it agreed |
+
 ## Engines
 
 A template is rendered by whatever you serve the model with, and the two common runtimes
@@ -208,6 +218,32 @@ rewrite applied; a flag saying "the normaliser ran" is never enough on its own.
 
 Both engines run with `strftime_now` pinned to a fixed date so output is reproducible.
 Templates whose output depends on the date are not fully exercised.
+
+### Ollama
+
+Ollama is not a third engine in the sense above: it has no template converter of its own
+to embed. `ollama create` runs the GGUF's Jinja source through `template.Named`, a
+brute-force Levenshtein distance against the 37 strings in its `template/index.json`; a
+score under 100 substitutes one of 19 curated Go templates for the GGUF's own, pinned
+here to Ollama commit `b79067b0` (release `v0.33.2`).
+
+Unrecognised templates — the common case, nine of the ten vendored real templates —
+render with llama-server's engine, which is the one bundled here, so `X001`/`X002`
+already describe Ollama for them. `O001`/`X003` only have something to say about the
+recognised minority.
+
+The check is data, not code. The Python port of `template.Named` (`ggufdoctor.ollama`)
+is asserted equal to the real Go function in CI, over the ten vendored real templates
+and synthetic probes built around every registry entry; the curated templates' renders
+are goldens produced by Ollama's own `template` package at the pin, not reimplemented.
+
+Two fixture shapes are excluded by construction: `add_generation_prompt: false`, which
+Ollama has no concept of, and typed content, which cannot unmarshal into Ollama's
+`api.Message` at all. Both are named as coverage rather than compared. The finding holds
+for a default `ollama create` on that build; `RENDERER`/`PARSER` directives,
+`OLLAMA_GO_TEMPLATE=0` and `PreferChatTemplate` all divert away from the curated
+template, and `--runtime` against your own `ollama` binary is the only way to see past
+them. See [`docs/research/2026-09-03-ollama-spike.md`](docs/research/2026-09-03-ollama-spike.md).
 
 ## The survey
 
@@ -246,11 +282,11 @@ harnesses. That is what the finding says.
   engine mirrors (tool-call arguments between object and string form, assistant prefill,
   per-family message rewrites selected by sniffing the template). Those are not
   reproduced. [`engine/README.md`](engine/README.md) lists exactly what is.
-- Ollama is not modelled. Ollama has no template conversion: it matches a GGUF's
-  template against a small registry of known templates and substitutes a curated Go
-  template on a hit; everything else it renders with llama.cpp's engine, which is the
-  one bundled here. A check for the registry case is planned; see
-  [`docs/research/2026-09-03-ollama-spike.md`](docs/research/2026-09-03-ollama-spike.md).
+- Hand-written renderers in Ollama's `model/renderers/` are selected by a Modelfile
+  `RENDERER` directive, never from a GGUF, so ggufdoctor cannot predict them. A clean
+  `X003` does not mean Ollama renders the model identically — only `--runtime` against
+  your own binary says that. Findings hold for the pinned Ollama commit, which the
+  weekly drift job watches.
 - The survey samples top downloads, not the long tail, and its percentages are the
   GGUF-versus-upstream question rendered through Jinja2 on both sides. Cross-engine
   divergence is not counted in the survey; the 100 of 100 result above is the
@@ -270,10 +306,14 @@ uv pip install --python .venv/bin/python -e ".[dev]"
 .venv/bin/python -m pytest -q
 ```
 
-The default test run is offline and needs no toolchain. Two opt-in suites download
-things: `pytest -m conformance` fetches the pinned `llama-server` release binary and a
-1 MB model and checks the bundled engine against it; `pytest -m network` talks to the
-Hub. Every download is verified against a pinned sha256 before use.
+The default test run is offline and needs no toolchain. Three opt-in suites reach
+outside the default run: `pytest -m conformance` fetches the pinned `llama-server`
+release binary and a 1 MB model and checks the bundled engine against it; `pytest -m
+network` talks to the Hub; `pytest -m ollama_conformance tests/ollama_conformance`
+checks the Python port of Ollama's template selector against the real Go
+`template.Named` and the committed goldens against a real render, and needs Go plus, on
+first run, the network to fetch Ollama's source at the pin. Every download is verified
+against a pinned sha256 before use.
 
 The WebAssembly engine is rebuilt with `engine/build.sh`, which fetches the pinned
 llama.cpp sources (checksummed) and wasi-sdk 34 (checksummed) and writes the module and
@@ -281,6 +321,12 @@ its manifest. CI rebuilds it on every push and runs the suite against the fresh 
 Bumping the llama.cpp pin is a deliberate change: edit `engine/LLAMACPP_PIN`, refetch,
 rebuild, re-run the conformance suite and the semantics table, update the version. The
 procedure is in [`engine/README.md`](engine/README.md).
+
+The Ollama registry is vendored data, refreshed the same deliberate way: goldens are
+regenerated with `engine/ollama/regen-goldens.sh`, which needs an Ollama checkout at
+`engine/build/ollama` (`engine/ollama/fetch-ollama.sh` creates one at the pin). The
+bump procedure — edit the pin, refetch, re-vendor, regenerate goldens, re-run the
+conformance suite — is in [`engine/ollama/README.md`](engine/ollama/README.md).
 
 Layout:
 
@@ -290,13 +336,18 @@ src/ggufdoctor/
   sources.py       target and upstream resolution
   engines/         jinja2_engine.py, llamacpp_engine.py, registry.py
   engine_data/     llamacpp-jinja.wasm + manifest (built by engine/)
-  checks/          sanity.py (S), cross_engine.py (X), reference.py (R)
+  checks/          sanity.py (S), cross_engine.py (X), reference.py (R),
+                   ollama_registry.py (O, X003)
+  ollama.py        Ollama's template registry, reproduced as data (selection)
+  runtime_ollama.py  family RT — asks a real `ollama` binary what it renders
+  ollama_data/     vendored registry, curated templates and goldens
   fixtures.py      the versioned conversation corpus
   survey.py        the survey harness
   report/          human and JSON output
 engine/            build pipeline and the C++ shim around llama.cpp's engine
+engine/ollama/     fetch/vendor/regen scripts and the Go oracle for the registry
 tests/             unit tests, ten vendored real templates, conformance suite
-docs/research/     survey data and the two engine studies
+docs/research/     survey data and the engine and Ollama studies
 ```
 
 ## Contributing

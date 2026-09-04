@@ -2,6 +2,35 @@
 
 All notable changes to `ggufdoctor`. Dates are the day the work landed on `main`.
 
+## 0.3.0 — 2026-09-04
+
+### Added
+
+- **Ollama registry check.** `ollama create` matches a GGUF's chat template against Ollama's
+  37-entry template registry by Levenshtein distance and, on a hit, substitutes one of 19
+  curated Go templates. ggufdoctor now reproduces that selection offline (`O001`, info) and
+  compares the GGUF's own render against the curated template's render on every fixture
+  (`X003`, error). The Go renders are goldens produced by Ollama's own `template` package at
+  the pinned commit `b79067b0` (v0.33.2) and checked in CI. When the registry recognises
+  nothing — nine of the ten vendored real templates — the report says so and points at the
+  llama.cpp engine, which is what modern Ollama renders such templates with. 18 of the 19
+  curated templates ignore tools entirely (only `command-r` references `.Tools`), which O001
+  reports as coverage rather than as a divergence.
+- `--runtime <ollama>`: renders every fixture through a real Ollama (`ollama create` from the
+  GGUF, then `/api/chat` with `_debug_render_only`) and reports where it differs from the
+  prediction (`RT001`). The only way to observe `PreferChatTemplate`, `RENDERER`/`PARSER` and
+  `OLLAMA_GO_TEMPLATE`.
+- `coverage.ollama` and `coverage.runtime` in the JSON report (both null when the corresponding
+  family did not run); an `ollama:` coverage line in the human report and, with `--runtime`, a
+  `runtime:` line; families `O` and `RT`.
+- A weekly CI job that diffs the vendored registry against Ollama `main` and opens an issue on
+  drift.
+
+### Changed
+
+- The JSON report's `fixture_corpus_version` is the version of the corpus actually loaded
+  (`--fixtures` corpora carry their own `version`), not the bundled constant.
+
 ## 0.2.1 — 2026-09-03
 
 ### Fixed

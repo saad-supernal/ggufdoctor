@@ -371,6 +371,6 @@ def test_runtime_requires_a_local_gguf(capsys):
     assert "--runtime needs a local .gguf file" in capsys.readouterr().err
 
 
-def test_version_is_0_2_1():
+def test_version_is_0_3_0():
     import ggufdoctor
-    assert ggufdoctor.__version__ == "0.2.1"
+    assert ggufdoctor.__version__ == "0.3.0"
