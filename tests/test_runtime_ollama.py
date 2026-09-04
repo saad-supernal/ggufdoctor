@@ -105,11 +105,11 @@ def _host(server):
     return f"http://127.0.0.1:{server.server_address[1]}"
 
 
-def _ctx(template=TPL, engines=None):
+def _ctx(template=TPL, engines=None, custom_corpus=False):
     model = GgufModel(source_id="m.gguf", architecture="llama", chat_template=template,
                       tokens=["<s>", "</s>"], bos_token_id=0, eos_token_id=1)
     return CheckContext(model=model, engines=engines or [Jinja2Engine(), LlamaCppEngine()],
-                        fixtures=load_fixtures())
+                        fixtures=load_fixtures(), custom_corpus=custom_corpus)
 
 
 def test_request_body_maps_a_fixture_to_api_chat():
@@ -350,3 +350,54 @@ def test_cli_runtime_not_evaluated_is_not_a_family_that_ran(server, fake_ollama,
     assert "_debug_render_only" in reason
     assert f"  runtime: not evaluated — {reason}" in out
     assert "agreed with the prediction" not in out
+
+
+# --- Final review round: "O did not evaluate" is not "Ollama would miss" ---
+
+
+def test_registry_hit_with_unevaluated_goldens_is_a_coverage_gap():
+    # `--fixtures custom.json --runtime ollama` on a template Ollama *does*
+    # recognise. Family O declines (its goldens were recorded against the
+    # bundled corpus), leaving recognised=None. Reading that as a miss sent
+    # RT down the llama.cpp path and then blamed PreferChatTemplate /
+    # RENDERER/PARSER / OLLAMA_GO_TEMPLATE for a difference that was only
+    # ever the wrong path. RT must say it cannot predict this one instead.
+    from ggufdoctor.ollama import load_index
+    chatml = next(t for n, t in load_index() if n == "chatml" and "add_generation_prompt" in t)
+    ctx = _ctx(chatml, custom_corpus=True)
+    run_ollama_checks(ctx)
+    assert ctx.stats["ollama"]["recognised"] is None
+    assert ctx.stats["ollama"]["not_evaluated"] is not None
+    calls = []
+    rt = OllamaRuntime(["/nonexistent/ollama"], run=lambda *a, **kw: calls.append(a))
+    assert run_runtime_checks(ctx, rt, "/tmp/m.gguf") == []
+    assert ctx.checks_not_evaluated[-1:] == ["RT001"]
+    reason = ctx.stats["runtime"]["not_evaluated"]
+    assert reason.startswith("registry recognised chatml but its goldens were not evaluated (")
+    assert reason.endswith("); cannot predict the registry path")
+    assert ctx.stats["ollama"]["not_evaluated"] in reason
+    assert calls == []                  # no model was created, so none needs removing
+    assert ctx.stats["runtime"]["predicted_path"] is None
+
+
+def test_registry_miss_with_unevaluated_goldens_labels_the_path_honestly(server, fake_ollama,
+                                                                         renders):
+    # Same decline, a template the registry genuinely misses: llama.cpp is
+    # the real path, so RT runs -- but the label has to say on whose
+    # authority, because family O never made the call.
+    llama = LlamaCppEngine()
+    renders(lambda body: llama.render(TPL, {
+        "messages": body["messages"], "tools": body.get("tools"),
+        "bos_token": "<s>", "eos_token": "</s>",
+        **({"enable_thinking": body["think"]} if "think" in body else {})}).text)
+    ctx = _ctx(custom_corpus=True)
+    run_ollama_checks(ctx)
+    assert ctx.stats["ollama"]["recognised"] is None
+    rt = OllamaRuntime(cmd_of(fake_ollama), host=_host(server))
+    found = run_runtime_checks(ctx, rt, "/tmp/m.gguf")
+    assert [(f.id, f.severity) for f in found] == [("RT001", Severity.INFO)]
+    path = ctx.stats["runtime"]["predicted_path"]
+    assert path.startswith("llama.cpp engine (registry not evaluated: ")
+    assert path.endswith(")") and ctx.stats["ollama"]["not_evaluated"] in path
+    assert f"via {path}" in found[0].message
+    assert found[0].evidence["predicted_path"] == path

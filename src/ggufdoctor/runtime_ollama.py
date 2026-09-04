@@ -24,6 +24,13 @@ predicted for that same file:
 * the bundled llama.cpp engine's render of the GGUF's own Jinja, when it did
   not (`path = "llama.cpp engine"`) -- Ollama's miss case is the Jinja path.
 
+When family O declined to evaluate at all (a custom corpus, a golden/corpus
+version mismatch, no jinja2), it has said nothing about which path Ollama
+would take, and RT must not read that silence as a miss. It runs the selector
+itself for the path decision alone: a registry hit means the golden RT would
+need was never evaluated, so RT001 is a coverage gap naming that; a miss means
+the Jinja path really is the one, and the label says so out loud.
+
 **RT001 INFO** is agreement: the oracle confirms the prediction on every
 fixture both sides could express. **RT001 WARN** is disagreement, one finding
 per distinct divergence (`collapse_by_signature`), with a diff labelled
@@ -80,7 +87,7 @@ from ggufdoctor.checks.common import (collapse_by_signature, divergence_signatur
 from ggufdoctor.checks.ollama_registry import (NO_GENERATION_PROMPT_REASON, NO_GOLDEN_REASON,
                                                OLLAMA_SUFFIX)
 from ggufdoctor.models import CheckContext, Finding, Fixture, RenderResult, Severity
-from ggufdoctor.ollama import load_goldens, pin
+from ggufdoctor.ollama import load_goldens, pin, select
 
 DEFAULT_HOST = "http://127.0.0.1:11434"
 HOST_ENV = "OLLAMA_HOST"
@@ -357,7 +364,15 @@ def _nothing_compared_reason(path: str, template_name: str | None,
 def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
                        gguf_path: str) -> list[Finding]:
     ollama_stats = ctx.stats.get("ollama") or {}
-    recognised = bool(ollama_stats.get("recognised"))
+    # Three states, not two. `recognised` is True/False when family O reached
+    # a verdict and None when it declined to look at all (custom corpus,
+    # golden/corpus version mismatch, no jinja2) -- and "O did not evaluate"
+    # is not "Ollama would not recognise this template". Collapsing the two
+    # sent RT down the llama.cpp path for a file Ollama serves from the
+    # registry, then blamed PreferChatTemplate / RENDERER/PARSER /
+    # OLLAMA_GO_TEMPLATE for a difference that was only ever the wrong path.
+    ollama_reason = ollama_stats.get("not_evaluated")
+    from_golden = ollama_reason is None and bool(ollama_stats.get("recognised"))
     template_name = ollama_stats.get("template")
 
     # Built once, up front, with every key the reports read, and mutated
@@ -381,15 +396,29 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
 
     engine = None
     renders: dict[str, Any] = {}
-    if recognised:
+    if from_golden:
         # Family O already decided Ollama would serve its curated template
         # for this file; the golden *is* the prediction, so no engine runs.
         path = f"registry:{template_name}"
         renders = load_goldens()["renders"].get(template_name, {})
     else:
-        path = ENGINE_PATH
         if not ctx.model.chat_template:
             return not_evaluated(NO_TEMPLATE_REASON)
+        path = ENGINE_PATH
+        if ollama_reason is not None:
+            # O declined, so nothing has decided the path yet. Run the
+            # selector alone -- the *path* decision needs only `select`, not
+            # the goldens O was missing. A hit means the registry path is the
+            # right one and RT cannot walk it (no golden to predict from), so
+            # it is a stated coverage gap, not a run down the wrong path; a
+            # miss means llama.cpp is genuinely the path, and the label says
+            # on whose authority.
+            selection = select(ctx.model.chat_template)
+            if selection.recognised:
+                return not_evaluated(
+                    f"registry recognised {selection.name} but its goldens were not "
+                    f"evaluated ({ollama_reason}); cannot predict the registry path")
+            path = f"{ENGINE_PATH} (registry not evaluated: {ollama_reason})"
         engine = next((e for e in ctx.engines
                        if getattr(e, "name", None) == LLAMACPP
                        and getattr(e, "available", True)), None)
@@ -414,7 +443,7 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
             if reason is not None:
                 not_comparable[fx.name] = reason
                 continue
-            if recognised:
+            if from_golden:
                 golden = renders.get(fx.name)
                 reason = _golden_not_comparable(golden, template_name)
                 if reason is not None:
