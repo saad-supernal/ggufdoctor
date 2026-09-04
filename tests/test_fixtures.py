@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
@@ -64,3 +66,23 @@ def test_thinking_fixtures_pin_the_enable_thinking_triple():
     assert "enable_thinking" not in fixtures["thinking_unset"].context
     assert fixtures["thinking_true"].context["enable_thinking"] is True
     assert fixtures["thinking_false"].context["enable_thinking"] is False
+
+
+def test_load_corpus_reports_version_and_custom_flag(tmp_path):
+    from ggufdoctor.fixtures import CORPUS_VERSION, load_corpus
+    bundled = load_corpus()
+    assert bundled.version == CORPUS_VERSION and bundled.custom is False and bundled.path is None
+    assert [f.name for f in bundled.fixtures] == [f.name for f in load_fixtures()]
+    p = tmp_path / "c.json"
+    p.write_text(json.dumps({"version": "custom-7", "fixtures": [
+        {"name": "one", "context": {"messages": [{"role": "user", "content": "x"}]}}]}), encoding="utf-8")
+    custom = load_corpus(str(p))
+    assert custom.version == "custom-7" and custom.custom is True and custom.path == str(p)
+    assert [f.name for f in custom.fixtures] == ["one"]
+
+
+def test_load_corpus_without_a_version_field_is_unversioned(tmp_path):
+    from ggufdoctor.fixtures import load_corpus
+    p = tmp_path / "c.json"
+    p.write_text(json.dumps({"fixtures": []}), encoding="utf-8")
+    assert load_corpus(str(p)).version == "unversioned"

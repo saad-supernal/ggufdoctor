@@ -7,7 +7,7 @@ import sys
 
 from ggufdoctor.checks.reference import run_reference_checks
 from ggufdoctor.checks.sanity import run_sanity_checks
-from ggufdoctor.fixtures import load_fixtures
+from ggufdoctor.fixtures import load_corpus
 from ggufdoctor.ignorefile import apply_ignores, load_ignores
 from ggufdoctor.models import CheckContext
 from ggufdoctor.report.human import render_human
@@ -106,7 +106,8 @@ def _lint_main(argv: list[str] | None = None) -> int:
     try:
         from ggufdoctor.sources import resolve
         model, upstream, coverage = resolve(args.target, args.compare_upstream)
-        fixtures = load_fixtures(args.fixtures)
+        corpus = load_corpus(args.fixtures)
+        fixtures = corpus.fixtures
 
         from ggufdoctor.checks.cross_engine import X_IDS, run_cross_engine_checks
         from ggufdoctor.engines.registry import select_engines
@@ -118,7 +119,8 @@ def _lint_main(argv: list[str] | None = None) -> int:
         coverage.engines_unavailable = dict(selection.unavailable)
         ctx = CheckContext(model=model, engines=engines, fixtures=fixtures,
                            upstream_template=upstream,
-                           upstream_meta={"coverage": coverage.upstream})
+                           upstream_meta={"coverage": coverage.upstream},
+                           corpus_version=corpus.version, custom_corpus=corpus.custom)
         findings = run_sanity_checks(ctx)
         if len(engines) >= 2:
             findings += run_cross_engine_checks(ctx)
@@ -150,7 +152,8 @@ def _lint_main(argv: list[str] | None = None) -> int:
         # the contract is a one-line "ggufdoctor: ..." message and exit 2,
         # never a stack trace.
         if args.json_path:
-            payload = build_json(model, findings, suppressed, coverage, engines)
+            payload = build_json(model, findings, suppressed, coverage, engines,
+                                 corpus_version=corpus.version)
             with open(args.json_path, "w", encoding="utf-8") as f:
                 json.dump(payload, f, indent=1)
     except Exception as e:  # unreadable input, network failure, bad ignore

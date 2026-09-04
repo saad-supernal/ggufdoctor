@@ -179,3 +179,18 @@ def test_family_skipped_note_fires_for_x_when_an_engine_is_unavailable():
                    engines_unavailable={"llama.cpp": "boom"})
     text = render_human(model, [], [], cov, [Jinja2Engine()])
     assert "X family skipped" in text
+
+
+def test_json_reports_the_loaded_corpus_version_when_given():
+    d = build_json(MODEL, [], [], COV, [Jinja2Engine()], corpus_version="custom-7")
+    assert d["fixture_corpus_version"] == "custom-7"
+
+
+def test_json_coverage_carries_ollama_when_set():
+    cov = Coverage(upstream="not_requested", families_run=["S"],
+                   ollama={"pinned_commit": "b79067b0db7417f20108363bc22adb97f35c966a",
+                           "recognised": False, "template": None, "distance": None,
+                           "confident": None, "not_evaluated": None})
+    d = build_json(MODEL, [], [], cov, [Jinja2Engine()])
+    assert d["coverage"]["ollama"]["recognised"] is False
+    assert build_json(MODEL, [], [], COV, [Jinja2Engine()])["coverage"]["ollama"] is None

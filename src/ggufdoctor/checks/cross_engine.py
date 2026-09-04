@@ -21,22 +21,17 @@ raise (ruling R13).
 """
 from __future__ import annotations
 
-import difflib
 from typing import Any
 
-from ggufdoctor.checks.common import collapse_by_signature, with_real_tokens
-from ggufdoctor.models import CheckContext, Finding, Fixture, RenderResult, Severity
+from ggufdoctor.checks.common import (DIFF_LINE_CHARS, DIFF_LINES, collapse_by_signature,
+                                      divergence_signature, failure_text, is_tool_fixture,
+                                      render_diff, with_real_tokens)
+from ggufdoctor.models import CheckContext, Finding, RenderResult, Severity
 
 X_IDS = ["X001", "X002", "X004", "X005"]
 JINJA2 = "jinja2"
 LLAMACPP = "llama.cpp"
-DIFF_LINES = 40
-DIFF_LINE_CHARS = 400
 UNAVAILABLE_PREFIX = "engine:unavailable:"
-
-
-def is_tool_fixture(fixture: Fixture) -> bool:
-    return "tools" in fixture.context
 
 
 def _engine_pair(ctx: CheckContext) -> tuple[Any, Any] | None:
@@ -54,26 +49,10 @@ def _whitespace_only(a: str, b: str) -> bool:
     return a != b and "".join(a.split()) == "".join(b.split())
 
 
-def _signature(a: str, b: str) -> tuple[tuple[str, str, str], ...]:
-    """A dedup key describing *what* differs, independent of surrounding
-    text that both engines render identically.
-
-    Two fixtures that hit "the same divergence" (e.g. jinja2 prints "None"
-    where llama.cpp prints nothing, at a fixed spot in the template) do not
-    generally render byte-identical *lines* -- fixture corpus messages carry
-    a different number/shape of roles, so the line-based unified diff used
-    for the human-readable evidence["diff"] differs per fixture even though
-    the underlying divergence is the same one. A character-level opcode diff
-    isolates just the replaced/deleted/inserted substrings (dropping the
-    "equal" spans), which collapses correctly across fixtures that vary only
-    in the parts both engines agree on.
-    """
-    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
-    return tuple(
-        (tag, a[i1:i2], b[j1:j2])
-        for tag, i1, i2, j1, j2 in sm.get_opcodes()
-        if tag != "equal"
-    )
+# Old name, kept because existing tests import it -- generalised and moved
+# to checks/common.py as divergence_signature (engine-neutral: a later
+# Ollama-registry check reuses it with its own labels).
+_signature = divergence_signature
 
 
 def _flatten_typed_content(context: dict[str, Any]) -> dict[str, Any]:
@@ -266,29 +245,12 @@ def _explain(j2: Any, tpl: str, context: dict[str, Any],
 
 
 def _diff(a: str, b: str) -> str:
-    lines = difflib.unified_diff(a.splitlines(), b.splitlines(),
-                                 fromfile=JINJA2, tofile=LLAMACPP, lineterm="", n=1)
-    # Per-line budget as well as a line count: a template that renders
-    # everything on one line (minified templates do) would otherwise put both
-    # engines' entire output -- unbounded, attacker-influenced text from a
-    # stranger's repo -- into a JSON report as a single diff line.
-    out = [ln if len(ln) <= DIFF_LINE_CHARS else ln[:DIFF_LINE_CHARS] + "…"
-           for ln in lines]
-    if len(out) > DIFF_LINES:
-        out = out[:DIFF_LINES] + [f"... ({len(out) - DIFF_LINES} more diff lines)"]
-    return "\n".join(out)
+    return render_diff(a, b, JINJA2, LLAMACPP)
 
 
-def _failure_text(r: RenderResult) -> tuple[str, str]:
-    """(stage, one-line text) for a failed RenderResult."""
-    tag, _, rest = r.error.partition(":")
-    rest = rest.strip()
-    if tag == "compile":
-        stage, _, msg = rest.partition(":")
-        return stage.strip() or "compile", msg.strip()
-    if tag == "raise":
-        return "raise", rest
-    return "render", rest
+# Old name, kept because existing tests import it -- moved to
+# checks/common.py as failure_text (engine-neutral).
+_failure_text = failure_text
 
 
 def _x002(ok_engine: str, failing: RenderResult, ok_result: RenderResult,

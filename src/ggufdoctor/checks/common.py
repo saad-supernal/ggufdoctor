@@ -1,9 +1,65 @@
 from __future__ import annotations
 
+import difflib
 from collections.abc import Callable
 from typing import Any
 
-from ggufdoctor.models import CheckContext, Finding, GgufModel, Severity
+from ggufdoctor.models import CheckContext, Finding, Fixture, GgufModel, RenderResult, Severity
+
+# Per-line budget as well as a line count, for render_diff: a template that
+# renders everything on one line (minified templates do) would otherwise put
+# an engine's entire output -- unbounded, attacker-influenced text from a
+# stranger's repo -- into a JSON report as a single diff line.
+DIFF_LINES = 40
+DIFF_LINE_CHARS = 400
+
+
+def is_tool_fixture(fixture: Fixture) -> bool:
+    return "tools" in fixture.context
+
+
+def render_diff(a: str, b: str, from_name: str, to_name: str) -> str:
+    lines = difflib.unified_diff(a.splitlines(), b.splitlines(),
+                                 fromfile=from_name, tofile=to_name, lineterm="", n=1)
+    out = [ln if len(ln) <= DIFF_LINE_CHARS else ln[:DIFF_LINE_CHARS] + "…"
+           for ln in lines]
+    if len(out) > DIFF_LINES:
+        out = out[:DIFF_LINES] + [f"... ({len(out) - DIFF_LINES} more diff lines)"]
+    return "\n".join(out)
+
+
+def divergence_signature(a: str, b: str) -> tuple[tuple[str, str, str], ...]:
+    """A dedup key describing *what* differs, independent of surrounding
+    text that both sides render identically.
+
+    Two fixtures that hit "the same divergence" (e.g. one side prints "None"
+    where the other prints nothing, at a fixed spot in the template) do not
+    generally render byte-identical *lines* -- fixture corpus messages carry
+    a different number/shape of roles, so the line-based unified diff used
+    for the human-readable evidence["diff"] differs per fixture even though
+    the underlying divergence is the same one. A character-level opcode diff
+    isolates just the replaced/deleted/inserted substrings (dropping the
+    "equal" spans), which collapses correctly across fixtures that vary only
+    in the parts both sides agree on.
+    """
+    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
+    return tuple(
+        (tag, a[i1:i2], b[j1:j2])
+        for tag, i1, i2, j1, j2 in sm.get_opcodes()
+        if tag != "equal"
+    )
+
+
+def failure_text(r: RenderResult) -> tuple[str, str]:
+    """(stage, one-line text) for a failed RenderResult."""
+    tag, _, rest = r.error.partition(":")
+    rest = rest.strip()
+    if tag == "compile":
+        stage, _, msg = rest.partition(":")
+        return stage.strip() or "compile", msg.strip()
+    if tag == "raise":
+        return "raise", rest
+    return "render", rest
 
 
 def real_token(m: GgufModel, token_id: int | None) -> str | None:

@@ -13,6 +13,12 @@ class Severity(str, Enum):
 
 SEVERITY_ORDER = {Severity.INFO: 0, Severity.WARN: 1, Severity.ERROR: 2}
 
+# The bundled fixture corpus's version. Lives here, not in fixtures.py, so
+# CheckContext.corpus_version can default to it without models.py importing
+# fixtures.py (which imports models.py already -- fixtures.py aliases this
+# as CORPUS_VERSION instead of redeclaring it).
+CORPUS_VERSION_DEFAULT = "2"
+
 
 @dataclass
 class Finding:
@@ -59,6 +65,10 @@ class Coverage:
     engines_unavailable: dict[str, str] = field(default_factory=dict)
     # Fixtures both engines rendered byte-identically when family X ran.
     engines_agreed_fixtures: int | None = None
+    # Ollama registry-comparison facts (a later check family), or None when
+    # that comparison was not requested/available. Shape is that family's
+    # concern; Coverage only carries it through to the report.
+    ollama: dict[str, Any] | None = None
 
 
 FIXTURE_TIERS = ("core", "extended")
@@ -91,3 +101,9 @@ class CheckContext:
     # (e.g. cross_engine: "engines_agreed_fixtures"). Never used to decide
     # exit codes.
     stats: dict[str, Any] = field(default_factory=dict)
+    # The fixture corpus's own version (Corpus.version) and whether it came
+    # from a user-supplied --fixtures path rather than the bundled corpus.
+    # A later check refuses to compare goldens (recorded against the
+    # bundled corpus) against a foreign corpus using these.
+    corpus_version: str = CORPUS_VERSION_DEFAULT
+    custom_corpus: bool = False

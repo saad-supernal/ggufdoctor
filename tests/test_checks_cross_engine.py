@@ -383,3 +383,13 @@ def test_unavailable_engine_records_x_family_as_not_evaluated():
     assert run_cross_engine_checks(ctx) == []
     assert ctx.checks_not_evaluated == X_IDS
     assert "engines_agreed_fixtures" not in ctx.stats
+
+
+def test_shared_diff_helpers_label_both_sides():
+    from ggufdoctor.checks.common import divergence_signature, failure_text, render_diff
+    d = render_diff("a\nb", "a\nc", "jinja2", "ollama:chatml")
+    assert d.startswith("--- jinja2\n+++ ollama:chatml")
+    assert divergence_signature("xay", "xby") == (("replace", "a", "b"),)
+    assert failure_text(RenderResult(None, "raise:nope")) == ("raise", "nope")
+    assert failure_text(RenderResult(None, "compile:TemplateSyntaxError: bad")) == ("TemplateSyntaxError", "bad")
+    assert failure_text(RenderResult(None, "render:TypeError: x")) == ("render", "TypeError: x")

@@ -40,11 +40,11 @@ def _engine_entry(e: Any) -> dict[str, Any]:
 
 def build_json(model: GgufModel, findings: list[Finding],
                suppressed: list[Finding], coverage: Coverage,
-               engines: list[Any]) -> dict[str, Any]:
+               engines: list[Any], corpus_version: str = CORPUS_VERSION) -> dict[str, Any]:
     return {
         "schema_version": "1",
         "tool_version": __version__,
-        "fixture_corpus_version": CORPUS_VERSION,
+        "fixture_corpus_version": corpus_version,
         "generated_at": datetime.datetime.now(datetime.UTC).isoformat(),
         "target": {"id": model.source_id, "architecture": model.architecture},
         "engines": [_engine_entry(e) for e in engines],
@@ -52,7 +52,8 @@ def build_json(model: GgufModel, findings: list[Finding],
                      "families_run": coverage.families_run,
                      "checks_not_evaluated": coverage.checks_not_evaluated,
                      "engines_unavailable": coverage.engines_unavailable,
-                     "engines_agreed_fixtures": coverage.engines_agreed_fixtures},
+                     "engines_agreed_fixtures": coverage.engines_agreed_fixtures,
+                     "ollama": coverage.ollama},
         "findings": [
             {"id": f.id, "severity": f.severity.value, "message": f.message,
              "fixture": f.fixture, "evidence": f.evidence} for f in findings],
