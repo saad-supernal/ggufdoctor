@@ -19,18 +19,26 @@ jobs:
         run: |
           set -eu
           mkdir -p /tmp/head
+          : > /tmp/head/.missing
           base=https://raw.githubusercontent.com/ollama/ollama/main/template
           curl -fsSL "$base/index.json" -o /tmp/head/index.json
           for f in src/ggufdoctor/ollama_data/*.gotmpl; do
-            curl -fsSL "$base/$(basename "$f")" -o "/tmp/head/$(basename "$f")"
+            name=$(basename "$f")
+            curl -fsSL "$base/$name" -o "/tmp/head/$name" || { echo "$name" >> /tmp/head/.missing; rm -f "/tmp/head/$name"; }
           done
           python - <<'PY' | tee /tmp/drift.txt
           import json, pathlib
           vend = pathlib.Path("src/ggufdoctor/ollama_data"); head = pathlib.Path("/tmp/head")
-          changed = [p.name for p in head.iterdir() if p.read_bytes() != (vend / p.name).read_bytes()]
+          missing = {l.strip() for l in (head / ".missing").read_text().splitlines() if l.strip()}
+          gotmpls = [p.name for p in vend.iterdir() if p.name.endswith(".gotmpl")]
+          changed = sorted(missing) + [
+              name for name in gotmpls
+              if name not in missing and (head / name).read_bytes() != (vend / name).read_bytes()
+          ]
           hi = json.load(open(head / "index.json")); vi = json.load(open(vend / "index.json"))
           new = [e for e in hi if e not in vi]; gone = [e for e in vi if e not in hi]
           print(f"changed files: {changed}")
+          if missing: print(f"removed upstream (404 at HEAD): {sorted(missing)}")
           print(f"index entries added at HEAD: {len(new)}, removed: {len(gone)}")
           for e in new: print("  +", e["name"], repr(e["template"][:80]))
           open("/tmp/drifted", "w").write("1" if (changed or new or gone) else "")
@@ -42,7 +50,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           title="Ollama template registry drifted from the vendored pin"
-          if [ -z "$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number')" ]; then
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
             gh issue create --title "$title" --body-file /tmp/drift.txt --label maintenance || \
             gh issue create --title "$title" --body-file /tmp/drift.txt
           fi

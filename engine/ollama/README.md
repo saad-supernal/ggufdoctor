@@ -68,6 +68,9 @@ commit.
 
 `.github/workflows/ollama-registry-drift.yml` runs weekly against `ollama/ollama@main`: it
 downloads the current `index.json` and every vendored `*.gotmpl` by name, diffs them
-byte-for-byte against what's vendored, and diffs the index entries. If anything changed or was
-added or removed, it opens (or leaves open) a maintenance issue summarizing the drift and fails
-the run — a nudge to bump the pin, not an automatic bump.
+byte-for-byte against what's vendored, and diffs the index entries. A vendored `*.gotmpl` that
+404s at HEAD (renamed or deleted upstream) counts as drift too rather than aborting the job —
+only `index.json` itself failing to download is treated as a hard error, since without it
+there's nothing to diff against. If anything changed, 404'd, or was added or removed, the job
+opens (or leaves open) a maintenance issue summarizing the drift and fails the run — a nudge to
+bump the pin, not an automatic bump.
