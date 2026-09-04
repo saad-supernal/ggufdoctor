@@ -194,3 +194,35 @@ def test_json_coverage_carries_ollama_when_set():
     d = build_json(MODEL, [], [], cov, [Jinja2Engine()])
     assert d["coverage"]["ollama"]["recognised"] is False
     assert build_json(MODEL, [], [], COV, [Jinja2Engine()])["coverage"]["ollama"] is None
+
+
+def _cov_ollama(**kw):
+    base = {"pinned_commit": "b79067b0db7417f20108363bc22adb97f35c966a", "recognised": False,
+            "template": None, "distance": None, "confident": None, "not_evaluated": None}
+    base.update(kw)
+    return Coverage(upstream="not_requested", families_run=["S", "X", "O"], ollama=base)
+
+
+def test_human_ollama_line_unrecognised_is_the_headline_sentence():
+    out = render_human(MODEL, [], [], _cov_ollama(), [Jinja2Engine()])
+    assert ("  ollama: template not in the registry — Ollama renders it with llama.cpp's engine "
+            "(see X001/X002) (Ollama b79067b0)") in out
+
+
+def test_human_ollama_line_recognised_names_template_and_distance():
+    cov = _cov_ollama(recognised=True, template="chatml", distance=72, confident=False)
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "  ollama: registry recognises this template as chatml (distance 72, low confidence)" in out
+    assert "see O001/X003 (Ollama b79067b0)" in out
+
+
+def test_human_ollama_line_not_evaluated_gives_the_reason():
+    cov = _cov_ollama(not_evaluated="no Ollama goldens for a custom corpus")
+    cov.families_run = ["S", "X"]; cov.checks_not_evaluated = ["X003", "O001"]
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "  ollama: not evaluated — no Ollama goldens for a custom corpus (Ollama b79067b0)" in out
+    assert "X003, O001 not evaluated" in out
+
+
+def test_human_has_no_ollama_line_when_coverage_has_none():
+    assert "ollama:" not in render_human(MODEL, [], [], COV, [Jinja2Engine()])

@@ -129,6 +129,15 @@ def _lint_main(argv: list[str] | None = None) -> int:
         elif selection.unavailable:
             # X was not declined -- it could not run. That is a coverage gap.
             ctx.checks_not_evaluated.extend(X_IDS)
+
+        from ggufdoctor.checks.ollama_registry import run_ollama_checks
+        findings += run_ollama_checks(ctx)
+        ollama_stats = ctx.stats.get("ollama")
+        coverage.ollama = ollama_stats
+        if ollama_stats and ollama_stats["not_evaluated"] is None:
+            anchor = "X" if "X" in coverage.families_run else "S"
+            coverage.families_run.insert(coverage.families_run.index(anchor) + 1, "O")
+
         if upstream or coverage.upstream == "not_found":
             findings += run_reference_checks(ctx)
         rules = load_ignores(args.ignore_file)

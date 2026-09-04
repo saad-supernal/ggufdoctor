@@ -4,9 +4,10 @@ import re
 from typing import Any
 
 from ggufdoctor.models import Coverage, Finding, GgufModel
+from ggufdoctor.ollama import pin
 from ggufdoctor.report.json_report import summarize
 
-ALL_FAMILIES = ["S", "X", "R"]
+ALL_FAMILIES = ["S", "X", "O", "R", "RT"]
 
 # C0 control characters and DEL. This is deliberately broad rather than a
 # narrow "just ANSI CSI sequences" pattern: every value sanitised here
@@ -97,6 +98,31 @@ def _skipped_families(coverage: Coverage) -> list[str]:
     return skipped
 
 
+def _ollama_line(coverage: Coverage) -> str | None:
+    """The one-line summary of the O family's verdict, or None.
+
+    None whenever coverage.ollama itself is None -- the registry check did
+    not run at all (no chat template, or an older caller that never wired
+    it up). When it did run, exactly one of three sentences fires, chosen
+    by the same stats the check recorded on ctx.stats["ollama"]/O001: a
+    reason the check declined (not_evaluated), a registry hit (recognised),
+    or the common case, a miss (neither).
+    """
+    o = coverage.ollama
+    if o is None:
+        return None
+    trailer = f" (Ollama {pin().short})"
+    if o["not_evaluated"] is not None:
+        return f"  ollama: not evaluated — {o['not_evaluated']}{trailer}"
+    if o["recognised"]:
+        low = ", low confidence" if not o["confident"] else ""
+        return (f"  ollama: registry recognises this template as {o['template']} "
+                f"(distance {o['distance']}{low}) — Ollama would substitute its "
+                f"curated Go template; see O001/X003{trailer}")
+    return ("  ollama: template not in the registry — Ollama renders it with "
+            f"llama.cpp's engine (see X001/X002){trailer}")
+
+
 def _engine_label(e: Any) -> str:
     label = f"{e.name} {e.version}"
     details = []
@@ -155,6 +181,11 @@ def render_human(model: GgufModel, findings: list[Finding],
     if "X" in coverage.families_run and coverage.engines_agreed_fixtures is not None:
         lines.append(f"  engines agree: jinja2 and llama.cpp rendered "
                      f"{coverage.engines_agreed_fixtures} fixtures identically")
+        lines.append("")
+
+    ollama_line = _ollama_line(coverage)
+    if ollama_line is not None:
+        lines.append(ollama_line)
         lines.append("")
 
     counts = summarize(findings)

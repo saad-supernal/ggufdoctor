@@ -275,8 +275,12 @@ def test_default_run_uses_both_engines_and_reports_agreement(tmp_path, capsys):
 def test_engines_flag_subsets_without_recording_a_gap(tmp_path, capsys):
     assert main([_model(tmp_path), "--engines", "jinja2"]) == 0
     out = capsys.readouterr().out
-    assert "llama.cpp" not in out
-    assert "partial" not in out and "X001" not in out
+    # Task 6: the unrecognised-template ollama line names "llama.cpp" in
+    # prose (it says what Ollama's own fallback engine is, regardless of
+    # what --engines selected here) -- so this checks that llama.cpp was
+    # not actually constructed as a running engine, not a bare substring.
+    assert "llama.cpp b10775" not in out and "engines: jinja2 " in out
+    assert "partial" not in out and "X001 not evaluated" not in out
 
 
 def test_unknown_engine_exits_two_with_one_line(tmp_path, capsys):
@@ -292,7 +296,10 @@ def test_json_carries_engine_provenance_and_agreement(tmp_path):
     llama = next(e for e in payload["engines"] if e["name"] == "llama.cpp")
     assert llama["version"] == "b10775" and llama["commit"].startswith("67a17c17")
     assert llama["backend"].startswith("wasmtime ")
-    assert payload["coverage"]["families_run"] == ["S", "X"]
+    # O runs right after X here: the default template (CHAT_TPL, "far from
+    # every index entry") is not recognised, but the registry check itself
+    # still evaluated -- see test_default_run_states_ollama_registry_coverage.
+    assert payload["coverage"]["families_run"] == ["S", "X", "O"]
     assert payload["coverage"]["engines_unavailable"] == {}
     assert isinstance(payload["coverage"]["engines_agreed_fixtures"], int)
     assert payload["fixture_corpus_version"] == "2"
@@ -309,6 +316,54 @@ def test_unavailable_engine_makes_the_run_partial(tmp_path, capsys, monkeypatch)
     out = capsys.readouterr().out
     assert "llama.cpp unavailable — wasmtime not importable: boom" in out
     assert "partial" in out and "X001, X002, X004, X005 not evaluated" in out
+
+
+# --- Task 6: O family wired into the CLI and both reports ---
+
+def test_default_run_states_ollama_registry_coverage(tmp_path, capsys):
+    assert main([_model(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "ollama: template not in the registry" in out
+    assert "families run: S, X, O" in out
+
+
+def test_ollama_family_runs_with_jinja2_alone(tmp_path, capsys):
+    assert main([_model(tmp_path), "--engines", "jinja2"]) == 0
+    out = capsys.readouterr().out
+    assert "families run: S, O" in out and "ollama: template not in the registry" in out
+
+
+def test_custom_fixtures_leave_ollama_unevaluated_and_partial(tmp_path, capsys):
+    fx = tmp_path / "fx.json"
+    fx.write_text(json.dumps({"version": "mine", "fixtures": [
+        {"name": "one", "context": {"messages": [{"role": "user", "content": "hi"}],
+                                    "add_generation_prompt": True}}]}), encoding="utf-8")
+    js = tmp_path / "r.json"
+    assert main([_model(tmp_path), "--fixtures", str(fx), "--json", str(js)]) == 0
+    out = capsys.readouterr().out
+    assert "ollama: not evaluated — no Ollama goldens for a custom corpus" in out
+    assert "partial" in out and "X003, O001 not evaluated" in out
+    d = json.loads(js.read_text(encoding="utf-8"))
+    assert d["fixture_corpus_version"] == "mine"
+    assert d["coverage"]["ollama"]["not_evaluated"] == "no Ollama goldens for a custom corpus"
+    assert "O" not in d["coverage"]["families_run"]
+
+
+def test_recognised_template_reports_o001_and_json_coverage(tmp_path, capsys):
+    from ggufdoctor.ollama import load_index
+    chatml = next(t for n, t in load_index() if n == "chatml" and "add_generation_prompt" in t)
+    js = tmp_path / "r.json"
+    code = main([_model(tmp_path, **{"tokenizer.chat_template": ("string", chatml)}),
+                 "--json", str(js), "--fail-on", "never"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "O001  INFO" in out and "recognises this template as chatml (distance 0)" in out
+    assert "ollama: registry recognises this template as chatml (distance 0)" in out
+    d = json.loads(js.read_text(encoding="utf-8"))
+    assert d["coverage"]["ollama"] == {"pinned_commit": "b79067b0db7417f20108363bc22adb97f35c966a",
+                                       "recognised": True, "template": "chatml", "distance": 0,
+                                       "confident": True, "not_evaluated": None}
+    assert {f["id"] for f in d["findings"]} >= {"O001"}
 
 
 def test_version_is_0_2_1():
