@@ -171,6 +171,7 @@ def _lint_main(argv: list[str] | None = None) -> int:
             # travels on ctx.stats["runtime"], and the ids RT recorded on
             # ctx.checks_not_evaluated reach coverage below.
             runtime_stats = ctx.stats.get("runtime")
+            coverage.runtime = runtime_stats
             if runtime_stats and runtime_stats["not_evaluated"] is None:
                 coverage.families_run.append("RT")
 

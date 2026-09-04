@@ -57,6 +57,20 @@ def server():
 
 
 @pytest.fixture
+def renders(monkeypatch):
+    """Install the fake server's render function for the duration of one test.
+
+    _Handler.renderer is a class attribute, so assigning it directly leaks
+    the previous test's renderer into every test that forgets to set its
+    own -- and the failure that causes looks like a bug in the code under
+    test, not in the fixture. monkeypatch puts it back.
+    """
+    def install(fn):
+        monkeypatch.setattr(_Handler, "renderer", staticmethod(fn))
+    return install
+
+
+@pytest.fixture
 def fake_ollama(tmp_path):
     script = tmp_path / "fake_ollama.py"; script.write_text(FAKE_BIN)
     log = tmp_path / "calls.log"
@@ -117,10 +131,10 @@ def test_version_parses_ollama_output(fake_ollama):
     assert OllamaRuntime(cmd).version() == "0.33.2"
 
 
-def test_agreeing_runtime_yields_one_info_and_cleans_up(server, fake_ollama):
+def test_agreeing_runtime_yields_one_info_and_cleans_up(server, fake_ollama, renders):
     cmd, log = fake_ollama
     llama = LlamaCppEngine()
-    _Handler.renderer = staticmethod(lambda body: llama.render(TPL, {"messages": body["messages"],
+    renders(lambda body: llama.render(TPL, {"messages": body["messages"],
                                      "tools": body.get("tools"), "bos_token": "<s>", "eos_token": "</s>",
                                      **({"enable_thinking": body["think"]} if "think" in body else {})}).text)
     ctx = _ctx()
@@ -138,9 +152,9 @@ def test_agreeing_runtime_yields_one_info_and_cleans_up(server, fake_ollama):
     assert len(server.requests) == 8 and ctx.stats["runtime"]["agreed_fixtures"] == 8
 
 
-def test_disagreeing_runtime_is_a_warn_with_a_labelled_diff(server, fake_ollama):
+def test_disagreeing_runtime_is_a_warn_with_a_labelled_diff(server, fake_ollama, renders):
     cmd, _ = fake_ollama
-    _Handler.renderer = staticmethod(lambda body: "SOMETHING ELSE")
+    renders(lambda body: "SOMETHING ELSE")
     ctx = _ctx()
     run_ollama_checks(ctx)
     assert ctx.stats["ollama"]["recognised"] is False
@@ -151,13 +165,14 @@ def test_disagreeing_runtime_is_a_warn_with_a_labelled_diff(server, fake_ollama)
     assert found[0].evidence["diff"].startswith("--- predicted (llama.cpp engine)\n+++ ollama 0.33.2")
 
 
-def test_recognised_template_predicts_from_the_golden(server, fake_ollama):
+def test_recognised_template_predicts_from_the_golden(server, fake_ollama, renders):
     from ggufdoctor.ollama import load_goldens, load_index
     cmd, _ = fake_ollama
     chatml = next(t for n, t in load_index() if n == "chatml" and "add_generation_prompt" in t)
     golden = load_goldens()["renders"]["chatml"]
-    _Handler.renderer = staticmethod(lambda body: golden[[f.name for f in load_fixtures()
-                                     if request_body("m", f) and request_body("m", f)["messages"] == body["messages"]][0]])
+    renders(lambda body: golden[[f.name for f in load_fixtures()
+                                 if request_body("m", f)
+                                 and request_body("m", f)["messages"] == body["messages"]][0]])
     ctx = _ctx(chatml)
     run_ollama_checks(ctx)
     assert ctx.stats["ollama"]["recognised"] is True
@@ -207,11 +222,11 @@ def test_no_chat_template_is_a_coverage_gap_not_a_warn_storm():
     assert "no chat template" in ctx.stats["runtime"]["not_evaluated"]
 
 
-def test_nothing_compared_is_a_coverage_gap_not_a_clean_run(server, fake_ollama):
+def test_nothing_compared_is_a_coverage_gap_not_a_clean_run(server, fake_ollama, renders):
     # An Ollama that answers but renders nothing -- the shape of a build
     # without _debug_render_only. Reporting no findings here would read as
     # "agreed with every prediction" on a run that compared nothing.
-    _Handler.renderer = staticmethod(lambda body: None)
+    renders(lambda body: None)
     ctx = _ctx()
     run_ollama_checks(ctx)
     rt = OllamaRuntime(cmd_of(fake_ollama), host=_host(server))
@@ -240,12 +255,12 @@ def test_recognised_template_without_goldens_is_a_coverage_gap(fake_ollama, monk
         "no fixture could be compared: no Ollama goldens were recorded for the chatml template")
 
 
-def test_a_failed_prediction_is_not_reported_as_a_divergence(server, fake_ollama):
+def test_a_failed_prediction_is_not_reported_as_a_divergence(server, fake_ollama, renders):
     # The prediction side raised; PreferChatTemplate, RENDERER/PARSER and
     # OLLAMA_GO_TEMPLATE had nothing to do with it, so the WARN that names
     # them must not be emitted for this fixture.
     llama = LlamaCppEngine()
-    _Handler.renderer = staticmethod(lambda body: llama.render(TPL, {
+    renders(lambda body: llama.render(TPL, {
         "messages": body["messages"], "tools": body.get("tools"),
         "bos_token": "<s>", "eos_token": "</s>",
         **({"enable_thinking": body["think"]} if "think" in body else {})}).text)
@@ -266,14 +281,14 @@ def test_a_failed_prediction_is_not_reported_as_a_divergence(server, fake_ollama
 
 
 def test_cli_runtime_flag_runs_the_family_and_records_it(server, fake_ollama, tmp_path,
-                                                        monkeypatch, capsys):
+                                                        monkeypatch, renders, capsys):
     import shlex
 
     from ggufdoctor.cli import main
     from tests.test_cli import CHAT_TPL, _model
 
     llama = LlamaCppEngine()
-    _Handler.renderer = staticmethod(lambda body: llama.render(
+    renders(lambda body: llama.render(
         CHAT_TPL, {"messages": body["messages"], "tools": body.get("tools"),
                    "bos_token": "<|im_start|>", "eos_token": "<|im_end|>"}).text)
     # The CLI builds its own OllamaRuntime from a single path, so the fake
@@ -288,15 +303,22 @@ def test_cli_runtime_flag_runs_the_family_and_records_it(server, fake_ollama, tm
     js = tmp_path / "r.json"
     assert main([_model(tmp_path), "--runtime", str(shim), "--json", str(js),
                  "--fail-on", "never"]) == 0
-    assert "RT001  INFO" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "RT001  INFO" in out
+    assert ("  runtime: ollama 0.33.2 agreed with the prediction on 8 of 8 compared "
+            "fixtures via llama.cpp engine") in out
     data = json.loads(js.read_text(encoding="utf-8"))
     assert data["coverage"]["families_run"][-1] == "RT"
+    assert data["coverage"]["runtime"] == {"version": "0.33.2",
+                                           "predicted_path": "llama.cpp engine",
+                                           "agreed_fixtures": 8, "compared_fixtures": 8,
+                                           "not_evaluated": None}
     assert {f["id"] for f in data["findings"]} >= {"RT001"}
     assert [json.loads(l)[0] for l in log.read_text().splitlines()] == ["--version", "create", "rm"]
 
 
 def test_cli_runtime_not_evaluated_is_not_a_family_that_ran(server, fake_ollama, tmp_path,
-                                                            monkeypatch, capsys):
+                                                            monkeypatch, renders, capsys):
     # The same run as above against an Ollama that renders nothing: RT must
     # be absent from families_run and present in checks_not_evaluated, or the
     # report claims a comparison that never happened.
@@ -305,7 +327,7 @@ def test_cli_runtime_not_evaluated_is_not_a_family_that_ran(server, fake_ollama,
     from ggufdoctor.cli import main
     from tests.test_cli import _model
 
-    _Handler.renderer = staticmethod(lambda body: None)
+    renders(lambda body: None)
     cmd, _ = fake_ollama
     shim = tmp_path / "ollama"
     shim.write_text("#!/bin/sh\nexec " + shlex.join(cmd) + ' "$@"\n')
@@ -317,8 +339,14 @@ def test_cli_runtime_not_evaluated_is_not_a_family_that_ran(server, fake_ollama,
                  "--fail-on", "never"]) == 0
     out = capsys.readouterr().out
     assert "RT001 not evaluated" in out and "partial" in out
-    assert "RT001" not in out.replace("RT001 not evaluated", "")   # no finding claimed
     data = json.loads(js.read_text(encoding="utf-8"))
     assert "RT" not in data["coverage"]["families_run"]
     assert "RT001" in data["coverage"]["checks_not_evaluated"]
     assert {f["id"] for f in data["findings"]}.isdisjoint({"RT001"})
+    # "note: RT001 not evaluated" names the check; the operator also needs
+    # the cause, which travels on coverage.runtime and prints as its own line.
+    reason = data["coverage"]["runtime"]["not_evaluated"]
+    assert reason.startswith("no fixture could be compared: real Ollama failed to render")
+    assert "_debug_render_only" in reason
+    assert f"  runtime: not evaluated — {reason}" in out
+    assert "agreed with the prediction" not in out

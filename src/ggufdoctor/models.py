@@ -69,6 +69,10 @@ class Coverage:
     # that comparison was not requested/available. Shape is that family's
     # concern; Coverage only carries it through to the report.
     ollama: dict[str, Any] | None = None
+    # Real-Ollama oracle facts (family RT), or None when --runtime was not
+    # given. Same arrangement as `ollama` above: the shape is that family's
+    # concern, Coverage only carries it to the reports.
+    runtime: dict[str, Any] | None = None
 
 
 FIXTURE_TIERS = ("core", "extended")

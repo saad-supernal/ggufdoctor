@@ -123,6 +123,26 @@ def _ollama_line(coverage: Coverage) -> str | None:
             f"llama.cpp's engine (see X001/X002){trailer}")
 
 
+def _runtime_line(coverage: Coverage) -> str | None:
+    """The one-line summary of the RT family's verdict, or None.
+
+    None whenever coverage.runtime is None -- --runtime was not given, so
+    no real Ollama was asked anything. When it was, the reason RT could not
+    evaluate has to reach the operator here: the "note: RT001 not evaluated"
+    line at the foot of the report names the check but not the cause, and
+    the cause ("real Ollama failed to render every fixture (...)") is the
+    whole of what makes that gap actionable.
+    """
+    r = coverage.runtime
+    if r is None:
+        return None
+    if r["not_evaluated"] is not None:
+        return f"  runtime: not evaluated — {r['not_evaluated']}"
+    return (f"  runtime: ollama {r['version']} agreed with the prediction on "
+            f"{r['agreed_fixtures']} of {r['compared_fixtures']} compared fixtures "
+            f"via {r['predicted_path']}")
+
+
 def _engine_label(e: Any) -> str:
     label = f"{e.name} {e.version}"
     details = []
@@ -186,6 +206,11 @@ def render_human(model: GgufModel, findings: list[Finding],
     ollama_line = _ollama_line(coverage)
     if ollama_line is not None:
         lines.append(ollama_line)
+        lines.append("")
+
+    runtime_line = _runtime_line(coverage)
+    if runtime_line is not None:
+        lines.append(runtime_line)
         lines.append("")
 
     counts = summarize(findings)

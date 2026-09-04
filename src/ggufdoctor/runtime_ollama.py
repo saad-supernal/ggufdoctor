@@ -360,13 +360,23 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
     recognised = bool(ollama_stats.get("recognised"))
     template_name = ollama_stats.get("template")
 
+    # Built once, up front, with every key the reports read, and mutated
+    # from here on -- so each of the four exits below (no template, no
+    # engine, nothing compared, a verdict) leaves the same shape behind and
+    # neither report has to guess which keys this run happened to set.
+    # Same arrangement as run_ollama_checks' ctx.stats["ollama"].
+    stats: dict[str, Any] = {"version": None, "predicted_path": None,
+                             "agreed_fixtures": 0, "compared_fixtures": 0,
+                             "not_evaluated": None}
+    ctx.stats["runtime"] = stats
+
     def not_evaluated(reason: str) -> list[Finding]:
         # Nothing to compare against. Saying "Ollama agreed" would be a lie
         # and saying nothing would read as a clean run, so an RT that cannot
         # predict is a coverage gap with a stated reason -- never a pile of
         # WARNs blaming the file for a prediction ggufdoctor never made.
+        stats["not_evaluated"] = reason
         ctx.checks_not_evaluated.extend(RT_IDS)
-        ctx.stats["runtime"] = {"not_evaluated": reason}
         return []
 
     engine = None
@@ -385,8 +395,9 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
                        and getattr(e, "available", True)), None)
         if engine is None:
             return not_evaluated(NO_ENGINE_REASON)
+    stats["predicted_path"] = path
 
-    version = runtime.version()
+    stats["version"] = version = runtime.version()
     model = runtime.create(gguf_path)
 
     not_comparable: dict[str, str] = {}
@@ -439,21 +450,16 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
     finally:
         runtime.remove(model)
 
-    stats: dict[str, Any] = {"version": version, "predicted_path": path,
-                             "agreed_fixtures": agreed,
-                             "compared_fixtures": agreed + len(differs),
-                             "not_evaluated": None}
-    ctx.stats["runtime"] = stats
+    stats["agreed_fixtures"] = agreed
+    stats["compared_fixtures"] = agreed + len(differs)
     if not stats["compared_fixtures"]:
         # The oracle was asked and answered nothing usable. Reporting no
         # findings here would read as "real Ollama agreed with every
         # prediction" -- the strongest claim this tool makes -- on a run that
         # compared nothing at all, and would silently drop the errors that
         # explain why. Same shape as the pre-flight gaps above.
-        stats["not_evaluated"] = _nothing_compared_reason(
-            path, template_name, not_comparable, blocked, render_errors, prediction_errors)
-        ctx.checks_not_evaluated.extend(RT_IDS)
-        return []
+        return not_evaluated(_nothing_compared_reason(
+            path, template_name, not_comparable, blocked, render_errors, prediction_errors))
 
     base_evidence = {"ollama_version": version, "predicted_path": path,
                      "not_comparable": not_comparable, "render_errors": render_errors,

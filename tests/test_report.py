@@ -226,3 +226,44 @@ def test_human_ollama_line_not_evaluated_gives_the_reason():
 
 def test_human_has_no_ollama_line_when_coverage_has_none():
     assert "ollama:" not in render_human(MODEL, [], [], COV, [Jinja2Engine()])
+
+
+def _cov_runtime(**kw):
+    base = {"version": "0.33.2", "predicted_path": "llama.cpp engine",
+            "agreed_fixtures": 8, "compared_fixtures": 8, "not_evaluated": None}
+    base.update(kw)
+    return Coverage(upstream="not_requested", families_run=["S", "X", "O", "RT"],
+                    runtime=base)
+
+
+def test_human_runtime_line_reports_the_oracle_verdict():
+    out = render_human(MODEL, [], [], _cov_runtime(), [Jinja2Engine()])
+    assert ("  runtime: ollama 0.33.2 agreed with the prediction on 8 of 8 compared "
+            "fixtures via llama.cpp engine") in out
+
+
+def test_human_runtime_line_not_evaluated_gives_the_reason():
+    # The "note: RT001 not evaluated" line names the check; only this line
+    # says why, which is the half an operator can act on.
+    reason = ("no fixture could be compared: real Ollama failed to render every fixture "
+              "(render:ollama: response carries no _debug_info)")
+    cov = _cov_runtime(not_evaluated=reason, agreed_fixtures=0, compared_fixtures=0)
+    cov.families_run = ["S", "X", "O"]; cov.checks_not_evaluated = ["RT001"]
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert f"  runtime: not evaluated — {reason}" in out
+    assert "RT001 not evaluated" in out
+    assert "agreed with the prediction" not in out
+
+
+def test_human_has_no_runtime_line_when_coverage_has_none():
+    # --runtime was not given, so no real Ollama was asked anything.
+    assert "runtime:" not in render_human(MODEL, [], [], _cov_ollama(), [Jinja2Engine()])
+
+
+def test_json_coverage_carries_runtime_when_set():
+    cov = _cov_runtime(not_evaluated="no fixture could be compared: the fixture corpus is empty")
+    d = build_json(MODEL, [], [], cov, [Jinja2Engine()])
+    assert d["coverage"]["runtime"]["predicted_path"] == "llama.cpp engine"
+    assert d["coverage"]["runtime"]["not_evaluated"].startswith("no fixture could be compared")
+    assert d["schema_version"] == "1"   # additive: the schema did not change
+    assert build_json(MODEL, [], [], COV, [Jinja2Engine()])["coverage"]["runtime"] is None
