@@ -49,5 +49,6 @@ testpaths = ["tests"]
 markers = [
   "network: hits the real Hugging Face API (deselected by default)",
   "conformance: downloads and runs a pinned llama-server binary (deselected by default)",
+  "ollama_conformance: builds Ollama's Go template package at the pin and compares (needs Go; deselected by default)",
 ]
-addopts = "-m 'not network and not conformance'"
+addopts = "-m 'not network and not conformance and not ollama_conformance'"

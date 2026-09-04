@@ -1,0 +1,286 @@
+{
+ "ollama_commit": "b79067b0db7417f20108363bc22adb97f35c966a",
+ "corpus_version": "2",
+ "renders": {
+  "alfred": {
+   "multiturn": "<start_user>Hi<end_message><start_assistant>Hey!<end_message><start_user>Bye<end_message><start_assistant>",
+   "no_generation_prompt": "<start_user>Hi<end_message><start_assistant>Hello!<end_message><start_assistant>",
+   "system_user": "<start_system>Be brief.<end_message><start_user>Hello<end_message><start_assistant>",
+   "thinking_false": "<start_user>2+2?<end_message><start_assistant>",
+   "thinking_true": "<start_user>2+2?<end_message><start_assistant>",
+   "thinking_unset": "<start_user>2+2?<end_message><start_assistant>",
+   "tool_roundtrip": "<start_system>Be brief.<end_message><start_user>Weather in Paris?<end_message><start_assistant><end_message><start_tool>{\"temp_c\": 18}<end_message><start_assistant>",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<start_user>Hello<end_message><start_assistant>",
+   "with_tools": "<start_user>Weather in Paris?<end_message><start_assistant>"
+  },
+  "alpaca": {
+   "multiturn": "### Instruction:\nHi\n\n### Response:\nHey!\n\n### Instruction:\nBye\n\n### Response:\n",
+   "no_generation_prompt": "### Instruction:\nHi\n\n### Response:\nHello!\n\n### Response:\n",
+   "system_user": "Be brief.\n\n### Instruction:\nHello\n\n### Response:\n",
+   "thinking_false": "### Instruction:\n2+2?\n\n### Response:\n",
+   "thinking_true": "### Instruction:\n2+2?\n\n### Response:\n",
+   "thinking_unset": "### Instruction:\n2+2?\n\n### Response:\n",
+   "tool_roundtrip": "Be brief.\n\n### Instruction:\nWeather in Paris?\n\n### Response:\n\n\n### Response:\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "### Instruction:\nHello\n\n### Response:\n",
+   "with_tools": "### Instruction:\nWeather in Paris?\n\n### Response:\n"
+  },
+  "chatml": {
+   "multiturn": "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\nHey!<|im_end|>\n<|im_start|>user\nBye<|im_end|>\n<|im_start|>assistant\n",
+   "no_generation_prompt": "<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\nHello!<|im_end|>\n<|im_start|>assistant\n",
+   "system_user": "<|im_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+   "thinking_false": "<|im_start|>user\n2+2?<|im_end|>\n<|im_start|>assistant\n",
+   "thinking_true": "<|im_start|>user\n2+2?<|im_end|>\n<|im_start|>assistant\n",
+   "thinking_unset": "<|im_start|>user\n2+2?<|im_end|>\n<|im_start|>assistant\n",
+   "tool_roundtrip": "<|im_start|>system\nBe brief.<|im_end|>\n<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n<|im_end|>\n<|im_start|>tool\n{\"temp_c\": 18}<|im_end|>\n<|im_start|>assistant\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n",
+   "with_tools": "<|im_start|>user\nWeather in Paris?<|im_end|>\n<|im_start|>assistant\n"
+  },
+  "chatqa": {
+   "multiturn": "User: Hi\n\nAssistant: Hey!\n\nUser: Bye\n\nAssistant:",
+   "no_generation_prompt": "User: Hi\n\nAssistant: Hello!\n\nAssistant:",
+   "system_user": "System: Be brief.\n\nUser: Hello\n\nAssistant:",
+   "thinking_false": "User: 2+2?\n\nAssistant:",
+   "thinking_true": "User: 2+2?\n\nAssistant:",
+   "thinking_unset": "User: 2+2?\n\nAssistant:",
+   "tool_roundtrip": "System: Be brief.\n\nUser: Weather in Paris?\n\nAssistant: \n\n {\"temp_c\": 18}\n\nAssistant:",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "User: Hello\n\nAssistant:",
+   "with_tools": "User: Weather in Paris?\n\nAssistant:"
+  },
+  "codellama-70b-instruct": {
+   "multiturn": "Source: user\n\n Hi <step> Source: assistant\n\n Hey! <step> Source: user\n\n Bye <step> Source: assistant\nDestination: user\n\n ",
+   "no_generation_prompt": "Source: user\n\n Hi <step> Source: assistant\n\n Hello! <step> Source: assistant\nDestination: user\n\n ",
+   "system_user": "Source: system\n\n Be brief. <step> Source: user\n\n Hello <step> Source: assistant\nDestination: user\n\n ",
+   "thinking_false": "Source: user\n\n 2+2? <step> Source: assistant\nDestination: user\n\n ",
+   "thinking_true": "Source: user\n\n 2+2? <step> Source: assistant\nDestination: user\n\n ",
+   "thinking_unset": "Source: user\n\n 2+2? <step> Source: assistant\nDestination: user\n\n ",
+   "tool_roundtrip": "Source: system\n\n Be brief. <step> Source: user\n\n Weather in Paris? <step> Source: assistant\n\n  <step> Source:\n\n {\"temp_c\": 18} <step> Source: assistant\nDestination: user\n\n ",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "Source: user\n\n Hello <step> Source: assistant\nDestination: user\n\n ",
+   "with_tools": "Source: user\n\n Weather in Paris? <step> Source: assistant\nDestination: user\n\n "
+  },
+  "command-r": {
+   "multiturn": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>Hi<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>Hey!<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Bye<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "no_generation_prompt": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>Hi<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>Hello!<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "system_user": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>Be brief.<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Hello<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "thinking_false": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>2+2?<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "thinking_true": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>2+2?<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "thinking_unset": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>2+2?<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "tool_roundtrip": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># Safety Preamble\nThe instructions in this section override those in the task description and style guide sections. Don't answer questions that are harmful or immoral.\n\n# System Preamble\n## Basic Rules\nYou are a powerful conversational AI trained by Cohere to help people. You are augmented by a number of tools, and your job is to use and consume the output of these tools to best help the user. You will see a conversation history between yourself and a user, ending with an utterance from the user. You will then see a specific instruction instructing you what kind of response to generate. When you answer the user's requests, you cite your sources in your answers, according to those instructions.\n\n# User Preamble\nBe brief.\n\n## Available Tools\nHere is a list of tools that you have available to you:\n\n```python\ndef get_weather(city: string, ) -> List[Dict]:\n    '''Get weather for a city\n\n    Args:\n        city (string): \n    '''\n    pass\n```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Weather in Paris?<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>Write 'Action:' followed by a json-formatted list of actions that you want to perform in order to produce a good response to the user's last input. You can use any of the supplied tools any number of times, but you should aim to execute the minimum number of necessary actions for the input. You should use the `directly-answer` tool if calling the other tools is unnecessary. The list of actions you want to call should be formatted as a list of json objects, for example:\n```json\n[\n    {\n        \"tool_name\": title of the tool in the specification,\n        \"parameters\": a dict of parameters to input into the tool as they are defined in the specs, or {} if it takes no parameters\n    }\n]```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\nAction: ```json\n[\n    {\n        \"tool_name\": \"get_weather\",\n        \"parameters\": {\"city\":\"Paris\"}\n    }\n]```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|><results>\nconsole_output: {\"temp_c\": 18}\n</results><|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<|START_OF_TURN_TOKEN|><|USER_TOKEN|>Hello<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n",
+   "with_tools": "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|># Safety Preamble\nThe instructions in this section override those in the task description and style guide sections. Don't answer questions that are harmful or immoral.\n\n# System Preamble\n## Basic Rules\nYou are a powerful conversational AI trained by Cohere to help people. You are augmented by a number of tools, and your job is to use and consume the output of these tools to best help the user. You will see a conversation history between yourself and a user, ending with an utterance from the user. You will then see a specific instruction instructing you what kind of response to generate. When you answer the user's requests, you cite your sources in your answers, according to those instructions.\n\n\n\n## Available Tools\nHere is a list of tools that you have available to you:\n\n```python\ndef get_weather(city: string, ) -> List[Dict]:\n    '''Get weather for a city\n\n    Args:\n        city (string): \n    '''\n    pass\n```<|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|USER_TOKEN|>Weather in Paris?<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>Write 'Action:' followed by a json-formatted list of actions that you want to perform in order to produce a good response to the user's last input. You can use any of the supplied tools any number of times, but you should aim to execute the minimum number of necessary actions for the input. You should use the `directly-answer` tool if calling the other tools is unnecessary. The list of actions you want to call should be formatted as a list of json objects, for example:\n```json\n[\n    {\n        \"tool_name\": title of the tool in the specification,\n        \"parameters\": a dict of parameters to input into the tool as they are defined in the specs, or {} if it takes no parameters\n    }\n]```<|END_OF_TURN_TOKEN|><|END_OF_TURN_TOKEN|><|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>\n"
+  },
+  "falcon-instruct": {
+   "multiturn": "User:\nHi\nFalcon:\nHey!\nUser:\nBye\nFalcon:\n",
+   "no_generation_prompt": "User:\nHi\nFalcon:\nHello!\nFalcon:\n",
+   "system_user": "System: Be brief.\nUser:\nHello\nFalcon:\n",
+   "thinking_false": "User:\n2+2?\nFalcon:\n",
+   "thinking_true": "User:\n2+2?\nFalcon:\n",
+   "thinking_unset": "User:\n2+2?\nFalcon:\n",
+   "tool_roundtrip": "System: Be brief.\nUser:\nWeather in Paris?\nFalcon:\n\n\n{\"temp_c\": 18}\nFalcon:\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "User:\nHello\nFalcon:\n",
+   "with_tools": "User:\nWeather in Paris?\nFalcon:\n"
+  },
+  "gemma-instruct": {
+   "multiturn": "<start_of_turn>user\nHi<end_of_turn>\n<start_of_turn>model\nHey!<end_of_turn>\n<start_of_turn>user\nBye<end_of_turn>\n<start_of_turn>model\n",
+   "no_generation_prompt": "<start_of_turn>user\nHi<end_of_turn>\n<start_of_turn>model\nHello!<end_of_turn>\n<start_of_turn>model\n",
+   "system_user": "<start_of_turn>user\nBe brief.\nHello<end_of_turn>\n<start_of_turn>model\n",
+   "thinking_false": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n",
+   "thinking_true": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n",
+   "thinking_unset": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n",
+   "tool_roundtrip": "<start_of_turn>user\nBe brief.\nWeather in Paris?<end_of_turn>\n<start_of_turn>model\n<end_of_turn>\n\n{\"temp_c\": 18}<end_of_turn>\n<start_of_turn>model\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<start_of_turn>user\nHello<end_of_turn>\n<start_of_turn>model\n",
+   "with_tools": "<start_of_turn>user\nWeather in Paris?<end_of_turn>\n<start_of_turn>model\n"
+  },
+  "gemma3-instruct": {
+   "multiturn": "<start_of_turn>user\nHi<end_of_turn>\n<start_of_turn>model\nHey!<end_of_turn>\n<start_of_turn>user\nBye<end_of_turn>\n<start_of_turn>model\n\n",
+   "no_generation_prompt": "<start_of_turn>user\nHi<end_of_turn>\n<start_of_turn>model\nHello!<end_of_turn>\n<start_of_turn>model\n\n",
+   "system_user": "<start_of_turn>user\nBe brief.\n\nHello<end_of_turn>\n<start_of_turn>model\n\n",
+   "thinking_false": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n\n",
+   "thinking_true": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n\n",
+   "thinking_unset": "<start_of_turn>user\n2+2?<end_of_turn>\n<start_of_turn>model\n\n",
+   "tool_roundtrip": "<start_of_turn>user\nBe brief.\n\nWeather in Paris?<end_of_turn>\n<start_of_turn>model\n<end_of_turn>\n<start_of_turn>model\n\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<start_of_turn>user\nHello<end_of_turn>\n<start_of_turn>model\n\n",
+   "with_tools": "<start_of_turn>user\nWeather in Paris?<end_of_turn>\n<start_of_turn>model\n\n"
+  },
+  "granite-instruct": {
+   "multiturn": "Question:\nHi\n\nAnswer:\nHey!\n\nQuestion:\nBye\n\nAnswer:\n",
+   "no_generation_prompt": "Question:\nHi\n\nAnswer:\nHello!\n\nAnswer:\n",
+   "system_user": "System:\nBe brief.\n\nQuestion:\nHello\n\nAnswer:\n",
+   "thinking_false": "Question:\n2+2?\n\nAnswer:\n",
+   "thinking_true": "Question:\n2+2?\n\nAnswer:\n",
+   "thinking_unset": "Question:\n2+2?\n\nAnswer:\n",
+   "tool_roundtrip": "System:\nBe brief.\n\nQuestion:\nWeather in Paris?\n\nAnswer:\n\n\n\n{\"temp_c\": 18}\n\nAnswer:\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "Question:\nHello\n\nAnswer:\n",
+   "with_tools": "Question:\nWeather in Paris?\n\nAnswer:\n"
+  },
+  "llama2-chat": {
+   "multiturn": "[INST] <<SYS>><</SYS>>\n\nHi [/INST] Hey!</s><s>[INST] <<SYS>><</SYS>>\n\nBye [/INST]",
+   "no_generation_prompt": "[INST] <<SYS>><</SYS>>\n\nHi [/INST] Hello!</s><s>[INST] ",
+   "system_user": "[INST] <<SYS>>\nBe brief.\n<</SYS>>\n\nHello [/INST]",
+   "thinking_false": "[INST] <<SYS>><</SYS>>\n\n2+2? [/INST]",
+   "thinking_true": "[INST] <<SYS>><</SYS>>\n\n2+2? [/INST]",
+   "thinking_unset": "[INST] <<SYS>><</SYS>>\n\n2+2? [/INST]",
+   "tool_roundtrip": "[INST] <<SYS>>\nBe brief.\n<</SYS>>\n\nWeather in Paris? [/INST] </s><s>[INST] ",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "[INST] <<SYS>><</SYS>>\n\nHello [/INST]",
+   "with_tools": "[INST] <<SYS>><</SYS>>\n\nWeather in Paris? [/INST]"
+  },
+  "llama3-instruct": {
+   "multiturn": "<|start_header_id|>user<|end_header_id|>\n\nHi<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nHey!<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nBye<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "no_generation_prompt": "<|start_header_id|>user<|end_header_id|>\n\nHi<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nHello!<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "system_user": "<|start_header_id|>system<|end_header_id|>\n\nBe brief.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nHello<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "thinking_false": "<|start_header_id|>user<|end_header_id|>\n\n2+2?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "thinking_true": "<|start_header_id|>user<|end_header_id|>\n\n2+2?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "thinking_unset": "<|start_header_id|>user<|end_header_id|>\n\n2+2?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "tool_roundtrip": "<|start_header_id|>system<|end_header_id|>\n\nBe brief.<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nWeather in Paris?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n<|eot_id|><|start_header_id|>tool<|end_header_id|>\n\n{\"temp_c\": 18}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<|start_header_id|>user<|end_header_id|>\n\nHello<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+   "with_tools": "<|start_header_id|>user<|end_header_id|>\n\nWeather in Paris?<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+  },
+  "magicoder": {
+   "multiturn": "@@ Instruction\nHi\n\n@@ Response\nHey!\n\n@@ Instruction\nBye\n\n@@ Response\n",
+   "no_generation_prompt": "@@ Instruction\nHi\n\n@@ Response\nHello!\n\n@@ Response\n",
+   "system_user": "Be brief.\n\n@@ Instruction\nHello\n\n@@ Response\n",
+   "thinking_false": "@@ Instruction\n2+2?\n\n@@ Response\n",
+   "thinking_true": "@@ Instruction\n2+2?\n\n@@ Response\n",
+   "thinking_unset": "@@ Instruction\n2+2?\n\n@@ Response\n",
+   "tool_roundtrip": "Be brief.\n\n@@ Instruction\nWeather in Paris?\n\n@@ Response\n\n\n\n{\"temp_c\": 18}\n\n@@ Response\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "@@ Instruction\nHello\n\n@@ Response\n",
+   "with_tools": "@@ Instruction\nWeather in Paris?\n\n@@ Response\n"
+  },
+  "mistral-instruct": {
+   "multiturn": "[INST] Hi[/INST] Hey!</s>[INST] Bye[/INST]",
+   "no_generation_prompt": "[INST] Hi[/INST] Hello!</s>[INST] ",
+   "system_user": "[INST] Be brief.\n\nHello[/INST]",
+   "thinking_false": "[INST] 2+2?[/INST]",
+   "thinking_true": "[INST] 2+2?[/INST]",
+   "thinking_unset": "[INST] 2+2?[/INST]",
+   "tool_roundtrip": "[INST] Be brief.\n\nWeather in Paris?[/INST] </s>[INST] ",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "[INST] Hello[/INST]",
+   "with_tools": "[INST] Weather in Paris?[/INST]"
+  },
+  "openchat": {
+   "multiturn": "GPT4 Correct User: Hi<|end_of_turn|>GPT4 Correct Assistant: Hey!<|end_of_turn|>GPT4 Correct User: Bye<|end_of_turn|>GPT4 Correct Assistant:",
+   "no_generation_prompt": "GPT4 Correct User: Hi<|end_of_turn|>GPT4 Correct Assistant: Hello!<|end_of_turn|>GPT4 Correct Assistant:",
+   "system_user": "GPT4 Correct System: Be brief.<|end_of_turn|>GPT4 Correct User: Hello<|end_of_turn|>GPT4 Correct Assistant:",
+   "thinking_false": "GPT4 Correct User: 2+2?<|end_of_turn|>GPT4 Correct Assistant:",
+   "thinking_true": "GPT4 Correct User: 2+2?<|end_of_turn|>GPT4 Correct Assistant:",
+   "thinking_unset": "GPT4 Correct User: 2+2?<|end_of_turn|>GPT4 Correct Assistant:",
+   "tool_roundtrip": "GPT4 Correct System: Be brief.<|end_of_turn|>GPT4 Correct User: Weather in Paris?<|end_of_turn|>GPT4 Correct Assistant: <|end_of_turn|>GPT4 Correct {\"temp_c\": 18}<|end_of_turn|>GPT4 Correct Assistant:",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "GPT4 Correct User: Hello<|end_of_turn|>GPT4 Correct Assistant:",
+   "with_tools": "GPT4 Correct User: Weather in Paris?<|end_of_turn|>GPT4 Correct Assistant:"
+  },
+  "phi-3": {
+   "multiturn": "<|user|>\nHi<|end|>\n<|assistant|>\nHey!<|end|>\n<|user|>\nBye<|end|>\n<|assistant|>\n",
+   "no_generation_prompt": "<|user|>\nHi<|end|>\n<|assistant|>\nHello!<|end|>\n<|assistant|>\n",
+   "system_user": "<|system|>\nBe brief.<|end|>\n<|user|>\nHello<|end|>\n<|assistant|>\n",
+   "thinking_false": "<|user|>\n2+2?<|end|>\n<|assistant|>\n",
+   "thinking_true": "<|user|>\n2+2?<|end|>\n<|assistant|>\n",
+   "thinking_unset": "<|user|>\n2+2?<|end|>\n<|assistant|>\n",
+   "tool_roundtrip": "<|system|>\nBe brief.<|end|>\n<|user|>\nWeather in Paris?<|end|>\n<|assistant|>\n<|end|>\n<|tool|>\n{\"temp_c\": 18}<|end|>\n<|assistant|>\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<|user|>\nHello<|end|>\n<|assistant|>\n",
+   "with_tools": "<|user|>\nWeather in Paris?<|end|>\n<|assistant|>\n"
+  },
+  "solar-instruct": {
+   "multiturn": "### User:\nHi\n\n### Assistant:\nHey!</s>\n\n### User:\nBye\n\n### Assistant:\n",
+   "no_generation_prompt": "### User:\nHi\n\n### Assistant:\nHello!</s>\n\n### Assistant:\n",
+   "system_user": "### System:\nBe brief.\n\n### User:\nHello\n\n### Assistant:\n",
+   "thinking_false": "### User:\n2+2?\n\n### Assistant:\n",
+   "thinking_true": "### User:\n2+2?\n\n### Assistant:\n",
+   "thinking_unset": "### User:\n2+2?\n\n### Assistant:\n",
+   "tool_roundtrip": "### System:\nBe brief.\n\n### User:\nWeather in Paris?\n\n### Assistant:\n</s>\n\n\n{\"temp_c\": 18}\n\n### Assistant:\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "### User:\nHello\n\n### Assistant:\n",
+   "with_tools": "### User:\nWeather in Paris?\n\n### Assistant:\n"
+  },
+  "starcoder2-instruct": {
+   "multiturn": "### Instruction\nHi\n\n### Response\nHey!<|endoftext|>\n\n### Instruction\nBye\n\n### Response\n",
+   "no_generation_prompt": "### Instruction\nHi\n\n### Response\nHello!<|endoftext|>\n\n### Response\n",
+   "system_user": "Be brief.\n\n### Instruction\nHello\n\n### Response\n",
+   "thinking_false": "### Instruction\n2+2?\n\n### Response\n",
+   "thinking_true": "### Instruction\n2+2?\n\n### Response\n",
+   "thinking_unset": "### Instruction\n2+2?\n\n### Response\n",
+   "tool_roundtrip": "Be brief.\n\n### Instruction\nWeather in Paris?\n\n### Response\n<|endoftext|>\n\n### Response\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "### Instruction\nHello\n\n### Response\n",
+   "with_tools": "### Instruction\nWeather in Paris?\n\n### Response\n"
+  },
+  "vicuna": {
+   "multiturn": "USER: Hi\nASSISTANT: Hey!</s>\nUSER: Bye\nASSISTANT:",
+   "no_generation_prompt": "USER: Hi\nASSISTANT: Hello!</s>\nASSISTANT:",
+   "system_user": "Be brief.\n\nUSER: Hello\nASSISTANT:",
+   "thinking_false": "USER: 2+2?\nASSISTANT:",
+   "thinking_true": "USER: 2+2?\nASSISTANT:",
+   "thinking_unset": "USER: 2+2?\nASSISTANT:",
+   "tool_roundtrip": "Be brief.\n\nUSER: Weather in Paris?\nASSISTANT: </s>\nASSISTANT:",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "USER: Hello\nASSISTANT:",
+   "with_tools": "USER: Weather in Paris?\nASSISTANT:"
+  },
+  "zephyr": {
+   "multiturn": "<|user|>\nHi</s>\n<|assistant|>\nHey!</s>\n<|user|>\nBye</s>\n<|assistant|>\n",
+   "no_generation_prompt": "<|user|>\nHi</s>\n<|assistant|>\nHello!</s>\n<|assistant|>\n",
+   "system_user": "<|system|>\nBe brief.</s>\n<|user|>\nHello</s>\n<|assistant|>\n",
+   "thinking_false": "<|user|>\n2+2?</s>\n<|assistant|>\n",
+   "thinking_true": "<|user|>\n2+2?</s>\n<|assistant|>\n",
+   "thinking_unset": "<|user|>\n2+2?</s>\n<|assistant|>\n",
+   "tool_roundtrip": "<|system|>\nBe brief.</s>\n<|user|>\nWeather in Paris?</s>\n<|assistant|>\n</s>\n<|tool|>\n{\"temp_c\": 18}</s>\n<|assistant|>\n",
+   "typed_content": {
+    "unrepresentable": "json: cannot unmarshal array into Go struct field .context.messages.content of type string"
+   },
+   "user_only": "<|user|>\nHello</s>\n<|assistant|>\n",
+   "with_tools": "<|user|>\nWeather in Paris?</s>\n<|assistant|>\n"
+  }
+ }
+}

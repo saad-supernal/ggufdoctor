@@ -47,3 +47,23 @@ def test_licence_is_mit_from_ollama():
 def test_data_directory_fits_the_size_budget():
     total = sum(p.stat().st_size for p in DATA.iterdir() if p.is_file())
     assert total < 600_000, total
+
+
+def test_goldens_cover_every_template_and_fixture_at_the_pinned_commit():
+    from ggufdoctor.fixtures import CORPUS_VERSION, load_fixtures
+    goldens = json.loads(_text("goldens.json"))
+    pin = json.loads(_text("OLLAMA_PIN"))
+    assert goldens["ollama_commit"] == pin["commit"]
+    assert goldens["corpus_version"] == CORPUS_VERSION
+    names = {p.name[:-len(".gotmpl")] for p in DATA.iterdir() if p.name.endswith(".gotmpl")}
+    assert set(goldens["renders"]) == names
+    fixtures = [f.name for f in load_fixtures()]
+    for name, per in goldens["renders"].items():
+        assert "_parse_error" not in per, name
+        assert set(per) == set(fixtures), name
+        for fx, value in per.items():
+            assert isinstance(value, str) or set(value) in ({"unrepresentable"}, {"error"}), (name, fx)
+    # api.Message.Content is a string: typed content cannot reach any Go template.
+    assert all("unrepresentable" in per["typed_content"] for per in goldens["renders"].values())
+    # chatml appends the generation prompt unconditionally (Ollama has no add_generation_prompt).
+    assert goldens["renders"]["chatml"]["no_generation_prompt"].endswith("<|im_start|>assistant\n")
