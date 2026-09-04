@@ -44,6 +44,23 @@ Two fixture shapes never reach the wire, because `api.Message` cannot carry
 them: `add_generation_prompt: false` (Ollama has no such concept) and typed
 content (`Content` is a Go `string`). They are named in `not_comparable`, the
 same coverage fact family O records, rather than silently dropped.
+
+The one thing this family must never do is claim an agreement it did not
+measure, so a fixture that could not be compared is separated from one that
+was compared and matched, by which side came up short:
+
+* `prediction_errors` -- ggufdoctor produced no prediction (the engine
+  raised, the template refused this conversation). Nothing is sent for it,
+  and it is *not* a divergence: the WARN's three culprits all live on
+  Ollama's side of the wire and none of them can explain a failure that
+  happened here. Reported as evidence on RT001.
+* `render_errors` -- Ollama answered, but not with a prompt.
+* When neither side produced anything comparable on *any* fixture, there is
+  no finding to make and RT001 goes to `checks_not_evaluated` with a reason
+  naming what happened. Emitting nothing instead would read exactly like the
+  clean run this family exists to distinguish itself from -- an Ollama
+  without `_debug_render_only` would report as "agreed with every
+  prediction" while having rendered not one.
 """
 from __future__ import annotations
 
@@ -72,6 +89,9 @@ LLAMACPP = "llama.cpp"
 ENGINE_PATH = "llama.cpp engine"
 NO_ENGINE_REASON = "llama.cpp engine unavailable, cannot predict the native path"
 NO_TEMPLATE_REASON = "this GGUF embeds no chat template, so there is nothing to predict"
+NOTHING_COMPARED = "no fixture could be compared"
+# Distinct reasons to name in a not-evaluated line before summarising the rest.
+REASON_CAP = 3
 TYPED_CONTENT_REASON = "Ollama's api.Message cannot represent typed content"
 
 # `ollama create` copies and quantises a whole GGUF, and the first render on a
@@ -286,6 +306,54 @@ def _golden_not_comparable(golden: Any, template: str) -> str | None:
     return None
 
 
+def _distinct(reasons: Any) -> str:
+    """The distinct reasons behind a per-fixture bucket, bounded.
+
+    Every fixture usually fails the same way (one server, one build, one
+    template), so a list of ten identical strings is noise; and the result
+    goes into a report line, so the tail is capped rather than unbounded.
+    """
+    seen = sorted(set(reasons))
+    head = "; ".join(seen[:REASON_CAP])
+    if len(seen) > REASON_CAP:
+        head += f"; and {len(seen) - REASON_CAP} more"
+    return head
+
+
+def _nothing_compared_reason(path: str, template_name: str | None,
+                             not_comparable: dict[str, str], blocked: list[str],
+                             render_errors: dict[str, str],
+                             prediction_errors: dict[str, str]) -> str:
+    """Why the oracle compared nothing, in the operator's terms.
+
+    Ordered by what the operator can act on: a server that renders nothing
+    (an Ollama without `_debug_render_only`) is a different problem from a
+    prediction side that produced nothing, which is different again from a
+    corpus none of whose fixtures were ever comparable.
+
+    `blocked` holds only the fixtures that got as far as needing a
+    prediction -- the two shapes `api.Message` can never carry are a
+    permanent property of the corpus and are in `not_comparable` on every
+    single run, so letting them into this line would bury the reason this
+    particular run found nothing under two facts that are always true.
+    """
+    if render_errors:
+        return (f"{NOTHING_COMPARED}: real Ollama failed to render every fixture "
+                f"({_distinct(render_errors.values())})")
+    if prediction_errors:
+        return (f"{NOTHING_COMPARED}: the prediction via {path} failed on every fixture "
+                f"({_distinct(prediction_errors.values())})")
+    if blocked:
+        if set(blocked) == {NO_GOLDEN_REASON}:
+            return (f"{NOTHING_COMPARED}: no Ollama goldens were recorded for the "
+                    f"{template_name} template")
+        return f"{NOTHING_COMPARED}: {_distinct(blocked)}"
+    if not not_comparable:
+        return f"{NOTHING_COMPARED}: the fixture corpus is empty"
+    # Only the shapes an Ollama request cannot carry at all were left.
+    return f"{NOTHING_COMPARED}: {_distinct(not_comparable.values())}"
+
+
 def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
                        gguf_path: str) -> list[Finding]:
     ollama_stats = ctx.stats.get("ollama") or {}
@@ -323,6 +391,10 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
 
     not_comparable: dict[str, str] = {}
     render_errors: dict[str, str] = {}
+    prediction_errors: dict[str, str] = {}
+    # not_comparable reasons for fixtures that were sendable -- i.e. those a
+    # prediction was actually needed for. See _nothing_compared_reason.
+    blocked: list[str] = []
     differs: list[tuple[str, Any, dict[str, Any]]] = []
     agreed = 0
     try:
@@ -336,34 +408,56 @@ def run_runtime_checks(ctx: CheckContext, runtime: OllamaRuntime,
                 reason = _golden_not_comparable(golden, template_name)
                 if reason is not None:
                     not_comparable[fx.name] = reason
+                    blocked.append(reason)
                     continue
                 pred = RenderResult(golden, None)
             else:
                 pred = engine.render(ctx.model.chat_template,
                                      with_real_tokens(ctx, fx.context))
 
+            if not pred.ok:
+                # ggufdoctor failed to produce a prediction at all, so there
+                # is no comparison to be had -- and calling that a divergence
+                # would name PreferChatTemplate, RENDERER/PARSER and
+                # OLLAMA_GO_TEMPLATE as suspects for a failure that happened
+                # entirely on this side of the wire. Its own bucket, and never
+                # `differs`. Nothing is sent for it either: there is nothing
+                # the answer could be compared against.
+                prediction_errors[fx.name] = pred.error
+                continue
+
             real = runtime.render(model, fx)
             if not real.ok:
                 render_errors[fx.name] = real.error
                 continue
-            if pred.ok and pred.text == real.text:
+            if pred.text == real.text:
                 agreed += 1
                 continue
-            # A prediction that failed to render is still a prediction, and
-            # the operator needs to see what it was; carrying the error text
-            # into the diff says so without pretending it was output.
-            pred_text = pred.text if pred.ok else f"<no render: {pred.error}>"
-            differs.append((fx.name, divergence_signature(pred_text, real.text),
-                            {"diff": render_diff(pred_text, real.text,
+            differs.append((fx.name, divergence_signature(pred.text, real.text),
+                            {"diff": render_diff(pred.text, real.text,
                                                  f"predicted ({path})", f"ollama {version}")}))
     finally:
         runtime.remove(model)
 
-    ctx.stats["runtime"] = {"version": version, "predicted_path": path,
-                            "agreed_fixtures": agreed,
-                            "compared_fixtures": agreed + len(differs)}
+    stats: dict[str, Any] = {"version": version, "predicted_path": path,
+                             "agreed_fixtures": agreed,
+                             "compared_fixtures": agreed + len(differs),
+                             "not_evaluated": None}
+    ctx.stats["runtime"] = stats
+    if not stats["compared_fixtures"]:
+        # The oracle was asked and answered nothing usable. Reporting no
+        # findings here would read as "real Ollama agreed with every
+        # prediction" -- the strongest claim this tool makes -- on a run that
+        # compared nothing at all, and would silently drop the errors that
+        # explain why. Same shape as the pre-flight gaps above.
+        stats["not_evaluated"] = _nothing_compared_reason(
+            path, template_name, not_comparable, blocked, render_errors, prediction_errors)
+        ctx.checks_not_evaluated.extend(RT_IDS)
+        return []
+
     base_evidence = {"ollama_version": version, "predicted_path": path,
                      "not_comparable": not_comparable, "render_errors": render_errors,
+                     "prediction_errors": prediction_errors,
                      "agreed_fixtures": agreed, "ollama_commit": pin().commit}
 
     findings = collapse_by_signature(

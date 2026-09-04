@@ -164,7 +164,14 @@ def _lint_main(argv: list[str] | None = None) -> int:
             # condition -- "ggufdoctor: ..." and exit 2, below.
             from ggufdoctor.runtime_ollama import OllamaRuntime, run_runtime_checks
             findings += run_runtime_checks(ctx, OllamaRuntime([args.runtime]), args.target)
-            if (ctx.stats.get("runtime") or {}).get("not_evaluated") is None:
+            # Same rule as the O family above: a family that could not
+            # evaluate did not run, and must not appear in families_run --
+            # otherwise a run that compared nothing reads as one that
+            # compared everything and found nothing wrong. The reason
+            # travels on ctx.stats["runtime"], and the ids RT recorded on
+            # ctx.checks_not_evaluated reach coverage below.
+            runtime_stats = ctx.stats.get("runtime")
+            if runtime_stats and runtime_stats["not_evaluated"] is None:
                 coverage.families_run.append("RT")
 
         rules = load_ignores(args.ignore_file)
