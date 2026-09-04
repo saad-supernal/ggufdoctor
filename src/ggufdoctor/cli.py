@@ -44,6 +44,12 @@ def build_parser() -> argparse.ArgumentParser:
                         "via --compare-upstream could not be resolved "
                         "(gated, not found, or otherwise unreachable); "
                         "requires --compare-upstream")
+    p.add_argument("--runtime", metavar="OLLAMA",
+                   help="path to a real `ollama` binary; creates a temporary "
+                        "model from the GGUF and renders every fixture through "
+                        "Ollama itself (RT001). Needs a running Ollama server "
+                        "(OLLAMA_HOST or http://127.0.0.1:11434). Local .gguf "
+                        "targets only.")
     p.add_argument("--engines", metavar="NAMES",
                    help="comma-separated engines to run (default: all available; "
                         "choose from jinja2, llama.cpp). jinja2 is the reference "
@@ -103,6 +109,16 @@ def _lint_main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 2
 
+    if args.runtime:
+        from ggufdoctor.sources import is_repo_id
+        if is_repo_id(args.target):
+            # `ollama create` needs a file it can point a Modelfile FROM at,
+            # and ggufdoctor will not download one to hand it: a repo id here
+            # is a request the tool cannot honour, not a run it should start
+            # and abandon halfway through.
+            print("ggufdoctor: --runtime needs a local .gguf file", file=sys.stderr)
+            return 2
+
     try:
         from ggufdoctor.sources import resolve
         model, upstream, coverage = resolve(args.target, args.compare_upstream)
@@ -140,6 +156,17 @@ def _lint_main(argv: list[str] | None = None) -> int:
 
         if upstream or coverage.upstream == "not_found":
             findings += run_reference_checks(ctx)
+
+        if args.runtime:
+            # Opt-in only, and last: it is the one family that touches a
+            # process and a socket the operator owns, and an OllamaRuntimeError
+            # from it takes the same route as any other operator-fixable
+            # condition -- "ggufdoctor: ..." and exit 2, below.
+            from ggufdoctor.runtime_ollama import OllamaRuntime, run_runtime_checks
+            findings += run_runtime_checks(ctx, OllamaRuntime([args.runtime]), args.target)
+            if (ctx.stats.get("runtime") or {}).get("not_evaluated") is None:
+                coverage.families_run.append("RT")
+
         rules = load_ignores(args.ignore_file)
         findings, suppressed = apply_ignores(findings, rules)
 

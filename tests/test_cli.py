@@ -366,6 +366,11 @@ def test_recognised_template_reports_o001_and_json_coverage(tmp_path, capsys):
     assert {f["id"] for f in d["findings"]} >= {"O001"}
 
 
+def test_runtime_requires_a_local_gguf(capsys):
+    assert main(["org/repo", "--runtime", "/usr/bin/ollama"]) == 2
+    assert "--runtime needs a local .gguf file" in capsys.readouterr().err
+
+
 def test_version_is_0_2_1():
     import ggufdoctor
     assert ggufdoctor.__version__ == "0.2.1"
