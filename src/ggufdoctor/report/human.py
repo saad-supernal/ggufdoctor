@@ -11,8 +11,11 @@ ALL_FAMILIES = ["S", "X", "O", "R", "RT"]
 
 # C0 control characters and DEL. This is deliberately broad rather than a
 # narrow "just ANSI CSI sequences" pattern: every value sanitised here
-# (model id, messages, fixture names, evidence strings) originates inside
-# the GGUF file this tool is linting, i.e. untrusted input. Escaping the
+# (model id, messages, fixture names, evidence strings, and the O/RT
+# coverage lines -- a not_evaluated reason can quote the llama.cpp engine's
+# error text, which carries the template's own raise_exception argument)
+# originates inside the GGUF file this tool is linting, i.e. untrusted
+# input. Escaping the
 # ESC byte alone defangs any ANSI sequence (the printable bytes that would
 # follow it, like "[2J", are harmless text once ESC itself is gone), and
 # escaping CR/LF/etc. stops a file from forging extra report lines.
@@ -113,10 +116,10 @@ def _ollama_line(coverage: Coverage) -> str | None:
         return None
     trailer = f" (Ollama {pin().short})"
     if o["not_evaluated"] is not None:
-        return f"  ollama: not evaluated — {o['not_evaluated']}{trailer}"
+        return f"  ollama: not evaluated — {_visible(o['not_evaluated'])}{trailer}"
     if o["recognised"]:
         low = ", low confidence" if not o["confident"] else ""
-        return (f"  ollama: registry recognises this template as {o['template']} "
+        return (f"  ollama: registry recognises this template as {_visible(o['template'])} "
                 f"(distance {o['distance']}{low}) — Ollama would substitute its "
                 f"curated Go template; see O001/X003{trailer}")
     return ("  ollama: template not in the registry — Ollama renders it with "
@@ -137,10 +140,10 @@ def _runtime_line(coverage: Coverage) -> str | None:
     if r is None:
         return None
     if r["not_evaluated"] is not None:
-        return f"  runtime: not evaluated — {r['not_evaluated']}"
-    return (f"  runtime: ollama {r['version']} agreed with the prediction on "
+        return f"  runtime: not evaluated — {_visible(r['not_evaluated'])}"
+    return (f"  runtime: ollama {_visible(r['version'])} agreed with the prediction on "
             f"{r['agreed_fixtures']} of {r['compared_fixtures']} compared fixtures "
-            f"via {r['predicted_path']}")
+            f"via {_visible(r['predicted_path'])}")
 
 
 def _engine_label(e: Any) -> str:

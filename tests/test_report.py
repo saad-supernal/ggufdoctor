@@ -267,3 +267,38 @@ def test_json_coverage_carries_runtime_when_set():
     assert d["coverage"]["runtime"]["not_evaluated"].startswith("no fixture could be compared")
     assert d["schema_version"] == "1"   # additive: the schema did not change
     assert build_json(MODEL, [], [], COV, [Jinja2Engine()])["coverage"]["runtime"] is None
+
+
+# --- Final review round ---
+
+
+def test_human_coverage_lines_escape_control_characters():
+    # The RT not-evaluated reason quotes the llama.cpp engine's error text,
+    # which carries the template's own raise_exception argument -- bytes out
+    # of the GGUF. Interpolated raw, "\x1b[2J\rFAKE LINE" clears the terminal
+    # and prints a report line ggufdoctor never wrote.
+    forged = "no fixture could be compared: \x1b[2J\r  runtime: ollama 9.9 agreed"
+    cov = _cov_runtime(not_evaluated=forged, agreed_fixtures=0, compared_fixtures=0)
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "\x1b" not in out and "\r" not in out
+    assert "\\x1b" in out and "\\x0d" in out
+
+    # The O line's reason and the template name travel the same route.
+    cov = _cov_ollama(not_evaluated="custom corpus \x1b[2J\r  ollama: registry recognises")
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "\x1b" not in out and "\r" not in out
+    assert "\\x1b" in out and "\\x0d" in out
+
+    cov = _cov_ollama(recognised=True, template="chat\x1bml\r", distance=72, confident=True)
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "\x1b" not in out and "\r" not in out
+    assert "chat\\x1bml\\x0d" in out
+
+
+def test_human_runtime_line_escapes_the_version_and_the_path():
+    # Both come back from another process: `ollama --version`'s first line
+    # verbatim, and a predicted_path that can now quote family O's reason.
+    cov = _cov_runtime(version="0.33.2\x1b[2J\r", predicted_path="llama.cpp engine \x1b[31m")
+    out = render_human(MODEL, [], [], cov, [Jinja2Engine()])
+    assert "\x1b" not in out and "\r" not in out
+    assert "0.33.2\\x1b[2J\\x0d" in out and "llama.cpp engine \\x1b[31m" in out
