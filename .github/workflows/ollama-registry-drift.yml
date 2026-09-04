@@ -1,0 +1,49 @@
+name: Ollama registry drift
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # weekly, Monday 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: compare the vendored registry with Ollama main
+        id: cmp
+        run: |
+          set -eu
+          mkdir -p /tmp/head
+          base=https://raw.githubusercontent.com/ollama/ollama/main/template
+          curl -fsSL "$base/index.json" -o /tmp/head/index.json
+          for f in src/ggufdoctor/ollama_data/*.gotmpl; do
+            curl -fsSL "$base/$(basename "$f")" -o "/tmp/head/$(basename "$f")"
+          done
+          python - <<'PY' | tee /tmp/drift.txt
+          import json, pathlib
+          vend = pathlib.Path("src/ggufdoctor/ollama_data"); head = pathlib.Path("/tmp/head")
+          changed = [p.name for p in head.iterdir() if p.read_bytes() != (vend / p.name).read_bytes()]
+          hi = json.load(open(head / "index.json")); vi = json.load(open(vend / "index.json"))
+          new = [e for e in hi if e not in vi]; gone = [e for e in vi if e not in hi]
+          print(f"changed files: {changed}")
+          print(f"index entries added at HEAD: {len(new)}, removed: {len(gone)}")
+          for e in new: print("  +", e["name"], repr(e["template"][:80]))
+          open("/tmp/drifted", "w").write("1" if (changed or new or gone) else "")
+          PY
+          echo "drifted=$(cat /tmp/drifted)" >> "$GITHUB_OUTPUT"
+      - name: open an issue when the registry moved
+        if: steps.cmp.outputs.drifted == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Ollama template registry drifted from the vendored pin"
+          if [ -z "$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number')" ]; then
+            gh issue create --title "$title" --body-file /tmp/drift.txt --label maintenance || \
+            gh issue create --title "$title" --body-file /tmp/drift.txt
+          fi
+          exit 1
