@@ -280,6 +280,9 @@ def test_a_failed_prediction_is_not_reported_as_a_divergence(server, fake_ollama
     assert ctx.stats["runtime"]["compared_fixtures"] == 7
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="the CLI is reached through a POSIX shell shim; OllamaRuntime itself "
+                           "is exercised on Windows by the command-list tests above")
 def test_cli_runtime_flag_runs_the_family_and_records_it(server, fake_ollama, tmp_path,
                                                         monkeypatch, renders, capsys):
     import shlex
@@ -317,6 +320,9 @@ def test_cli_runtime_flag_runs_the_family_and_records_it(server, fake_ollama, tm
     assert [json.loads(l)[0] for l in log.read_text().splitlines()] == ["--version", "create", "rm"]
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="the CLI is reached through a POSIX shell shim; OllamaRuntime itself "
+                           "is exercised on Windows by the command-list tests above")
 def test_cli_runtime_not_evaluated_is_not_a_family_that_ran(server, fake_ollama, tmp_path,
                                                             monkeypatch, renders, capsys):
     # The same run as above against an Ollama that renders nothing: RT must

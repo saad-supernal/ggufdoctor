@@ -1,0 +1,3 @@
+# Vendored Ollama registry files are compared byte-for-byte against a sha256 manifest
+# and against the upstream checkout; never let git rewrite their line endings.
+src/ggufdoctor/ollama_data/** -text
