@@ -285,7 +285,9 @@ harnesses. That is what the finding says.
 - Hand-written renderers in Ollama's `model/renderers/` are selected by a Modelfile
   `RENDERER` directive, never from a GGUF, so ggufdoctor cannot predict them. A clean
   `X003` does not mean Ollama renders the model identically — only `--runtime` against
-  your own binary says that. Findings hold for the pinned Ollama commit, which the
+  your own binary says that. `X003` itself is a finding about a *pair* — this file under
+  a default `ollama create` — and not about the file in isolation: the same template
+  under llama.cpp is fine. Findings hold for the pinned Ollama commit, which the
   weekly drift job watches.
 - The survey samples top downloads, not the long tail, and its percentages are the
   GGUF-versus-upstream question rendered through Jinja2 on both sides. Cross-engine
@@ -313,7 +315,8 @@ network` talks to the Hub; `pytest -m ollama_conformance tests/ollama_conformanc
 checks the Python port of Ollama's template selector against the real Go
 `template.Named` and the committed goldens against a real render, and needs Go plus, on
 first run, the network to fetch Ollama's source at the pin. Every download is verified
-against a pinned sha256 before use.
+against a pinned sha256 before use, except Ollama's source, which is fetched at a
+pinned commit id and verified by that.
 
 The WebAssembly engine is rebuilt with `engine/build.sh`, which fetches the pinned
 llama.cpp sources (checksummed) and wasi-sdk 34 (checksummed) and writes the module and

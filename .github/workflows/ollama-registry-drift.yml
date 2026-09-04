@@ -17,7 +17,11 @@ jobs:
       - name: compare the vendored registry with Ollama main
         id: cmp
         run: |
-          set -eu
+          # pipefail matters below: the drift verdict is written by a Python
+          # script on the left of a `| tee`, so without it a traceback there
+          # is masked by tee's exit 0 and the job reports "no drift" on a run
+          # that compared nothing.
+          set -eu -o pipefail
           mkdir -p /tmp/head
           : > /tmp/head/.missing
           base=https://raw.githubusercontent.com/ollama/ollama/main/template
@@ -26,22 +30,32 @@ jobs:
             name=$(basename "$f")
             curl -fsSL "$base/$name" -o "/tmp/head/$name" || { echo "$name" >> /tmp/head/.missing; rm -f "/tmp/head/$name"; }
           done
-          python - <<'PY' | tee /tmp/drift.txt
-          import json, pathlib
-          vend = pathlib.Path("src/ggufdoctor/ollama_data"); head = pathlib.Path("/tmp/head")
-          missing = {l.strip() for l in (head / ".missing").read_text().splitlines() if l.strip()}
-          gotmpls = [p.name for p in vend.iterdir() if p.name.endswith(".gotmpl")]
-          changed = sorted(missing) + [
-              name for name in gotmpls
-              if name not in missing and (head / name).read_bytes() != (vend / name).read_bytes()
-          ]
-          hi = json.load(open(head / "index.json")); vi = json.load(open(vend / "index.json"))
-          new = [e for e in hi if e not in vi]; gone = [e for e in vi if e not in hi]
-          print(f"changed files: {changed}")
-          if missing: print(f"removed upstream (404 at HEAD): {sorted(missing)}")
-          print(f"index entries added at HEAD: {len(new)}, removed: {len(gone)}")
-          for e in new: print("  +", e["name"], repr(e["template"][:80]))
-          open("/tmp/drifted", "w").write("1" if (changed or new or gone) else "")
+          python3 - <<'PY' | tee /tmp/drift.txt
+          import json, pathlib, sys, traceback
+          # Written before anything that can fail, so an absent file can never
+          # be read as "no drift"; any exception below turns it into "1", so a
+          # broken comparison escalates rather than passing silently.
+          drifted = pathlib.Path("/tmp/drifted")
+          drifted.write_text("")
+          try:
+              vend = pathlib.Path("src/ggufdoctor/ollama_data"); head = pathlib.Path("/tmp/head")
+              missing = {l.strip() for l in (head / ".missing").read_text().splitlines() if l.strip()}
+              gotmpls = [p.name for p in vend.iterdir() if p.name.endswith(".gotmpl")]
+              changed = sorted(missing) + [
+                  name for name in gotmpls
+                  if name not in missing and (head / name).read_bytes() != (vend / name).read_bytes()
+              ]
+              hi = json.load(open(head / "index.json")); vi = json.load(open(vend / "index.json"))
+              new = [e for e in hi if e not in vi]; gone = [e for e in vi if e not in hi]
+              print(f"changed files: {changed}")
+              if missing: print(f"removed upstream (404 at HEAD): {sorted(missing)}")
+              print(f"index entries added at HEAD: {len(new)}, removed: {len(gone)}")
+              for e in new: print("  +", e["name"], repr(e["template"][:80]))
+              drifted.write_text("1" if (changed or new or gone) else "")
+          except Exception:
+              drifted.write_text("1")
+              print("drift comparison failed:"); traceback.print_exc(file=sys.stdout)
+              raise
           PY
           echo "drifted=$(cat /tmp/drifted)" >> "$GITHUB_OUTPUT"
       - name: open an issue when the registry moved

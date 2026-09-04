@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"os"
 
@@ -19,6 +20,10 @@ type result struct {
 }
 
 func main() {
+	if len(os.Args) != 2 {
+		fmt.Fprintln(os.Stderr, "usage: namedcheck INDEX.json  (templates as a JSON array on stdin)")
+		os.Exit(2)
+	}
 	var inputs []string
 	if err := json.NewDecoder(os.Stdin).Decode(&inputs); err != nil {
 		panic(err)

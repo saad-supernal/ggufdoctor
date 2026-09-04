@@ -11,7 +11,8 @@ Evidence: docs/research/2026-09-03-ollama-spike.md.
 `select` is that loop, exactly, over the vendored index. The distance is
 computed with a banded DP that is exact below the cutoff and saturates at it:
 the decision only ever needs "is it < 100?", and the band plus a length
-prefilter turn a 212 ms Go computation into ~10 ms of Python per template.
+prefilter turn a 212 ms Go computation into a few milliseconds of Python
+for a miss, and around 130 ms for a near-match to the largest index entry.
 Agreement with the real `template.Named` is asserted by
 tests/ollama_conformance (Go, CI); the ten vendored real templates are pinned
 in tests/test_ollama_select.py.
