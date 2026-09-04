@@ -1,4 +1,4 @@
-"""Complete S + X finding sets on ten real, vendored templates.
+"""Complete S + X + O finding sets on ten real, vendored templates.
 
 Every expected finding below is a true positive with a stated reason. If a
 change to the checks alters any set, this test fails loudly -- that is the
@@ -24,6 +24,17 @@ Both engines therefore render with the same fabricated placeholder
 symmetric, so it cannot manufacture a divergence between them, which is why
 the X family is unaffected in kind. The `<s>` visible in some expected diffs
 below is that placeholder, not the repo's own BOS.
+
+The Ollama family (X003/O001) is nearly silent here, and that is the finding
+rather than a gap: nine of these ten templates are not in Ollama's registry at
+all, so `ollama create` renders their own Jinja through llama-server and there
+is no substitution to compare. The misses are not close -- the nearest is
+`legraphista`'s eight-byte "ChatGLM4" at distance 194 against a cutoff of 100,
+and the other eight are off by thousands (spike §5). The exception is
+HyperCLOVAX, whose template is a verbatim copy of canonical ChatML: it matches
+index entry `chatml` at distance 0, so Ollama would replace it with
+`chatml.gotmpl`, and the head-to-head against the recorded goldens is the pair
+of entries on that slug below.
 """
 import json
 import pathlib
@@ -31,6 +42,7 @@ import pathlib
 import pytest
 
 from ggufdoctor.checks.cross_engine import run_cross_engine_checks
+from ggufdoctor.checks.ollama_registry import run_ollama_checks
 from ggufdoctor.checks.sanity import run_sanity_checks
 from ggufdoctor.engines.jinja2_engine import Jinja2Engine
 from ggufdoctor.engines.llamacpp_engine import LlamaCppEngine
@@ -59,7 +71,7 @@ def run(slug):
                       eos_token_id=None, add_bos_token=None)
     ctx = CheckContext(model=model, engines=[Jinja2Engine(), LlamaCppEngine()],
                        fixtures=load_fixtures())
-    findings = run_sanity_checks(ctx) + run_cross_engine_checks(ctx)
+    findings = run_sanity_checks(ctx) + run_cross_engine_checks(ctx) + run_ollama_checks(ctx)
     def fixtures_of(f):
         return tuple(f.evidence.get("fixtures") or ((f.fixture,) if f.fixture else ()))
     return ({(f.id, f.severity, fixtures_of(f)) for f in findings},
@@ -603,6 +615,22 @@ EXPECTED = {
             # pre-flattened jinja2 re-render reproduces llama.cpp's output
             # exactly. INFO, not ERROR.
             ("X002", Severity.INFO, ("typed_content",)),
+            # O001 INFO: Ollama's registry recognises this template verbatim
+            # (index entry #2 is this exact ChatML text; distance 0) and
+            # `ollama create` would substitute chatml.gotmpl for it. chatml.gotmpl
+            # never references .Tools, so the message says the curated template
+            # ignores tools. typed_content and no_generation_prompt are listed as
+            # not comparable (api.Message.Content is a string; Ollama has no
+            # add_generation_prompt) -- coverage facts, not divergence.
+            ("O001", Severity.INFO, ()),
+            # X003 ERROR on tool_roundtrip, one-sided: the same `+ message['content']`
+            # that raises the NoneType TypeError under jinja2 (see S003/X002 above)
+            # is simply not there in chatml.gotmpl, which prints {{ .Content }} of an
+            # empty string and renders the conversation -- including the tool result
+            # under a bare `tool` role. So a user who `ollama create`s this GGUF gets
+            # a prompt transformers refuses to build. Spike §5 measured exactly this
+            # pair: jinja2 raises, Ollama renders.
+            ("X003", Severity.ERROR, ("tool_roundtrip",)),
             # Not reported, but true of the repo and worth recording: this GGUF
             # declares eos_token `<|endofturn|>` while its template closes every
             # turn with `<|im_end|>`. S005 is exactly the check for that, and it
@@ -654,3 +682,17 @@ def test_complete_finding_set(slug):
     # (R11a's removal of the caps gate moved nothing further: every template
     # here that reads a preserve_reasoning variable already had caps saying so.)
     assert stats["engines_agreed_fixtures"] >= 1, "both engines must agree on at least one fixture"
+
+
+def test_ollama_registry_recognises_exactly_hyperclovax():
+    for slug in EXPECTED:
+        _, _, stats = run(slug)
+        o = stats["ollama"]
+        assert o["pinned_commit"] == "b79067b0db7417f20108363bc22adb97f35c966a"
+        if slug.startswith("rippertnt__HyperCLOVAX"):
+            assert (o["recognised"], o["template"], o["distance"], o["confident"]) == (True, "chatml", 0, True)
+            # user_only, system_user, multiturn, with_tools and the three thinking
+            # fixtures render byte-identically under both (spike §5 head-to-head).
+            assert stats["ollama_agreed_fixtures"] == 7
+        else:
+            assert o["recognised"] is False and o["template"] is None
